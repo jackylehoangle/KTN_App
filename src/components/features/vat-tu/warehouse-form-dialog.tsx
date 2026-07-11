@@ -1,0 +1,111 @@
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { warehouseSchema, type WarehouseInput } from '@/lib/validations/vat-tu';
+import { createWarehouse } from '@/lib/actions/vat-tu';
+
+export function WarehouseFormDialog() {
+  const [open, setOpen] = useState(false);
+
+  const form = useForm<WarehouseInput>({
+    resolver: zodResolver(warehouseSchema),
+    defaultValues: { code: '', name: '', address: '' },
+  });
+
+  async function onSubmit(values: WarehouseInput) {
+    try {
+      await createWarehouse(values);
+      toast.success('Đã thêm kho');
+      setOpen(false);
+      form.reset();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="size-4" />
+          Thêm kho
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Thêm kho mới</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mã kho</FormLabel>
+                  <FormControl>
+                    <Input placeholder="KHO01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tên kho</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Kho trung tâm" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Địa chỉ</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Tuỳ chọn" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Đang lưu...' : 'Lưu'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
