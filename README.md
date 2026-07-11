@@ -10,6 +10,10 @@
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · shadcn/ui · Supabase (PostgreSQL + Auth) · react-hook-form + zod.
 
+## 0. Yêu cầu dung lượng ổ đĩa
+
+Ổ `D:\` trên máy hiện chỉ còn rất ít dung lượng trống. `node_modules` của dự án này cần khoảng **700MB–1GB**. Trước khi chạy `npm install`, hãy đảm bảo ổ chứa thư mục dự án còn **tối thiểu 2–3GB trống** (dọn bớt file lớn không cần thiết, hoặc chuyển dự án sang ổ còn nhiều chỗ hơn) — nếu không `npm install` có thể thất bại giữa chừng và làm đầy ổ đĩa.
+
 ## 1. Cài đặt
 
 ```bash
