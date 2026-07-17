@@ -6,6 +6,23 @@
 -- ---------- EXTENSIONS ----------
 create extension if not exists "pgcrypto";
 
+-- ---------- CLEANUP (makes this script safe to re-run) ----------
+drop trigger if exists on_auth_user_created on auth.users;
+drop view if exists stock_balances cascade;
+drop table if exists
+  sales_order_items, purchase_order_items, quotation_items,
+  production_plan_items, production_tasks, bom_items,
+  stock_movements, invoice_payments, attendance, leave_requests, payroll,
+  transactions, budgets,
+  sales_orders, purchase_orders, quotations, production_plans,
+  contracts, opportunities,
+  materials, material_categories, warehouses, suppliers,
+  positions, departments, employees,
+  accounts, invoices,
+  customers, profiles
+  cascade;
+drop type if exists user_role cascade;
+
 -- ---------- ROLES & PROFILES ----------
 create type user_role as enum ('admin', 'kinh_doanh', 'vat_tu', 'nhan_su', 'tai_chinh', 'san_xuat');
 
@@ -428,6 +445,126 @@ alter table bom_items enable row level security;
 alter table production_plans enable row level security;
 alter table production_plan_items enable row level security;
 alter table production_tasks enable row level security;
+
+-- ---------- CLEANUP: drop policies before recreating (safe to re-run) ----------
+drop policy if exists "profiles_select_own_or_admin" on profiles;
+drop policy if exists "profiles_update_own_or_admin" on profiles;
+drop policy if exists "kd_read_all" on customers;
+drop policy if exists "kd_write" on customers;
+drop policy if exists "kd_update" on customers;
+drop policy if exists "kd_delete" on customers;
+drop policy if exists "opp_read_all" on opportunities;
+drop policy if exists "opp_write" on opportunities;
+drop policy if exists "opp_update" on opportunities;
+drop policy if exists "opp_delete" on opportunities;
+drop policy if exists "contracts_read_all" on contracts;
+drop policy if exists "contracts_write" on contracts;
+drop policy if exists "contracts_update" on contracts;
+drop policy if exists "contracts_delete" on contracts;
+drop policy if exists "so_read_all" on sales_orders;
+drop policy if exists "so_write" on sales_orders;
+drop policy if exists "so_update" on sales_orders;
+drop policy if exists "so_delete" on sales_orders;
+drop policy if exists "soi_read_all" on sales_order_items;
+drop policy if exists "soi_write" on sales_order_items;
+drop policy if exists "soi_update" on sales_order_items;
+drop policy if exists "soi_delete" on sales_order_items;
+drop policy if exists "vt_read_all_suppliers" on suppliers;
+drop policy if exists "vt_write_suppliers" on suppliers;
+drop policy if exists "vt_update_suppliers" on suppliers;
+drop policy if exists "vt_delete_suppliers" on suppliers;
+drop policy if exists "vt_read_all_wh" on warehouses;
+drop policy if exists "vt_write_wh" on warehouses;
+drop policy if exists "vt_update_wh" on warehouses;
+drop policy if exists "vt_delete_wh" on warehouses;
+drop policy if exists "vt_read_all_cat" on material_categories;
+drop policy if exists "vt_write_cat" on material_categories;
+drop policy if exists "vt_update_cat" on material_categories;
+drop policy if exists "vt_delete_cat" on material_categories;
+drop policy if exists "vt_read_all_mat" on materials;
+drop policy if exists "vt_write_mat" on materials;
+drop policy if exists "vt_update_mat" on materials;
+drop policy if exists "vt_delete_mat" on materials;
+drop policy if exists "vt_read_all_po" on purchase_orders;
+drop policy if exists "vt_write_po" on purchase_orders;
+drop policy if exists "vt_update_po" on purchase_orders;
+drop policy if exists "vt_delete_po" on purchase_orders;
+drop policy if exists "vt_read_all_poi" on purchase_order_items;
+drop policy if exists "vt_write_poi" on purchase_order_items;
+drop policy if exists "vt_update_poi" on purchase_order_items;
+drop policy if exists "vt_delete_poi" on purchase_order_items;
+drop policy if exists "vt_read_all_sm" on stock_movements;
+drop policy if exists "vt_write_sm" on stock_movements;
+drop policy if exists "vt_update_sm" on stock_movements;
+drop policy if exists "vt_delete_sm" on stock_movements;
+drop policy if exists "ns_read_all_dept" on departments;
+drop policy if exists "ns_write_dept" on departments;
+drop policy if exists "ns_update_dept" on departments;
+drop policy if exists "ns_delete_dept" on departments;
+drop policy if exists "ns_read_all_pos" on positions;
+drop policy if exists "ns_write_pos" on positions;
+drop policy if exists "ns_update_pos" on positions;
+drop policy if exists "ns_delete_pos" on positions;
+drop policy if exists "ns_read_emp" on employees;
+drop policy if exists "ns_write_emp" on employees;
+drop policy if exists "ns_update_emp" on employees;
+drop policy if exists "ns_delete_emp" on employees;
+drop policy if exists "ns_read_att" on attendance;
+drop policy if exists "ns_write_att" on attendance;
+drop policy if exists "ns_update_att" on attendance;
+drop policy if exists "ns_delete_att" on attendance;
+drop policy if exists "ns_read_leave" on leave_requests;
+drop policy if exists "ns_write_leave" on leave_requests;
+drop policy if exists "ns_update_leave" on leave_requests;
+drop policy if exists "ns_delete_leave" on leave_requests;
+drop policy if exists "ns_read_payroll" on payroll;
+drop policy if exists "ns_write_payroll" on payroll;
+drop policy if exists "ns_update_payroll" on payroll;
+drop policy if exists "ns_delete_payroll" on payroll;
+drop policy if exists "tc_read_acc" on accounts;
+drop policy if exists "tc_write_acc" on accounts;
+drop policy if exists "tc_update_acc" on accounts;
+drop policy if exists "tc_delete_acc" on accounts;
+drop policy if exists "tc_read_tx" on transactions;
+drop policy if exists "tc_write_tx" on transactions;
+drop policy if exists "tc_update_tx" on transactions;
+drop policy if exists "tc_delete_tx" on transactions;
+drop policy if exists "tc_read_inv" on invoices;
+drop policy if exists "tc_write_inv" on invoices;
+drop policy if exists "tc_update_inv" on invoices;
+drop policy if exists "tc_delete_inv" on invoices;
+drop policy if exists "tc_read_invp" on invoice_payments;
+drop policy if exists "tc_write_invp" on invoice_payments;
+drop policy if exists "tc_update_invp" on invoice_payments;
+drop policy if exists "tc_delete_invp" on invoice_payments;
+drop policy if exists "tc_read_budget" on budgets;
+drop policy if exists "tc_write_budget" on budgets;
+drop policy if exists "tc_update_budget" on budgets;
+drop policy if exists "tc_delete_budget" on budgets;
+drop policy if exists "bg_read_quo" on quotations;
+drop policy if exists "bg_write_quo" on quotations;
+drop policy if exists "bg_update_quo" on quotations;
+drop policy if exists "bg_delete_quo" on quotations;
+drop policy if exists "bg_read_quoi" on quotation_items;
+drop policy if exists "bg_write_quoi" on quotation_items;
+drop policy if exists "bg_update_quoi" on quotation_items;
+drop policy if exists "bg_delete_quoi" on quotation_items;
+drop policy if exists "sx_read_bom" on bom_items;
+drop policy if exists "sx_write_bom" on bom_items;
+drop policy if exists "sx_update_bom" on bom_items;
+drop policy if exists "sx_delete_bom" on bom_items;
+drop policy if exists "sx_read_plan" on production_plans;
+drop policy if exists "sx_write_plan" on production_plans;
+drop policy if exists "sx_update_plan" on production_plans;
+drop policy if exists "sx_delete_plan" on production_plans;
+drop policy if exists "sx_read_plani" on production_plan_items;
+drop policy if exists "sx_write_plani" on production_plan_items;
+drop policy if exists "sx_update_plani" on production_plan_items;
+drop policy if exists "sx_delete_plani" on production_plan_items;
+drop policy if exists "sx_read_task" on production_tasks;
+drop policy if exists "sx_write_task" on production_tasks;
+drop policy if exists "sx_update_task" on production_tasks;
+drop policy if exists "sx_delete_task" on production_tasks;
 
 -- Helper function: current user's role
 create or replace function auth_role() returns user_role as $$

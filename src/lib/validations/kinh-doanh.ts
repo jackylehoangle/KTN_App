@@ -29,3 +29,23 @@ export const contractSchema = z.object({
   status: z.enum(['draft', 'active', 'completed', 'cancelled']),
 });
 export type ContractInput = z.infer<typeof contractSchema>;
+
+export const salesOrderSchema = z.object({
+  code: z.string().min(1, 'Bắt buộc'),
+  customer_id: z.string().uuid('Chọn khách hàng'),
+  contract_id: z.string().uuid('Chọn hợp đồng').optional().or(z.literal('')),
+  order_date: z.string().min(1, 'Bắt buộc'),
+  delivery_date: z.string().optional(),
+  status: z.enum(['pending', 'confirmed', 'delivered', 'cancelled']),
+  total_amount: z.number().min(0),
+});
+export type SalesOrderInput = z.infer<typeof salesOrderSchema>;
+
+export const salesOrderItemSchema = z.object({
+  sales_order_id: z.string().uuid('Chọn đơn hàng'),
+  product_name: z.string().min(1, 'Bắt buộc'),
+  quantity: z.number().positive('Số lượng phải > 0'),
+  unit: z.string().min(1, 'Bắt buộc'),
+  unit_price: z.number().min(0),
+});
+export type SalesOrderItemInput = z.infer<typeof salesOrderItemSchema>;

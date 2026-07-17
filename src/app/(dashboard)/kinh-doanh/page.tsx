@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -12,15 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { customerSchema, type CustomerInput } from '@/lib/validations/kinh-doanh';
+import type { CustomerInput } from '@/lib/validations/kinh-doanh';
 import { createCustomer, deleteCustomer } from '@/lib/actions/kinh-doanh';
 import type { Customer } from '@/types/database';
-
-const TABS = [
-  { title: 'Khách hàng', href: '/kinh-doanh' },
-  { title: 'Cơ hội', href: '/kinh-doanh/co-hoi' },
-  { title: 'Hợp đồng', href: '/kinh-doanh/hop-dong' },
-];
+import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
 const defaultValues: CustomerInput = {
   code: '',
@@ -35,7 +31,7 @@ const defaultValues: CustomerInput = {
 
 export default async function KinhDoanhPage() {
   const supabase = await createClient();
-  const { data: customers } = await supabase.from('customers').select('*').order('code');
+  const { data: customers, error } = await supabase.from('customers').select('*').order('code');
 
   return (
     <div className="space-y-4">
@@ -44,10 +40,11 @@ export default async function KinhDoanhPage() {
         <p className="text-sm text-muted-foreground">Danh sách khách hàng</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Thêm khách hàng"
-          schema={customerSchema}
+          schemaKey="customer"
           defaultValues={defaultValues}
           onSubmit={createCustomer}
           successMessage="Đã thêm khách hàng"

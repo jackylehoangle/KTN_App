@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { WarehouseFormDialog } from '@/components/features/vat-tu/warehouse-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { deleteWarehouse } from '@/lib/actions/vat-tu';
 import {
   Table,
@@ -12,17 +13,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Warehouse } from '@/types/database';
-
-const TABS = [
-  { title: 'Vật tư', href: '/vat-tu' },
-  { title: 'Kho', href: '/vat-tu/kho' },
-  { title: 'Nhà cung cấp', href: '/vat-tu/nha-cung-cap' },
-  { title: 'Nhập / xuất kho', href: '/vat-tu/nhap-xuat' },
-];
+import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
 export default async function KhoPage() {
   const supabase = await createClient();
-  const { data: warehouses } = await supabase.from('warehouses').select('*').order('code');
+  const { data: warehouses, error } = await supabase.from('warehouses').select('*').order('code');
 
   return (
     <div className="space-y-4">
@@ -31,6 +26,7 @@ export default async function KhoPage() {
         <p className="text-sm text-muted-foreground">Danh sách kho</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <WarehouseFormDialog />
       </div>

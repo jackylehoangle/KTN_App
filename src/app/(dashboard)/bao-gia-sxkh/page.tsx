@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,14 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, formatDate } from '@/lib/constants';
-import { quotationSchema, type QuotationInput } from '@/lib/validations/bao-gia-sxkh';
+import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
 import { createQuotation, deleteQuotation } from '@/lib/actions/bao-gia-sxkh';
 import type { Customer, QuotationStatus } from '@/types/database';
-
-const TABS = [
-  { title: 'Báo giá', href: '/bao-gia-sxkh' },
-  { title: 'Kế hoạch sản xuất', href: '/bao-gia-sxkh/ke-hoach' },
-];
+import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 
 const STATUS_LABEL: Record<QuotationStatus, string> = {
   draft: 'Nháp',
@@ -42,7 +39,7 @@ const defaultValues: QuotationInput = {
 
 export default async function BaoGiaPage() {
   const supabase = await createClient();
-  const [{ data: quotations }, { data: customers }] = await Promise.all([
+  const [{ data: quotations, error }, { data: customers }] = await Promise.all([
     supabase
       .from('quotations')
       .select('*, customers(name)')
@@ -57,10 +54,11 @@ export default async function BaoGiaPage() {
         <p className="text-sm text-muted-foreground">Báo giá gửi khách hàng</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Tạo báo giá"
-          schema={quotationSchema}
+          schemaKey="quotation"
           defaultValues={defaultValues}
           onSubmit={createQuotation}
           successMessage="Đã tạo báo giá"

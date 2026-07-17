@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -12,21 +13,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { departmentSchema, type DepartmentInput } from '@/lib/validations/nhan-su';
+import type { DepartmentInput } from '@/lib/validations/nhan-su';
 import { createDepartment, deleteDepartment } from '@/lib/actions/nhan-su';
 import type { Department } from '@/types/database';
-
-const TABS = [
-  { title: 'Nhân viên', href: '/nhan-su' },
-  { title: 'Phòng ban', href: '/nhan-su/phong-ban' },
-  { title: 'Nghỉ phép', href: '/nhan-su/nghi-phep' },
-];
+import { NHAN_SU_TABS as TABS } from '@/lib/constants';
 
 const defaultValues: DepartmentInput = { name: '' };
 
 export default async function PhongBanPage() {
   const supabase = await createClient();
-  const { data: departments } = await supabase.from('departments').select('*').order('name');
+  const { data: departments, error } = await supabase.from('departments').select('*').order('name');
 
   return (
     <div className="space-y-4">
@@ -35,10 +31,11 @@ export default async function PhongBanPage() {
         <p className="text-sm text-muted-foreground">Phòng ban</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Thêm phòng ban"
-          schema={departmentSchema}
+          schemaKey="department"
           defaultValues={defaultValues}
           onSubmit={createDepartment}
           successMessage="Đã thêm phòng ban"

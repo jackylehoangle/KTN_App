@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,15 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
-import { contractSchema, type ContractInput } from '@/lib/validations/kinh-doanh';
+import type { ContractInput } from '@/lib/validations/kinh-doanh';
 import { createContract, deleteContract } from '@/lib/actions/kinh-doanh';
 import type { Customer, ContractStatus } from '@/types/database';
-
-const TABS = [
-  { title: 'Khách hàng', href: '/kinh-doanh' },
-  { title: 'Cơ hội', href: '/kinh-doanh/co-hoi' },
-  { title: 'Hợp đồng', href: '/kinh-doanh/hop-dong' },
-];
+import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
 const STATUS_LABEL: Record<ContractStatus, string> = {
   draft: 'Nháp',
@@ -41,7 +37,7 @@ const defaultValues: ContractInput = {
 
 export default async function HopDongPage() {
   const supabase = await createClient();
-  const [{ data: contracts }, { data: customers }] = await Promise.all([
+  const [{ data: contracts, error }, { data: customers }] = await Promise.all([
     supabase.from('contracts').select('*, customers(name)').order('created_at', { ascending: false }),
     supabase.from('customers').select('*').order('name'),
   ]);
@@ -53,10 +49,11 @@ export default async function HopDongPage() {
         <p className="text-sm text-muted-foreground">Hợp đồng</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Thêm hợp đồng"
-          schema={contractSchema}
+          schemaKey="contract"
           defaultValues={defaultValues}
           onSubmit={createContract}
           successMessage="Đã thêm hợp đồng"

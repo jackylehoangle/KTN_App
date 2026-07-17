@@ -19,3 +19,41 @@ export const productionPlanSchema = z.object({
   status: z.enum(['planning', 'in_progress', 'completed', 'cancelled']),
 });
 export type ProductionPlanInput = z.infer<typeof productionPlanSchema>;
+
+export const quotationItemSchema = z.object({
+  quotation_id: z.string().uuid('Chọn báo giá'),
+  product_name: z.string().min(1, 'Bắt buộc'),
+  description: z.string().optional(),
+  quantity: z.number().positive('Số lượng phải > 0'),
+  unit: z.string().min(1, 'Bắt buộc'),
+  unit_price: z.number().min(0),
+  discount_pct: z.number().min(0).max(100),
+});
+export type QuotationItemInput = z.infer<typeof quotationItemSchema>;
+
+export const bomItemSchema = z.object({
+  product_name: z.string().min(1, 'Bắt buộc'),
+  material_id: z.string().uuid('Chọn vật tư'),
+  quantity_required: z.number().positive('Số lượng phải > 0'),
+  unit: z.string().min(1, 'Bắt buộc'),
+});
+export type BomItemInput = z.infer<typeof bomItemSchema>;
+
+export const productionPlanItemSchema = z.object({
+  production_plan_id: z.string().uuid('Chọn kế hoạch'),
+  product_name: z.string().min(1, 'Bắt buộc'),
+  quantity: z.number().positive('Số lượng phải > 0'),
+  unit: z.string().min(1, 'Bắt buộc'),
+});
+export type ProductionPlanItemInput = z.infer<typeof productionPlanItemSchema>;
+
+export const productionTaskSchema = z.object({
+  production_plan_id: z.string().uuid('Chọn kế hoạch'),
+  task_name: z.string().min(1, 'Bắt buộc'),
+  assigned_to: z.string().uuid('Chọn người phụ trách').optional().or(z.literal('')),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  status: z.enum(['pending', 'in_progress', 'done']),
+  progress_pct: z.number().min(0).max(100),
+});
+export type ProductionTaskInput = z.infer<typeof productionTaskSchema>;

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,15 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, formatDate } from '@/lib/constants';
-import { invoiceSchema, type InvoiceInput } from '@/lib/validations/tai-chinh';
+import type { InvoiceInput } from '@/lib/validations/tai-chinh';
 import { createInvoice, deleteInvoice } from '@/lib/actions/tai-chinh';
 import type { Customer, InvoiceStatus } from '@/types/database';
-
-const TABS = [
-  { title: 'Thu chi', href: '/tai-chinh' },
-  { title: 'Tài khoản', href: '/tai-chinh/tai-khoan' },
-  { title: 'Hoá đơn', href: '/tai-chinh/hoa-don' },
-];
+import { TAI_CHINH_TABS as TABS } from '@/lib/constants';
 
 const STATUS_LABEL: Record<InvoiceStatus, string> = {
   unpaid: 'Chưa thanh toán',
@@ -43,7 +39,7 @@ const defaultValues: InvoiceInput = {
 
 export default async function HoaDonPage() {
   const supabase = await createClient();
-  const [{ data: invoices }, { data: customers }] = await Promise.all([
+  const [{ data: invoices, error }, { data: customers }] = await Promise.all([
     supabase
       .from('invoices')
       .select('*, customers(name)')
@@ -58,10 +54,11 @@ export default async function HoaDonPage() {
         <p className="text-sm text-muted-foreground">Hoá đơn & công nợ</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Tạo hoá đơn"
-          schema={invoiceSchema}
+          schemaKey="invoice"
           defaultValues={defaultValues}
           onSubmit={createInvoice}
           successMessage="Đã tạo hoá đơn"

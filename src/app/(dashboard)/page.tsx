@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Briefcase, Package, Users, Wallet, FileSpreadsheet } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MODULES, ROLE_LABELS } from '@/lib/constants';
-import { getCurrentProfile } from '@/lib/supabase/queries';
+import { getCurrentProfile, getDashboardStats } from '@/lib/supabase/queries';
 
 const MODULE_ICONS: Record<string, React.ElementType> = {
   '/kinh-doanh': Briefcase,
@@ -23,6 +23,7 @@ const MODULE_DESCRIPTIONS: Record<string, string> = {
 export default async function DashboardHome() {
   const profile = await getCurrentProfile();
   const visibleModules = profile ? MODULES.filter((m) => m.roles.includes(profile.role)) : [];
+  const stats = visibleModules.length > 0 ? await getDashboardStats() : {};
 
   return (
     <div className="space-y-6">
@@ -38,6 +39,7 @@ export default async function DashboardHome() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {visibleModules.map((mod) => {
           const Icon = MODULE_ICONS[mod.href];
+          const moduleStats = stats[mod.href] ?? [];
           return (
             <Link key={mod.href} href={mod.href}>
               <Card className="h-full transition-shadow hover:shadow-md">
@@ -48,7 +50,18 @@ export default async function DashboardHome() {
                   <CardTitle className="text-base">{mod.title}</CardTitle>
                   <CardDescription>{MODULE_DESCRIPTIONS[mod.href]}</CardDescription>
                 </CardHeader>
-                <CardContent />
+                <CardContent>
+                  {moduleStats.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 border-t pt-3">
+                      {moduleStats.map((s) => (
+                        <div key={s.label}>
+                          <div className="text-lg font-semibold text-navy">{s.value}</div>
+                          <div className="text-xs text-muted-foreground">{s.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
               </Card>
             </Link>
           );

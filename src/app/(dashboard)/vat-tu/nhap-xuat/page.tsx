@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { StockMovementFormDialog } from '@/components/features/vat-tu/stock-movement-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { deleteStockMovement } from '@/lib/actions/vat-tu';
 import { formatDate } from '@/lib/constants';
 import {
@@ -14,13 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { Material, Warehouse } from '@/types/database';
-
-const TABS = [
-  { title: 'Vật tư', href: '/vat-tu' },
-  { title: 'Kho', href: '/vat-tu/kho' },
-  { title: 'Nhà cung cấp', href: '/vat-tu/nha-cung-cap' },
-  { title: 'Nhập / xuất kho', href: '/vat-tu/nhap-xuat' },
-];
+import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
 const TYPE_LABEL: Record<string, string> = {
   in: 'Nhập',
@@ -31,7 +26,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 export default async function NhapXuatPage() {
   const supabase = await createClient();
-  const [{ data: movements }, { data: materials }, { data: warehouses }] = await Promise.all([
+  const [{ data: movements, error }, { data: materials }, { data: warehouses }] = await Promise.all([
     supabase
       .from('stock_movements')
       .select('*, materials(code,name), warehouses(name)')
@@ -48,6 +43,7 @@ export default async function NhapXuatPage() {
         <p className="text-sm text-muted-foreground">Lịch sử nhập / xuất kho</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <StockMovementFormDialog
           materials={(materials as Material[]) ?? []}

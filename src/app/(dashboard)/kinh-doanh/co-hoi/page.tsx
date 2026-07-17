@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,15 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
-import { opportunitySchema, type OpportunityInput } from '@/lib/validations/kinh-doanh';
+import type { OpportunityInput } from '@/lib/validations/kinh-doanh';
 import { createOpportunity, deleteOpportunity } from '@/lib/actions/kinh-doanh';
 import type { Customer, OpportunityStage } from '@/types/database';
-
-const TABS = [
-  { title: 'Khách hàng', href: '/kinh-doanh' },
-  { title: 'Cơ hội', href: '/kinh-doanh/co-hoi' },
-  { title: 'Hợp đồng', href: '/kinh-doanh/hop-dong' },
-];
+import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
 const STAGE_LABEL: Record<OpportunityStage, string> = {
   new: 'Mới',
@@ -43,7 +39,7 @@ const defaultValues: OpportunityInput = {
 
 export default async function CoHoiPage() {
   const supabase = await createClient();
-  const [{ data: opportunities }, { data: customers }] = await Promise.all([
+  const [{ data: opportunities, error }, { data: customers }] = await Promise.all([
     supabase.from('opportunities').select('*, customers(name)').order('created_at', { ascending: false }),
     supabase.from('customers').select('*').order('name'),
   ]);
@@ -55,10 +51,11 @@ export default async function CoHoiPage() {
         <p className="text-sm text-muted-foreground">Cơ hội bán hàng</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Thêm cơ hội"
-          schema={opportunitySchema}
+          schemaKey="opportunity"
           defaultValues={defaultValues}
           onSubmit={createOpportunity}
           successMessage="Đã thêm cơ hội"

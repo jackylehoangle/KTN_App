@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,14 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/constants';
-import { productionPlanSchema, type ProductionPlanInput } from '@/lib/validations/bao-gia-sxkh';
+import type { ProductionPlanInput } from '@/lib/validations/bao-gia-sxkh';
 import { createProductionPlan, deleteProductionPlan } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlanStatus } from '@/types/database';
-
-const TABS = [
-  { title: 'Báo giá', href: '/bao-gia-sxkh' },
-  { title: 'Kế hoạch sản xuất', href: '/bao-gia-sxkh/ke-hoach' },
-];
+import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 
 const STATUS_LABEL: Record<ProductionPlanStatus, string> = {
   planning: 'Lên kế hoạch',
@@ -40,7 +37,7 @@ const defaultValues: ProductionPlanInput = {
 
 export default async function KeHoachPage() {
   const supabase = await createClient();
-  const { data: plans } = await supabase
+  const { data: plans, error } = await supabase
     .from('production_plans')
     .select('*')
     .order('created_at', { ascending: false });
@@ -52,10 +49,11 @@ export default async function KeHoachPage() {
         <p className="text-sm text-muted-foreground">Kế hoạch sản xuất</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Tạo kế hoạch sản xuất"
-          schema={productionPlanSchema}
+          schemaKey="productionPlan"
           defaultValues={defaultValues}
           onSubmit={createProductionPlan}
           successMessage="Đã tạo kế hoạch sản xuất"

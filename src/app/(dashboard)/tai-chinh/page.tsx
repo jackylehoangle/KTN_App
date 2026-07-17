@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,15 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, formatDate } from '@/lib/constants';
-import { transactionSchema, type TransactionInput } from '@/lib/validations/tai-chinh';
+import type { TransactionInput } from '@/lib/validations/tai-chinh';
 import { createTransaction, deleteTransaction } from '@/lib/actions/tai-chinh';
 import type { Account, TransactionType } from '@/types/database';
-
-const TABS = [
-  { title: 'Thu chi', href: '/tai-chinh' },
-  { title: 'Tài khoản', href: '/tai-chinh/tai-khoan' },
-  { title: 'Hoá đơn', href: '/tai-chinh/hoa-don' },
-];
+import { TAI_CHINH_TABS as TABS } from '@/lib/constants';
 
 const TYPE_LABEL: Record<TransactionType, string> = {
   income: 'Thu',
@@ -42,7 +38,7 @@ const defaultValues: TransactionInput = {
 
 export default async function TaiChinhPage() {
   const supabase = await createClient();
-  const [{ data: transactions }, { data: accounts }] = await Promise.all([
+  const [{ data: transactions, error }, { data: accounts }] = await Promise.all([
     supabase
       .from('transactions')
       .select('*, accounts(name)')
@@ -58,10 +54,11 @@ export default async function TaiChinhPage() {
         <p className="text-sm text-muted-foreground">Sổ thu chi</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Tạo phiếu thu / chi"
-          schema={transactionSchema}
+          schemaKey="transaction"
           defaultValues={defaultValues}
           onSubmit={createTransaction}
           successMessage="Đã tạo phiếu thu/chi"

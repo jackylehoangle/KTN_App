@@ -10,7 +10,6 @@ import {
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import type { ZodType } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,6 +36,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { SCHEMA_REGISTRY, type SchemaKey } from '@/lib/validations/registry';
 
 export type EntityField<T extends FieldValues> = {
   name: Path<T>;
@@ -48,7 +48,9 @@ export type EntityField<T extends FieldValues> = {
 };
 
 interface EntityFormDialogProps<T extends FieldValues> {
-  schema: ZodType<T>;
+  // A registry key rather than the zod schema itself: Next.js can't pass class
+  // instances like a ZodType from a Server Component to this Client Component.
+  schemaKey: SchemaKey;
   defaultValues: DefaultValues<T>;
   fields: EntityField<T>[];
   onSubmit: (values: T) => Promise<void>;
@@ -58,7 +60,7 @@ interface EntityFormDialogProps<T extends FieldValues> {
 }
 
 export function EntityFormDialog<T extends FieldValues>({
-  schema,
+  schemaKey,
   defaultValues,
   fields,
   onSubmit,
@@ -68,7 +70,7 @@ export function EntityFormDialog<T extends FieldValues>({
 }: EntityFormDialogProps<T>) {
   const [open, setOpen] = useState(false);
   const form = useForm<T>({
-    resolver: zodResolver(schema as never) as unknown as Resolver<T>,
+    resolver: zodResolver(SCHEMA_REGISTRY[schemaKey] as never) as unknown as Resolver<T>,
     defaultValues,
   });
 

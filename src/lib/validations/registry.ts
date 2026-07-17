@@ -1,0 +1,69 @@
+import {
+  customerSchema,
+  opportunitySchema,
+  contractSchema,
+  salesOrderSchema,
+  salesOrderItemSchema,
+} from '@/lib/validations/kinh-doanh';
+import {
+  materialCategorySchema,
+  purchaseOrderSchema,
+  purchaseOrderItemSchema,
+} from '@/lib/validations/vat-tu';
+import {
+  departmentSchema,
+  employeeSchema,
+  leaveRequestSchema,
+  positionSchema,
+  attendanceSchema,
+  payrollSchema,
+} from '@/lib/validations/nhan-su';
+import {
+  accountSchema,
+  transactionSchema,
+  invoiceSchema,
+  invoicePaymentSchema,
+  budgetSchema,
+} from '@/lib/validations/tai-chinh';
+import {
+  quotationSchema,
+  productionPlanSchema,
+  quotationItemSchema,
+  bomItemSchema,
+  productionPlanItemSchema,
+  productionTaskSchema,
+} from '@/lib/validations/bao-gia-sxkh';
+
+// Central registry so EntityFormDialog (a Client Component) can look up a zod
+// schema by key instead of receiving the schema object itself as a prop —
+// Next.js cannot serialize class instances like ZodType across the
+// Server -> Client Component boundary.
+export const SCHEMA_REGISTRY = {
+  customer: customerSchema,
+  opportunity: opportunitySchema,
+  contract: contractSchema,
+  salesOrder: salesOrderSchema,
+  salesOrderItem: salesOrderItemSchema,
+  materialCategory: materialCategorySchema,
+  purchaseOrder: purchaseOrderSchema,
+  purchaseOrderItem: purchaseOrderItemSchema,
+  department: departmentSchema,
+  employee: employeeSchema,
+  leaveRequest: leaveRequestSchema,
+  position: positionSchema,
+  attendance: attendanceSchema,
+  payroll: payrollSchema,
+  account: accountSchema,
+  transaction: transactionSchema,
+  invoice: invoiceSchema,
+  invoicePayment: invoicePaymentSchema,
+  budget: budgetSchema,
+  quotation: quotationSchema,
+  productionPlan: productionPlanSchema,
+  quotationItem: quotationItemSchema,
+  bomItem: bomItemSchema,
+  productionPlanItem: productionPlanItemSchema,
+  productionTask: productionTaskSchema,
+} as const;
+
+export type SchemaKey = keyof typeof SCHEMA_REGISTRY;

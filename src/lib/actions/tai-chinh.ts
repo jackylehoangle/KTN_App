@@ -6,9 +6,13 @@ import {
   accountSchema,
   transactionSchema,
   invoiceSchema,
+  invoicePaymentSchema,
+  budgetSchema,
   type AccountInput,
   type TransactionInput,
   type InvoiceInput,
+  type InvoicePaymentInput,
+  type BudgetInput,
 } from '@/lib/validations/tai-chinh';
 
 export async function createAccount(input: AccountInput) {
@@ -59,4 +63,38 @@ export async function deleteInvoice(id: string) {
   const { error } = await supabase.from('invoices').delete().eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/tai-chinh/hoa-don');
+}
+
+export async function createInvoicePayment(input: InvoicePaymentInput) {
+  const data = invoicePaymentSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('invoice_payments')
+    .insert({ ...data, account_id: data.account_id || null });
+  if (error) throw new Error(error.message);
+  revalidatePath('/tai-chinh/thanh-toan');
+}
+
+export async function deleteInvoicePayment(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('invoice_payments').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/tai-chinh/thanh-toan');
+}
+
+export async function createBudget(input: BudgetInput) {
+  const data = budgetSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('budgets')
+    .insert({ ...data, department_id: data.department_id || null });
+  if (error) throw new Error(error.message);
+  revalidatePath('/tai-chinh/ngan-sach');
+}
+
+export async function deleteBudget(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('budgets').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/tai-chinh/ngan-sach');
 }

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { LeaveActionButtons } from '@/components/features/nhan-su/leave-action-buttons';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,15 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/constants';
-import { leaveRequestSchema, type LeaveRequestInput } from '@/lib/validations/nhan-su';
+import type { LeaveRequestInput } from '@/lib/validations/nhan-su';
 import { createLeaveRequest } from '@/lib/actions/nhan-su';
 import type { Employee, LeaveStatus, LeaveType } from '@/types/database';
-
-const TABS = [
-  { title: 'Nhân viên', href: '/nhan-su' },
-  { title: 'Phòng ban', href: '/nhan-su/phong-ban' },
-  { title: 'Nghỉ phép', href: '/nhan-su/nghi-phep' },
-];
+import { NHAN_SU_TABS as TABS } from '@/lib/constants';
 
 const TYPE_LABEL: Record<LeaveType, string> = {
   annual: 'Phép năm',
@@ -48,7 +44,7 @@ const defaultValues: LeaveRequestInput = {
 
 export default async function NghiPhepPage() {
   const supabase = await createClient();
-  const [{ data: leaves }, { data: employees }] = await Promise.all([
+  const [{ data: leaves, error }, { data: employees }] = await Promise.all([
     supabase
       .from('leave_requests')
       .select('*, employees(full_name)')
@@ -63,10 +59,11 @@ export default async function NghiPhepPage() {
         <p className="text-sm text-muted-foreground">Đơn nghỉ phép</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Tạo đơn nghỉ phép"
-          schema={leaveRequestSchema}
+          schemaKey="leaveRequest"
           defaultValues={defaultValues}
           onSubmit={createLeaveRequest}
           successMessage="Đã tạo đơn nghỉ phép"

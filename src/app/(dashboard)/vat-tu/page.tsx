@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { MaterialFormDialog } from '@/components/features/vat-tu/material-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { deleteMaterial } from '@/lib/actions/vat-tu';
 import { formatVND } from '@/lib/constants';
 import {
@@ -14,17 +15,11 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { Material, StockBalance } from '@/types/database';
-
-const TABS = [
-  { title: 'Vật tư', href: '/vat-tu' },
-  { title: 'Kho', href: '/vat-tu/kho' },
-  { title: 'Nhà cung cấp', href: '/vat-tu/nha-cung-cap' },
-  { title: 'Nhập / xuất kho', href: '/vat-tu/nhap-xuat' },
-];
+import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
 export default async function VatTuPage() {
   const supabase = await createClient();
-  const [{ data: materials }, { data: balances }] = await Promise.all([
+  const [{ data: materials, error }, { data: balances }] = await Promise.all([
     supabase.from('materials').select('*').order('code'),
     supabase.from('stock_balances').select('*'),
   ]);
@@ -41,6 +36,7 @@ export default async function VatTuPage() {
         <p className="text-sm text-muted-foreground">Danh mục vật tư và tồn kho hiện tại</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <MaterialFormDialog />
       </div>

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,15 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
-import { employeeSchema, type EmployeeInput } from '@/lib/validations/nhan-su';
+import type { EmployeeInput } from '@/lib/validations/nhan-su';
 import { createEmployee, deleteEmployee } from '@/lib/actions/nhan-su';
 import type { Department, EmployeeStatus } from '@/types/database';
-
-const TABS = [
-  { title: 'Nhân viên', href: '/nhan-su' },
-  { title: 'Phòng ban', href: '/nhan-su/phong-ban' },
-  { title: 'Nghỉ phép', href: '/nhan-su/nghi-phep' },
-];
+import { NHAN_SU_TABS as TABS } from '@/lib/constants';
 
 const STATUS_LABEL: Record<EmployeeStatus, string> = {
   active: 'Đang làm việc',
@@ -44,7 +40,7 @@ const defaultValues: EmployeeInput = {
 
 export default async function NhanSuPage() {
   const supabase = await createClient();
-  const [{ data: employees }, { data: departments }] = await Promise.all([
+  const [{ data: employees, error }, { data: departments }] = await Promise.all([
     supabase.from('employees').select('*, departments(name)').order('code'),
     supabase.from('departments').select('*').order('name'),
   ]);
@@ -56,10 +52,11 @@ export default async function NhanSuPage() {
         <p className="text-sm text-muted-foreground">Danh sách nhân viên</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Thêm nhân viên"
-          schema={employeeSchema}
+          schemaKey="employee"
           defaultValues={defaultValues}
           onSubmit={createEmployee}
           successMessage="Đã thêm nhân viên"

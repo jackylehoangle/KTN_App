@@ -30,3 +30,21 @@ export const invoiceSchema = z.object({
   status: z.enum(['unpaid', 'partial', 'paid', 'overdue']),
 });
 export type InvoiceInput = z.infer<typeof invoiceSchema>;
+
+export const invoicePaymentSchema = z.object({
+  invoice_id: z.string().uuid('Chọn hoá đơn'),
+  account_id: z.string().uuid('Chọn tài khoản').optional().or(z.literal('')),
+  amount: z.number().positive('Số tiền phải > 0'),
+  payment_date: z.string().min(1, 'Bắt buộc'),
+  method: z.string().optional(),
+  note: z.string().optional(),
+});
+export type InvoicePaymentInput = z.infer<typeof invoicePaymentSchema>;
+
+export const budgetSchema = z.object({
+  department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')),
+  category: z.string().min(1, 'Bắt buộc'),
+  period: z.string().min(1, 'Bắt buộc (VD: 2026 hoặc 2026-07)'),
+  amount: z.number().min(0),
+});
+export type BudgetInput = z.infer<typeof budgetSchema>;

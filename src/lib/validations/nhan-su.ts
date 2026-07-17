@@ -26,3 +26,32 @@ export const leaveRequestSchema = z.object({
   reason: z.string().optional(),
 });
 export type LeaveRequestInput = z.infer<typeof leaveRequestSchema>;
+
+export const positionSchema = z.object({
+  name: z.string().min(2, 'Tối thiểu 2 ký tự'),
+  department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')),
+});
+export type PositionInput = z.infer<typeof positionSchema>;
+
+export const attendanceSchema = z.object({
+  employee_id: z.string().uuid('Chọn nhân viên'),
+  date: z.string().min(1, 'Bắt buộc'),
+  check_in: z.string().optional(),
+  check_out: z.string().optional(),
+  status: z.enum(['present', 'absent', 'leave', 'late']),
+  note: z.string().optional(),
+});
+export type AttendanceInput = z.infer<typeof attendanceSchema>;
+
+export const payrollSchema = z.object({
+  employee_id: z.string().uuid('Chọn nhân viên'),
+  period: z.string().min(1, 'Bắt buộc (VD: 2026-07)'),
+  base_salary: z.number().min(0),
+  allowance: z.number().min(0),
+  bonus: z.number().min(0),
+  deductions: z.number().min(0),
+  insurance: z.number().min(0),
+  tax: z.number().min(0),
+  status: z.enum(['draft', 'paid']),
+});
+export type PayrollInput = z.infer<typeof payrollSchema>;

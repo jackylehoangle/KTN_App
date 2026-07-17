@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -13,15 +14,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
-import { accountSchema, type AccountInput } from '@/lib/validations/tai-chinh';
+import type { AccountInput } from '@/lib/validations/tai-chinh';
 import { createAccount, deleteAccount } from '@/lib/actions/tai-chinh';
 import type { Account } from '@/types/database';
-
-const TABS = [
-  { title: 'Thu chi', href: '/tai-chinh' },
-  { title: 'Tài khoản', href: '/tai-chinh/tai-khoan' },
-  { title: 'Hoá đơn', href: '/tai-chinh/hoa-don' },
-];
+import { TAI_CHINH_TABS as TABS } from '@/lib/constants';
 
 const defaultValues: AccountInput = {
   name: '',
@@ -33,7 +29,7 @@ const defaultValues: AccountInput = {
 
 export default async function TaiKhoanPage() {
   const supabase = await createClient();
-  const { data: accounts } = await supabase.from('accounts').select('*').order('name');
+  const { data: accounts, error } = await supabase.from('accounts').select('*').order('name');
 
   return (
     <div className="space-y-4">
@@ -42,10 +38,11 @@ export default async function TaiKhoanPage() {
         <p className="text-sm text-muted-foreground">Tài khoản thu / chi</p>
       </div>
       <ModuleTabs items={TABS} />
+      <ErrorAlert error={error} />
       <div className="flex justify-end">
         <EntityFormDialog
           title="Thêm tài khoản"
-          schema={accountSchema}
+          schemaKey="account"
           defaultValues={defaultValues}
           onSubmit={createAccount}
           successMessage="Đã thêm tài khoản"
