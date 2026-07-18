@@ -58,8 +58,14 @@ export default async function TaiChinhPage() {
     { name: 'transaction_date', label: 'Ngày', type: 'date', half: true },
     { name: 'category', label: 'Danh mục', half: true },
     { name: 'description', label: 'Diễn giải', type: 'textarea' },
-    { name: 'receipt_url', label: 'Ảnh hoá đơn / biên lai', type: 'image' },
+    {
+      name: 'receipt_url',
+      label: 'Ảnh hoá đơn / biên lai',
+      type: 'image',
+      ocrMap: { amount: 'amount', date: 'transaction_date', description: 'description' },
+    },
   ];
+  const createFields = fields.filter((f) => f.name !== 'code');
 
   return (
     <div className="space-y-4">
@@ -82,7 +88,7 @@ export default async function TaiChinhPage() {
               Tạo phiếu thu / chi
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const materialSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   unit: z.string().min(1, 'Bắt buộc'),
   spec: z.string().optional(),
@@ -11,14 +11,14 @@ export const materialSchema = z.object({
 export type MaterialInput = z.infer<typeof materialSchema>;
 
 export const warehouseSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   address: z.string().optional(),
 });
 export type WarehouseInput = z.infer<typeof warehouseSchema>;
 
 export const supplierSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   tax_code: z.string().optional(),
   address: z.string().optional(),
@@ -29,7 +29,7 @@ export const supplierSchema = z.object({
 export type SupplierInput = z.infer<typeof supplierSchema>;
 
 export const stockMovementSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   material_id: z.string().uuid('Chọn vật tư'),
   warehouse_id: z.string().uuid('Chọn kho'),
   movement_type: z.enum(['in', 'out', 'adjust']),
@@ -46,7 +46,7 @@ export const materialCategorySchema = z.object({
 export type MaterialCategoryInput = z.infer<typeof materialCategorySchema>;
 
 export const purchaseOrderSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   supplier_id: z.string().uuid('Chọn nhà cung cấp'),
   order_date: z.string().min(1, 'Bắt buộc'),
   expected_date: z.string().optional(),

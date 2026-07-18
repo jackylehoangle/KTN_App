@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { generateNextCode, generateCodeSequence } from '@/lib/generate-code';
 import {
   customerSchema,
   opportunitySchema,
@@ -18,7 +19,20 @@ import {
 export async function createCustomer(input: CustomerInput) {
   const data = customerSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('customers').insert(data);
+  const code = await generateNextCode(supabase, 'customers', 'KH', 3);
+  const { error } = await supabase.from('customers').insert({ ...data, code });
+  if (error) throw new Error(error.message);
+  revalidatePath('/kinh-doanh');
+}
+
+export async function bulkCreateCustomers(inputs: CustomerInput[]) {
+  if (inputs.length === 0) return;
+  const parsed = inputs.map((input) => customerSchema.parse(input));
+  const supabase = await createClient();
+  const codes = await generateCodeSequence(supabase, 'customers', 'KH', 3, parsed.length);
+  const { error } = await supabase
+    .from('customers')
+    .insert(parsed.map((data, i) => ({ ...data, code: codes[i] })));
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh');
 }
@@ -41,7 +55,8 @@ export async function deleteCustomer(id: string) {
 export async function createOpportunity(input: OpportunityInput) {
   const data = opportunitySchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('opportunities').insert(data);
+  const code = await generateNextCode(supabase, 'opportunities', 'CH', 3);
+  const { error } = await supabase.from('opportunities').insert({ ...data, code });
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh/co-hoi');
 }
@@ -64,7 +79,8 @@ export async function deleteOpportunity(id: string) {
 export async function createContract(input: ContractInput) {
   const data = contractSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('contracts').insert(data);
+  const code = await generateNextCode(supabase, 'contracts', 'HD', 3);
+  const { error } = await supabase.from('contracts').insert({ ...data, code });
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh/hop-dong');
 }
@@ -87,9 +103,10 @@ export async function deleteContract(id: string) {
 export async function createSalesOrder(input: SalesOrderInput) {
   const data = salesOrderSchema.parse(input);
   const supabase = await createClient();
+  const code = await generateNextCode(supabase, 'sales_orders', 'DH', 4);
   const { error } = await supabase
     .from('sales_orders')
-    .insert({ ...data, contract_id: data.contract_id || null });
+    .insert({ ...data, code, contract_id: data.contract_id || null });
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh/don-hang');
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { generateNextCode } from '@/lib/generate-code';
 import {
   quotationSchema,
   productionPlanSchema,
@@ -20,7 +21,8 @@ import {
 export async function createQuotation(input: QuotationInput) {
   const data = quotationSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('quotations').insert(data);
+  const code = await generateNextCode(supabase, 'quotations', 'BG', 4);
+  const { error } = await supabase.from('quotations').insert({ ...data, code });
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh');
 }
@@ -43,7 +45,8 @@ export async function deleteQuotation(id: string) {
 export async function createProductionPlan(input: ProductionPlanInput) {
   const data = productionPlanSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('production_plans').insert(data);
+  const code = await generateNextCode(supabase, 'production_plans', 'SX', 4);
+  const { error } = await supabase.from('production_plans').insert({ ...data, code });
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh/ke-hoach');
 }
@@ -67,6 +70,15 @@ export async function createQuotationItem(input: QuotationItemInput) {
   const data = quotationItemSchema.parse(input);
   const supabase = await createClient();
   const { error } = await supabase.from('quotation_items').insert(data);
+  if (error) throw new Error(error.message);
+  revalidatePath('/bao-gia-sxkh/chi-tiet-bao-gia');
+}
+
+export async function bulkCreateQuotationItems(inputs: QuotationItemInput[]) {
+  if (inputs.length === 0) return;
+  const parsed = inputs.map((input) => quotationItemSchema.parse(input));
+  const supabase = await createClient();
+  const { error } = await supabase.from('quotation_items').insert(parsed);
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh/chi-tiet-bao-gia');
 }

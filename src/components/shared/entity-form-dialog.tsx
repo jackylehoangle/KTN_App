@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { Loader2, Sparkles } from 'lucide-react';
 import {
   useForm,
   type DefaultValues,
@@ -46,7 +47,48 @@ export type EntityField<T extends FieldValues> = {
   type?: 'text' | 'number' | 'email' | 'textarea' | 'select' | 'date' | 'image';
   options?: { label: string; value: string }[];
   half?: boolean; // render in a 2-col grid alongside the next `half` field
+  // For type "image": after AI reads the uploaded receipt photo, auto-fill these sibling fields.
+  ocrMap?: { amount?: Path<T>; date?: Path<T>; description?: Path<T> };
+  // For type "textarea": shows a "Gợi ý AI" button that generates this field's content
+  // from another field's current value (e.g. write a product description from its name).
+  aiAssist?: { sourceField: Path<T>; generate: (sourceValue: string) => Promise<string> };
 };
+
+function AiAssistButton({
+  getSourceValue,
+  generate,
+  onGenerated,
+}: {
+  getSourceValue: () => string;
+  generate: (sourceValue: string) => Promise<string>;
+  onGenerated: (text: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="h-6 gap-1 px-2 text-xs text-muted-foreground"
+      disabled={loading}
+      onClick={async () => {
+        setLoading(true);
+        try {
+          const text = await generate(getSourceValue());
+          onGenerated(text);
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+        } finally {
+          setLoading(false);
+        }
+      }}
+    >
+      {loading ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />}
+      Gợi ý AI
+    </Button>
+  );
+}
 
 interface EntityFormDialogProps<T extends FieldValues> {
   // A registry key rather than the zod schema itself: Next.js can't pass class
@@ -132,10 +174,37 @@ export function EntityFormDialog<T extends FieldValues>({
                     name={f.name}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{f.label}</FormLabel>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>{f.label}</FormLabel>
+                          {f.aiAssist && (
+                            <AiAssistButton
+                              getSourceValue={() => (form.getValues(f.aiAssist!.sourceField) as string) ?? ''}
+                              generate={f.aiAssist.generate}
+                              onGenerated={(text) => field.onChange(text)}
+                            />
+                          )}
+                        </div>
                         <FormControl>
                           {f.type === 'image' ? (
-                            <ImageUploadField value={field.value} onChange={field.onChange} />
+                            <ImageUploadField
+                              value={field.value}
+                              onChange={field.onChange}
+                              onExtracted={
+                                f.ocrMap
+                                  ? (extracted) => {
+                                      if (f.ocrMap?.amount && extracted.amount != null) {
+                                        form.setValue(f.ocrMap.amount, extracted.amount as never);
+                                      }
+                                      if (f.ocrMap?.date && extracted.date) {
+                                        form.setValue(f.ocrMap.date, extracted.date as never);
+                                      }
+                                      if (f.ocrMap?.description && extracted.description) {
+                                        form.setValue(f.ocrMap.description, extracted.description as never);
+                                      }
+                                    }
+                                  : undefined
+                              }
+                            />
                           ) : f.type === 'textarea' ? (
                             <Textarea placeholder={f.placeholder} {...field} value={field.value ?? ''} />
                           ) : f.type === 'select' ? (

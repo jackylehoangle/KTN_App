@@ -221,3 +221,47 @@ export async function getReportData(): Promise<ReportData> {
 
   return { revenueExpense, pipeline, lowStock, headcount };
 }
+
+// Compact text summary of business data, used as grounding context for the AI
+// chat assistant so it answers from real numbers instead of guessing.
+export async function getAssistantContext(): Promise<string> {
+  const [stats, report] = await Promise.all([getDashboardStats(), getReportData()]);
+
+  const lines: string[] = [];
+  for (const [href, moduleStats] of Object.entries(stats)) {
+    const label = MODULES.find((m) => m.href === href)?.title ?? href;
+    lines.push(`${label}: ${moduleStats.map((s) => `${s.label} = ${s.value}`).join(', ')}`);
+  }
+
+  if (report.revenueExpense.length > 0) {
+    lines.push(
+      'Thu/chi theo tháng: ' +
+        report.revenueExpense
+          .map((r) => `${r.month} thu ${formatVND(r.income)} chi ${formatVND(r.expense)}`)
+          .join('; ')
+    );
+  }
+  if (report.pipeline.length > 0) {
+    lines.push(
+      'Pipeline bán hàng: ' +
+        report.pipeline.map((p) => `${p.stage}: ${p.count} cơ hội, giá trị ${formatVND(p.value)}`).join('; ')
+    );
+  }
+  if (report.lowStock.length > 0) {
+    lines.push(
+      'Vật tư dưới mức tồn tối thiểu: ' +
+        report.lowStock
+          .slice(0, 10)
+          .map((m) => `${m.name} (còn ${m.onHand}, tối thiểu ${m.minStock})`)
+          .join('; ')
+    );
+  }
+  if (report.headcount.length > 0) {
+    lines.push(
+      'Nhân sự theo phòng ban: ' +
+        report.headcount.map((h) => `${h.department}: ${h.active} đang làm việc`).join('; ')
+    );
+  }
+
+  return lines.join('\n');
+}

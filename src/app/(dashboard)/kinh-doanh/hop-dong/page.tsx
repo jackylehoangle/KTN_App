@@ -61,6 +61,7 @@ export default async function HopDongPage() {
     },
     { name: 'value', label: 'Giá trị (VND)', type: 'number', half: true },
   ];
+  const createFields = fields.filter((f) => f.name !== 'code');
 
   return (
     <div className="space-y-4">
@@ -83,7 +84,7 @@ export default async function HopDongPage() {
               Thêm hợp đồng
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       <div className="rounded-lg border">

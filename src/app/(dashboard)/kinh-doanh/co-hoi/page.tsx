@@ -63,6 +63,7 @@ export default async function CoHoiPage() {
     },
     { name: 'value', label: 'Giá trị dự kiến (VND)', type: 'number', half: true },
   ];
+  const createFields = fields.filter((f) => f.name !== 'code');
 
   return (
     <div className="space-y-4">
@@ -85,7 +86,7 @@ export default async function CoHoiPage() {
               Thêm cơ hội
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       <div className="rounded-lg border">

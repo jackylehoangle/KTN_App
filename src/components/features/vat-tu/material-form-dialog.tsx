@@ -78,20 +78,22 @@ export function MaterialFormDialog({ material }: { material?: Material }) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mã vật tư</FormLabel>
-                    <FormControl>
-                      <Input placeholder="VT001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className={isEdit ? 'grid grid-cols-2 gap-4' : ''}>
+              {isEdit && (
+                <FormField
+                  control={form.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mã vật tư</FormLabel>
+                      <FormControl>
+                        <Input placeholder="VT001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="unit"

@@ -65,6 +65,7 @@ export default async function DonHangPage() {
     { name: 'delivery_date', label: 'Ngày giao hàng', type: 'date', half: true },
     { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number' },
   ];
+  const createFields = fields.filter((f) => f.name !== 'code');
 
   return (
     <div className="space-y-4">
@@ -87,7 +88,7 @@ export default async function DonHangPage() {
               Thêm đơn hàng
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

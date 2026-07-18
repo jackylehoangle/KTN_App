@@ -10,7 +10,7 @@ export const accountSchema = z.object({
 export type AccountInput = z.infer<typeof accountSchema>;
 
 export const transactionSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   account_id: z.string().uuid('Chọn tài khoản'),
   transaction_type: z.enum(['income', 'expense', 'transfer']),
   category: z.string().optional(),
@@ -22,7 +22,7 @@ export const transactionSchema = z.object({
 export type TransactionInput = z.infer<typeof transactionSchema>;
 
 export const invoiceSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   customer_id: z.string().uuid('Chọn khách hàng'),
   invoice_date: z.string().min(1, 'Bắt buộc'),
   due_date: z.string().optional(),

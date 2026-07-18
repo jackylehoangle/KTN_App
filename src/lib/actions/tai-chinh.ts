@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { generateNextCode } from '@/lib/generate-code';
 import {
   accountSchema,
   transactionSchema,
@@ -44,9 +45,10 @@ export async function createTransaction(input: TransactionInput) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const code = await generateNextCode(supabase, 'transactions', 'PT', 4);
   const { error } = await supabase
     .from('transactions')
-    .insert({ ...data, related_type: 'other', created_by: user?.id ?? null });
+    .insert({ ...data, code, related_type: 'other', created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/tai-chinh');
 }
@@ -69,7 +71,8 @@ export async function deleteTransaction(id: string) {
 export async function createInvoice(input: InvoiceInput) {
   const data = invoiceSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('invoices').insert(data);
+  const code = await generateNextCode(supabase, 'invoices', 'HD', 4);
+  const { error } = await supabase.from('invoices').insert({ ...data, code });
   if (error) throw new Error(error.message);
   revalidatePath('/tai-chinh/hoa-don');
 }

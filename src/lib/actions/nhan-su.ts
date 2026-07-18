@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { generateNextCode, generateCodeSequence } from '@/lib/generate-code';
 import {
   departmentSchema,
   employeeSchema,
@@ -43,9 +44,22 @@ export async function deleteDepartment(id: string) {
 export async function createEmployee(input: EmployeeInput) {
   const data = employeeSchema.parse(input);
   const supabase = await createClient();
+  const code = await generateNextCode(supabase, 'employees', 'NV', 3);
   const { error } = await supabase
     .from('employees')
-    .insert({ ...data, department_id: data.department_id || null });
+    .insert({ ...data, code, department_id: data.department_id || null });
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su');
+}
+
+export async function bulkCreateEmployees(inputs: EmployeeInput[]) {
+  if (inputs.length === 0) return;
+  const parsed = inputs.map((input) => employeeSchema.parse(input));
+  const supabase = await createClient();
+  const codes = await generateCodeSequence(supabase, 'employees', 'NV', 3, parsed.length);
+  const { error } = await supabase.from('employees').insert(
+    parsed.map((data, i) => ({ ...data, code: codes[i], department_id: data.department_id || null }))
+  );
   if (error) throw new Error(error.message);
   revalidatePath('/nhan-su');
 }

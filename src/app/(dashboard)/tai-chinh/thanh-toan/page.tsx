@@ -49,7 +49,12 @@ export default async function ThanhToanPage() {
     { name: 'amount', label: 'Số tiền (VND)', type: 'number', half: true },
     { name: 'method', label: 'Hình thức', placeholder: 'Chuyển khoản / Tiền mặt', half: true },
     { name: 'note', label: 'Ghi chú', type: 'textarea' },
-    { name: 'receipt_url', label: 'Ảnh chứng từ chuyển khoản', type: 'image' },
+    {
+      name: 'receipt_url',
+      label: 'Ảnh chứng từ chuyển khoản',
+      type: 'image',
+      ocrMap: { amount: 'amount', date: 'payment_date', description: 'note' },
+    },
   ];
 
   return (

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { MaterialFormDialog } from '@/components/features/vat-tu/material-form-dialog';
+import { MaterialImportDialog } from '@/components/features/vat-tu/material-import-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { deleteMaterial } from '@/lib/actions/vat-tu';
@@ -37,7 +38,8 @@ export default async function VatTuPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <MaterialImportDialog />
         <MaterialFormDialog />
       </div>
       <div className="rounded-lg border">

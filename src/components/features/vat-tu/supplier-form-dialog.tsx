@@ -79,20 +79,22 @@ export function SupplierFormDialog({ supplier }: { supplier?: Supplier }) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mã NCC</FormLabel>
-                    <FormControl>
-                      <Input placeholder="NCC001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className={isEdit ? 'grid grid-cols-2 gap-4' : ''}>
+              {isEdit && (
+                <FormField
+                  control={form.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mã NCC</FormLabel>
+                      <FormControl>
+                        <Input placeholder="NCC001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="tax_code"

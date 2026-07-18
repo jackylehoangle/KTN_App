@@ -43,7 +43,7 @@ export default async function KeHoachPage() {
     .order('created_at', { ascending: false });
 
   const fields: EntityField<ProductionPlanInput>[] = [
-    { name: 'code', label: 'Mã kế hoạch', placeholder: 'KH0001', half: true },
+    { name: 'code', label: 'Mã kế hoạch', placeholder: 'SX0001', half: true },
     {
       name: 'status',
       label: 'Trạng thái',
@@ -55,6 +55,7 @@ export default async function KeHoachPage() {
     { name: 'planned_start', label: 'Bắt đầu dự kiến', type: 'date', half: true },
     { name: 'planned_end', label: 'Kết thúc dự kiến', type: 'date', half: true },
   ];
+  const createFields = fields.filter((f) => f.name !== 'code');
 
   return (
     <div className="space-y-4">
@@ -77,7 +78,7 @@ export default async function KeHoachPage() {
               Tạo kế hoạch
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       <div className="rounded-lg border">

@@ -1,21 +1,33 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { ImagePlus, Loader2, X } from 'lucide-react';
+import { ImagePlus, Loader2, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
+import { extractReceiptData } from '@/lib/actions/ai';
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 365 * 10;
+
+export interface ReceiptExtraction {
+  amount?: number;
+  date?: string;
+  description?: string;
+}
 
 export function ImageUploadField({
   value,
   onChange,
+  onExtracted,
 }: {
   value?: string;
   onChange: (url: string) => void;
+  // When set, the uploaded image is sent to AI (Gemini) to read a receipt/invoice
+  // photo and auto-fill sibling form fields (amount, date, description).
+  onExtracted?: (data: ReceiptExtraction) => void;
 }) {
   const [uploading, setUploading] = useState(false);
+  const [reading, setReading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(file: File) {
@@ -31,6 +43,19 @@ export function ImageUploadField({
         .createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
       if (signError) throw signError;
       onChange(data.signedUrl);
+
+      if (onExtracted) {
+        setReading(true);
+        try {
+          const extracted = await extractReceiptData(data.signedUrl);
+          onExtracted(extracted);
+          toast.success('Đã đọc và điền dữ liệu từ ảnh');
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : 'Không đọc được dữ liệu từ ảnh, vui lòng nhập tay');
+        } finally {
+          setReading(false);
+        }
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Tải ảnh lên thất bại');
     } finally {
@@ -54,6 +79,12 @@ export function ImageUploadField({
         {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
         {value ? 'Đổi ảnh' : 'Chụp / tải ảnh'}
       </Button>
+      {reading && (
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Sparkles className="size-3 animate-pulse" />
+          AI đang đọc ảnh...
+        </span>
+      )}
       {value ? (
         <Button type="button" variant="ghost" size="icon" onClick={() => onChange('')}>
           <X className="size-4" />

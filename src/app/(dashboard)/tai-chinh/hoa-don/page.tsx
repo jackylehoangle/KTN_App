@@ -57,6 +57,7 @@ export default async function HoaDonPage() {
     { name: 'amount', label: 'Tiền hàng (VND)', type: 'number', half: true },
     { name: 'tax_amount', label: 'Thuế (VND)', type: 'number', half: true },
   ];
+  const createFields = fields.filter((f) => f.name !== 'code');
 
   return (
     <div className="space-y-4">
@@ -79,7 +80,7 @@ export default async function HoaDonPage() {
               Tạo hoá đơn
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

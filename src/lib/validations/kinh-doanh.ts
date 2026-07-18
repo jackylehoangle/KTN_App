@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const customerSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   customer_type: z.enum(['individual', 'company']),
   tax_code: z.string().optional(),
@@ -13,7 +13,7 @@ export const customerSchema = z.object({
 export type CustomerInput = z.infer<typeof customerSchema>;
 
 export const opportunitySchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   customer_id: z.string().uuid('Chọn khách hàng'),
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   stage: z.enum(['new', 'contacted', 'quoted', 'negotiating', 'won', 'lost']),
@@ -22,7 +22,7 @@ export const opportunitySchema = z.object({
 export type OpportunityInput = z.infer<typeof opportunitySchema>;
 
 export const contractSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   customer_id: z.string().uuid('Chọn khách hàng'),
   title: z.string().min(2, 'Tối thiểu 2 ký tự'),
   value: z.number().min(0),
@@ -31,7 +31,7 @@ export const contractSchema = z.object({
 export type ContractInput = z.infer<typeof contractSchema>;
 
 export const salesOrderSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   customer_id: z.string().uuid('Chọn khách hàng'),
   contract_id: z.string().uuid('Chọn hợp đồng').optional().or(z.literal('')),
   order_date: z.string().min(1, 'Bắt buộc'),

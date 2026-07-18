@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { SiteHeader } from '@/components/layout/site-header';
+import { ChatWidget } from '@/components/features/ai/chat-widget';
 import { getCurrentProfile } from '@/lib/supabase/queries';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <SiteHeader />
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">{children}</div>
       </SidebarInset>
+      <ChatWidget />
     </SidebarProvider>
   );
 }

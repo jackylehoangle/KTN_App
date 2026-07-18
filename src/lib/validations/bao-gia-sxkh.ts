@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const quotationSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   customer_id: z.string().uuid('Chọn khách hàng'),
   quotation_date: z.string().min(1, 'Bắt buộc'),
   valid_until: z.string().optional(),
@@ -12,7 +12,7 @@ export const quotationSchema = z.object({
 export type QuotationInput = z.infer<typeof quotationSchema>;
 
 export const productionPlanSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   planned_start: z.string().optional(),
   planned_end: z.string().optional(),

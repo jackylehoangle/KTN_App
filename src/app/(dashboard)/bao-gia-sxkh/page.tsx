@@ -67,6 +67,7 @@ export default async function BaoGiaPage() {
     { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number', half: true },
     { name: 'notes', label: 'Ghi chú', type: 'textarea' },
   ];
+  const createFields = fields.filter((f) => f.name !== 'code');
 
   return (
     <div className="space-y-4">
@@ -89,7 +90,7 @@ export default async function BaoGiaPage() {
               Tạo báo giá
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       <div className="rounded-lg border">

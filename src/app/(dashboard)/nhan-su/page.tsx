@@ -5,6 +5,7 @@ import { EntityFormDialog, type EntityField } from '@/components/shared/entity-f
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
 import { EmployeeTable } from '@/components/features/nhan-su/employee-table';
+import { EmployeeImportDialog } from '@/components/features/nhan-su/employee-import-dialog';
 import type { EmployeeInput } from '@/lib/validations/nhan-su';
 import { createEmployee } from '@/lib/actions/nhan-su';
 import type { Department, EmployeeStatus } from '@/types/database';
@@ -59,6 +60,7 @@ export default async function NhanSuPage() {
     { name: 'base_salary', label: 'Lương cơ bản (VND)', type: 'number' },
     { name: 'avatar_url', label: 'Ảnh đại diện / CMND', type: 'image' },
   ];
+  const createFields = fields.filter((f) => f.name !== 'code');
 
   return (
     <div className="space-y-4">
@@ -68,7 +70,8 @@ export default async function NhanSuPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <EmployeeImportDialog departments={(departments as Department[]) ?? []} />
         <EntityFormDialog
           title="Thêm nhân viên"
           schemaKey="employee"
@@ -81,7 +84,7 @@ export default async function NhanSuPage() {
               Thêm nhân viên
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { generateNextCode, generateCodeSequence } from '@/lib/generate-code';
 import {
   materialSchema,
   warehouseSchema,
@@ -22,7 +23,20 @@ import {
 export async function createMaterial(input: MaterialInput) {
   const data = materialSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('materials').insert(data);
+  const code = await generateNextCode(supabase, 'materials', 'VT', 3);
+  const { error } = await supabase.from('materials').insert({ ...data, code });
+  if (error) throw new Error(error.message);
+  revalidatePath('/vat-tu');
+}
+
+export async function bulkCreateMaterials(inputs: MaterialInput[]) {
+  if (inputs.length === 0) return;
+  const parsed = inputs.map((input) => materialSchema.parse(input));
+  const supabase = await createClient();
+  const codes = await generateCodeSequence(supabase, 'materials', 'VT', 3, parsed.length);
+  const { error } = await supabase
+    .from('materials')
+    .insert(parsed.map((data, i) => ({ ...data, code: codes[i] })));
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu');
 }
@@ -45,7 +59,8 @@ export async function deleteMaterial(id: string) {
 export async function createWarehouse(input: WarehouseInput) {
   const data = warehouseSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('warehouses').insert(data);
+  const code = await generateNextCode(supabase, 'warehouses', 'KHO', 2);
+  const { error } = await supabase.from('warehouses').insert({ ...data, code });
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/kho');
 }
@@ -68,7 +83,8 @@ export async function deleteWarehouse(id: string) {
 export async function createSupplier(input: SupplierInput) {
   const data = supplierSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('suppliers').insert(data);
+  const code = await generateNextCode(supabase, 'suppliers', 'NCC', 3);
+  const { error } = await supabase.from('suppliers').insert({ ...data, code });
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/nha-cung-cap');
 }
@@ -94,9 +110,10 @@ export async function createStockMovement(input: StockMovementInput) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const code = await generateNextCode(supabase, 'stock_movements', 'PN', 4);
   const { error } = await supabase
     .from('stock_movements')
-    .insert({ ...data, reference_type: 'manual', created_by: user?.id ?? null });
+    .insert({ ...data, code, reference_type: 'manual', created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/nhap-xuat');
   revalidatePath('/vat-tu');
@@ -150,7 +167,8 @@ export async function deleteMaterialCategory(id: string) {
 export async function createPurchaseOrder(input: PurchaseOrderInput) {
   const data = purchaseOrderSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('purchase_orders').insert(data);
+  const code = await generateNextCode(supabase, 'purchase_orders', 'PO', 4);
+  const { error } = await supabase.from('purchase_orders').insert({ ...data, code });
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/don-mua');
 }

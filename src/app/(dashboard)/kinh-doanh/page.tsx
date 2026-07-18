@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { CustomerImportDialog } from '@/components/features/kinh-doanh/customer-import-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -49,6 +50,8 @@ const fields: EntityField<CustomerInput>[] = [
   { name: 'address', label: 'Địa chỉ', type: 'textarea' },
 ];
 
+const createFields = fields.filter((f) => f.name !== 'code');
+
 export default async function KinhDoanhPage() {
   const supabase = await createClient();
   const { data: customers, error } = await supabase.from('customers').select('*').order('code');
@@ -61,7 +64,8 @@ export default async function KinhDoanhPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <CustomerImportDialog />
         <EntityFormDialog
           title="Thêm khách hàng"
           schemaKey="customer"
@@ -74,7 +78,7 @@ export default async function KinhDoanhPage() {
               Thêm khách hàng
             </Button>
           }
-          fields={fields}
+          fields={createFields}
         />
       </div>
       <div className="rounded-lg border">

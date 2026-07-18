@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { QuotationItemImportDialog } from '@/components/features/bao-gia-sxkh/quotation-item-import-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -16,6 +17,7 @@ import {
 import { formatVND, BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 import type { QuotationItemInput } from '@/lib/validations/bao-gia-sxkh';
 import { createQuotationItem, updateQuotationItem, deleteQuotationItem } from '@/lib/actions/bao-gia-sxkh';
+import { generateQuotationDescription } from '@/lib/actions/ai';
 import type { Quotation } from '@/types/database';
 
 const defaultValues: QuotationItemInput = {
@@ -46,7 +48,12 @@ export default async function ChiTietBaoGiaPage() {
       options: ((quotations as Quotation[]) ?? []).map((q) => ({ value: q.id, label: q.code })),
     },
     { name: 'product_name', label: 'Tên sản phẩm', placeholder: 'Tủ điện hạ thế' },
-    { name: 'description', label: 'Mô tả', type: 'textarea' },
+    {
+      name: 'description',
+      label: 'Mô tả',
+      type: 'textarea',
+      aiAssist: { sourceField: 'product_name', generate: generateQuotationDescription },
+    },
     { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
     { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
     { name: 'unit_price', label: 'Đơn giá (VND)', type: 'number', half: true },
@@ -61,7 +68,8 @@ export default async function ChiTietBaoGiaPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <QuotationItemImportDialog quotations={((quotations as Quotation[]) ?? []).map((q) => ({ id: q.id, code: q.code }))} />
         <EntityFormDialog
           title="Thêm dòng báo giá"
           schemaKey="quotationItem"

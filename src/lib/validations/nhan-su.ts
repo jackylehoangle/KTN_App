@@ -6,7 +6,7 @@ export const departmentSchema = z.object({
 export type DepartmentInput = z.infer<typeof departmentSchema>;
 
 export const employeeSchema = z.object({
-  code: z.string().min(1, 'Bắt buộc'),
+  code: z.string().optional(),
   full_name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')),
   phone: z.string().optional(),
