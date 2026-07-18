@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Briefcase, Package, Users, Wallet, FileSpreadsheet } from 'lucide-react';
+import { Briefcase, Package, Users, Wallet, FileSpreadsheet, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MODULES, ROLE_LABELS } from '@/lib/constants';
 import { getCurrentProfile, getDashboardStats } from '@/lib/supabase/queries';
@@ -10,6 +10,7 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
   '/nhan-su': Users,
   '/tai-chinh': Wallet,
   '/bao-gia-sxkh': FileSpreadsheet,
+  '/bao-cao': BarChart3,
 };
 
 const MODULE_DESCRIPTIONS: Record<string, string> = {
@@ -18,6 +19,7 @@ const MODULE_DESCRIPTIONS: Record<string, string> = {
   '/nhan-su': 'Nhân viên, chấm công, nghỉ phép, lương',
   '/tai-chinh': 'Thu chi, hoá đơn, công nợ, ngân sách',
   '/bao-gia-sxkh': 'Báo giá và kế hoạch sản xuất',
+  '/bao-cao': 'Biểu đồ doanh thu, bán hàng, tồn kho, nhân sự',
 };
 
 export default async function DashboardHome() {
