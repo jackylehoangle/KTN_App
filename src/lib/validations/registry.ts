@@ -33,6 +33,8 @@ import {
   productionPlanItemSchema,
   productionTaskSchema,
 } from '@/lib/validations/bao-gia-sxkh';
+import { userRoleLevelSchema, moduleGrantSchema } from '@/lib/validations/permissions';
+import { approvalRequestSchema, approvalActionSchema } from '@/lib/validations/de-xuat';
 
 // Central registry so EntityFormDialog (a Client Component) can look up a zod
 // schema by key instead of receiving the schema object itself as a prop —
@@ -64,6 +66,10 @@ export const SCHEMA_REGISTRY = {
   bomItem: bomItemSchema,
   productionPlanItem: productionPlanItemSchema,
   productionTask: productionTaskSchema,
+  userRoleLevel: userRoleLevelSchema,
+  moduleGrant: moduleGrantSchema,
+  approvalRequest: approvalRequestSchema,
+  approvalAction: approvalActionSchema,
 } as const;
 
 export type SchemaKey = keyof typeof SCHEMA_REGISTRY;

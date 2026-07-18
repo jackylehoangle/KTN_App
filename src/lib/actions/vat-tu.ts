@@ -167,8 +167,13 @@ export async function deleteMaterialCategory(id: string) {
 export async function createPurchaseOrder(input: PurchaseOrderInput) {
   const data = purchaseOrderSchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'purchase_orders', 'PO', 4);
-  const { error } = await supabase.from('purchase_orders').insert({ ...data, code });
+  const { error } = await supabase
+    .from('purchase_orders')
+    .insert({ ...data, code, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/don-mua');
 }

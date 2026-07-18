@@ -10,6 +10,8 @@ import {
   FileSpreadsheet,
   LayoutDashboard,
   BarChart3,
+  ClipboardCheck,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -33,6 +35,8 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
   '/tai-chinh': Wallet,
   '/bao-gia-sxkh': FileSpreadsheet,
   '/bao-cao': BarChart3,
+  '/de-xuat': ClipboardCheck,
+  '/phan-quyen': ShieldCheck,
 };
 
 export function AppSidebar({ profile }: { profile: Profile }) {

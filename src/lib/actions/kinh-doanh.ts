@@ -19,8 +19,11 @@ import {
 export async function createCustomer(input: CustomerInput) {
   const data = customerSchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'customers', 'KH', 3);
-  const { error } = await supabase.from('customers').insert({ ...data, code });
+  const { error } = await supabase.from('customers').insert({ ...data, code, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh');
 }
@@ -29,10 +32,13 @@ export async function bulkCreateCustomers(inputs: CustomerInput[]) {
   if (inputs.length === 0) return;
   const parsed = inputs.map((input) => customerSchema.parse(input));
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const codes = await generateCodeSequence(supabase, 'customers', 'KH', 3, parsed.length);
   const { error } = await supabase
     .from('customers')
-    .insert(parsed.map((data, i) => ({ ...data, code: codes[i] })));
+    .insert(parsed.map((data, i) => ({ ...data, code: codes[i], created_by: user?.id ?? null })));
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh');
 }
@@ -55,8 +61,13 @@ export async function deleteCustomer(id: string) {
 export async function createOpportunity(input: OpportunityInput) {
   const data = opportunitySchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'opportunities', 'CH', 3);
-  const { error } = await supabase.from('opportunities').insert({ ...data, code });
+  const { error } = await supabase
+    .from('opportunities')
+    .insert({ ...data, code, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh/co-hoi');
 }
@@ -79,8 +90,13 @@ export async function deleteOpportunity(id: string) {
 export async function createContract(input: ContractInput) {
   const data = contractSchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'contracts', 'HD', 3);
-  const { error } = await supabase.from('contracts').insert({ ...data, code });
+  const { error } = await supabase
+    .from('contracts')
+    .insert({ ...data, code, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh/hop-dong');
 }
@@ -103,10 +119,13 @@ export async function deleteContract(id: string) {
 export async function createSalesOrder(input: SalesOrderInput) {
   const data = salesOrderSchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'sales_orders', 'DH', 4);
   const { error } = await supabase
     .from('sales_orders')
-    .insert({ ...data, code, contract_id: data.contract_id || null });
+    .insert({ ...data, code, contract_id: data.contract_id || null, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh/don-hang');
 }

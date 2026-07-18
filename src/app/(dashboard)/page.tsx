@@ -1,5 +1,14 @@
 import Link from 'next/link';
-import { Briefcase, Package, Users, Wallet, FileSpreadsheet, BarChart3 } from 'lucide-react';
+import {
+  Briefcase,
+  Package,
+  Users,
+  Wallet,
+  FileSpreadsheet,
+  BarChart3,
+  ClipboardCheck,
+  ShieldCheck,
+} from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MODULES, ROLE_LABELS } from '@/lib/constants';
 import { getCurrentProfile, getDashboardStats } from '@/lib/supabase/queries';
@@ -11,6 +20,8 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
   '/tai-chinh': Wallet,
   '/bao-gia-sxkh': FileSpreadsheet,
   '/bao-cao': BarChart3,
+  '/de-xuat': ClipboardCheck,
+  '/phan-quyen': ShieldCheck,
 };
 
 const MODULE_DESCRIPTIONS: Record<string, string> = {
@@ -20,6 +31,8 @@ const MODULE_DESCRIPTIONS: Record<string, string> = {
   '/tai-chinh': 'Thu chi, hoá đơn, công nợ, ngân sách',
   '/bao-gia-sxkh': 'Báo giá và kế hoạch sản xuất',
   '/bao-cao': 'Biểu đồ doanh thu, bán hàng, tồn kho, nhân sự',
+  '/de-xuat': 'Gửi và duyệt đề xuất mua hàng, tạm ứng...',
+  '/phan-quyen': 'Quản lý vai trò, cấp bậc và quyền xem riêng',
 };
 
 export default async function DashboardHome() {

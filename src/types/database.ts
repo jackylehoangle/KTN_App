@@ -2,15 +2,55 @@
 // Regenerate/adjust if the schema changes.
 
 export type UserRole = 'admin' | 'kinh_doanh' | 'vat_tu' | 'nhan_su' | 'tai_chinh' | 'san_xuat';
+export type StaffLevel = 'staff' | 'manager';
 
 export interface Profile {
   id: string;
   full_name: string;
   email: string;
   role: UserRole;
+  level: StaffLevel;
   phone: string | null;
   active: boolean;
   created_at: string;
+}
+
+export interface UserPermission {
+  id: string;
+  user_id: string;
+  module_href: string;
+  granted_by: string | null;
+  created_at: string;
+}
+
+export type ApprovalType = 'purchase' | 'advance' | 'other';
+export type ApprovalStatus = 'pending_manager' | 'pending_director' | 'approved' | 'rejected';
+
+export interface ApprovalRequest {
+  id: string;
+  code: string;
+  request_type: ApprovalType;
+  title: string;
+  description: string | null;
+  amount: number | null;
+  department: UserRole;
+  requested_by: string;
+  requested_by_name: string;
+  status: ApprovalStatus;
+  created_at: string;
+}
+
+export type ApprovalActionStep = 'manager' | 'director';
+export type ApprovalActionKind = 'approve' | 'reject';
+
+export interface ApprovalAction {
+  id: string;
+  request_id: string;
+  approver_id: string;
+  step: ApprovalActionStep;
+  action: ApprovalActionKind;
+  note: string | null;
+  acted_at: string;
 }
 
 // ---------- Module 1: Kinh doanh ----------

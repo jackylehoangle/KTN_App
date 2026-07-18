@@ -21,8 +21,13 @@ import {
 export async function createQuotation(input: QuotationInput) {
   const data = quotationSchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'quotations', 'BG', 4);
-  const { error } = await supabase.from('quotations').insert({ ...data, code });
+  const { error } = await supabase
+    .from('quotations')
+    .insert({ ...data, code, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh');
 }
@@ -45,8 +50,13 @@ export async function deleteQuotation(id: string) {
 export async function createProductionPlan(input: ProductionPlanInput) {
   const data = productionPlanSchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'production_plans', 'SX', 4);
-  const { error } = await supabase.from('production_plans').insert({ ...data, code });
+  const { error } = await supabase
+    .from('production_plans')
+    .insert({ ...data, code, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh/ke-hoach');
 }

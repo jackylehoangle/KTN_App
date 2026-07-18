@@ -1,4 +1,4 @@
-import type { UserRole } from '@/types/database';
+import type { ApprovalStatus, ApprovalType, StaffLevel, UserRole } from '@/types/database';
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: 'Quản trị viên',
@@ -7,6 +7,26 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   nhan_su: 'Nhân sự',
   tai_chinh: 'Tài chính',
   san_xuat: 'Sản xuất',
+};
+
+export const ALL_ROLES: UserRole[] = ['admin', 'kinh_doanh', 'vat_tu', 'nhan_su', 'tai_chinh', 'san_xuat'];
+
+export const LEVEL_LABELS: Record<StaffLevel, string> = {
+  staff: 'Nhân viên',
+  manager: 'Quản lý',
+};
+
+export const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
+  purchase: 'Mua hàng',
+  advance: 'Tạm ứng',
+  other: 'Khác',
+};
+
+export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = {
+  pending_manager: 'Chờ Trưởng phòng duyệt',
+  pending_director: 'Chờ Giám đốc duyệt',
+  approved: 'Đã duyệt',
+  rejected: 'Từ chối',
 };
 
 export interface ModuleNavItem {
@@ -44,6 +64,16 @@ export const MODULES: ModuleNavItem[] = [
   {
     title: 'Báo cáo',
     href: '/bao-cao',
+    roles: ['admin'],
+  },
+  {
+    title: 'Đề xuất & Phê duyệt',
+    href: '/de-xuat',
+    roles: ALL_ROLES,
+  },
+  {
+    title: 'Phân quyền',
+    href: '/phan-quyen',
     roles: ['admin'],
   },
 ];
@@ -99,6 +129,8 @@ export const PAGE_TITLES: Record<string, string> = {
   '/setup': 'Thiết lập hệ thống',
   '/login': 'Đăng nhập',
   '/bao-cao': 'Báo cáo',
+  '/de-xuat': 'Đề xuất & Phê duyệt',
+  '/phan-quyen': 'Phân quyền',
 };
 for (const tabs of [KINH_DOANH_TABS, VAT_TU_TABS, NHAN_SU_TABS, TAI_CHINH_TABS, BAO_GIA_SXKH_TABS]) {
   for (const tab of tabs) PAGE_TITLES[tab.href] = tab.title;

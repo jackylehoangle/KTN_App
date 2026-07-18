@@ -71,8 +71,13 @@ export async function deleteTransaction(id: string) {
 export async function createInvoice(input: InvoiceInput) {
   const data = invoiceSchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'invoices', 'HD', 4);
-  const { error } = await supabase.from('invoices').insert({ ...data, code });
+  const { error } = await supabase
+    .from('invoices')
+    .insert({ ...data, code, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/tai-chinh/hoa-don');
 }
