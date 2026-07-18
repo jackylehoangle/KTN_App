@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/constants';
 import type { ProductionPlanInput } from '@/lib/validations/bao-gia-sxkh';
-import { createProductionPlan, deleteProductionPlan } from '@/lib/actions/bao-gia-sxkh';
+import { createProductionPlan, updateProductionPlan, deleteProductionPlan } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlanStatus } from '@/types/database';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 
@@ -42,6 +42,20 @@ export default async function KeHoachPage() {
     .select('*')
     .order('created_at', { ascending: false });
 
+  const fields: EntityField<ProductionPlanInput>[] = [
+    { name: 'code', label: 'Mã kế hoạch', placeholder: 'KH0001', half: true },
+    {
+      name: 'status',
+      label: 'Trạng thái',
+      type: 'select',
+      half: true,
+      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    { name: 'name', label: 'Tên kế hoạch', placeholder: 'Sản xuất lô hàng A' },
+    { name: 'planned_start', label: 'Bắt đầu dự kiến', type: 'date', half: true },
+    { name: 'planned_end', label: 'Kết thúc dự kiến', type: 'date', half: true },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -63,19 +77,7 @@ export default async function KeHoachPage() {
               Tạo kế hoạch
             </Button>
           }
-          fields={[
-            { name: 'code', label: 'Mã kế hoạch', placeholder: 'KH0001', half: true },
-            {
-              name: 'status',
-              label: 'Trạng thái',
-              type: 'select',
-              half: true,
-              options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
-            },
-            { name: 'name', label: 'Tên kế hoạch', placeholder: 'Sản xuất lô hàng A' },
-            { name: 'planned_start', label: 'Bắt đầu dự kiến', type: 'date', half: true },
-            { name: 'planned_end', label: 'Kết thúc dự kiến', type: 'date', half: true },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -104,7 +106,30 @@ export default async function KeHoachPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteProductionPlan.bind(null, p.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa kế hoạch sản xuất"
+                      schemaKey="productionPlan"
+                      mode="edit"
+                      recordId={p.id}
+                      defaultValues={{
+                        code: p.code,
+                        name: p.name,
+                        planned_start: p.planned_start ?? '',
+                        planned_end: p.planned_end ?? '',
+                        status: p.status,
+                      }}
+                      onUpdate={updateProductionPlan}
+                      successMessage="Đã cập nhật kế hoạch sản xuất"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteProductionPlan.bind(null, p.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

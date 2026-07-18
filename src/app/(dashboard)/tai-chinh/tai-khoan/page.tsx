@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
 import type { AccountInput } from '@/lib/validations/tai-chinh';
-import { createAccount, deleteAccount } from '@/lib/actions/tai-chinh';
+import { createAccount, updateAccount, deleteAccount } from '@/lib/actions/tai-chinh';
 import type { Account } from '@/types/database';
 import { TAI_CHINH_TABS as TABS } from '@/lib/constants';
 
@@ -26,6 +26,23 @@ const defaultValues: AccountInput = {
   bank_name: '',
   opening_balance: 0,
 };
+
+const fields: EntityField<AccountInput>[] = [
+  { name: 'name', label: 'Tên tài khoản', placeholder: 'Tiền mặt / Vietcombank...', half: true },
+  {
+    name: 'type',
+    label: 'Loại',
+    type: 'select',
+    half: true,
+    options: [
+      { label: 'Tiền mặt', value: 'cash' },
+      { label: 'Ngân hàng', value: 'bank' },
+    ],
+  },
+  { name: 'bank_name', label: 'Tên ngân hàng', half: true },
+  { name: 'account_number', label: 'Số tài khoản', half: true },
+  { name: 'opening_balance', label: 'Số dư đầu kỳ (VND)', type: 'number' },
+];
 
 export default async function TaiKhoanPage() {
   const supabase = await createClient();
@@ -52,22 +69,7 @@ export default async function TaiKhoanPage() {
               Thêm tài khoản
             </Button>
           }
-          fields={[
-            { name: 'name', label: 'Tên tài khoản', placeholder: 'Tiền mặt / Vietcombank...', half: true },
-            {
-              name: 'type',
-              label: 'Loại',
-              type: 'select',
-              half: true,
-              options: [
-                { label: 'Tiền mặt', value: 'cash' },
-                { label: 'Ngân hàng', value: 'bank' },
-              ],
-            },
-            { name: 'bank_name', label: 'Tên ngân hàng', half: true },
-            { name: 'account_number', label: 'Số tài khoản', half: true },
-            { name: 'opening_balance', label: 'Số dư đầu kỳ (VND)', type: 'number' },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -89,7 +91,30 @@ export default async function TaiKhoanPage() {
                 <TableCell className="text-muted-foreground">{a.bank_name ?? '—'}</TableCell>
                 <TableCell className="text-right">{formatVND(a.opening_balance)}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteAccount.bind(null, a.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa tài khoản"
+                      schemaKey="account"
+                      mode="edit"
+                      recordId={a.id}
+                      defaultValues={{
+                        name: a.name,
+                        type: a.type,
+                        account_number: a.account_number ?? '',
+                        bank_name: a.bank_name ?? '',
+                        opening_balance: a.opening_balance,
+                      }}
+                      onUpdate={updateAccount}
+                      successMessage="Đã cập nhật tài khoản"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteAccount.bind(null, a.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

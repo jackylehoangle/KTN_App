@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { formatVND, BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 import type { QuotationItemInput } from '@/lib/validations/bao-gia-sxkh';
-import { createQuotationItem, deleteQuotationItem } from '@/lib/actions/bao-gia-sxkh';
+import { createQuotationItem, updateQuotationItem, deleteQuotationItem } from '@/lib/actions/bao-gia-sxkh';
 import type { Quotation } from '@/types/database';
 
 const defaultValues: QuotationItemInput = {
@@ -38,6 +38,21 @@ export default async function ChiTietBaoGiaPage() {
     supabase.from('quotations').select('*').order('code'),
   ]);
 
+  const fields: EntityField<QuotationItemInput>[] = [
+    {
+      name: 'quotation_id',
+      label: 'Báo giá',
+      type: 'select',
+      options: ((quotations as Quotation[]) ?? []).map((q) => ({ value: q.id, label: q.code })),
+    },
+    { name: 'product_name', label: 'Tên sản phẩm', placeholder: 'Tủ điện hạ thế' },
+    { name: 'description', label: 'Mô tả', type: 'textarea' },
+    { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
+    { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
+    { name: 'unit_price', label: 'Đơn giá (VND)', type: 'number', half: true },
+    { name: 'discount_pct', label: 'Chiết khấu (%)', type: 'number', half: true },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -59,20 +74,7 @@ export default async function ChiTietBaoGiaPage() {
               Thêm dòng
             </Button>
           }
-          fields={[
-            {
-              name: 'quotation_id',
-              label: 'Báo giá',
-              type: 'select',
-              options: ((quotations as Quotation[]) ?? []).map((q) => ({ value: q.id, label: q.code })),
-            },
-            { name: 'product_name', label: 'Tên sản phẩm', placeholder: 'Tủ điện hạ thế' },
-            { name: 'description', label: 'Mô tả', type: 'textarea' },
-            { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
-            { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
-            { name: 'unit_price', label: 'Đơn giá (VND)', type: 'number', half: true },
-            { name: 'discount_pct', label: 'Chiết khấu (%)', type: 'number', half: true },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -99,7 +101,32 @@ export default async function ChiTietBaoGiaPage() {
                 <TableCell className="text-right">{i.discount_pct}%</TableCell>
                 <TableCell className="text-right">{formatVND(i.subtotal)}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteQuotationItem.bind(null, i.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa dòng báo giá"
+                      schemaKey="quotationItem"
+                      mode="edit"
+                      recordId={i.id}
+                      defaultValues={{
+                        quotation_id: i.quotation_id,
+                        product_name: i.product_name,
+                        description: i.description ?? '',
+                        quantity: i.quantity,
+                        unit: i.unit,
+                        unit_price: i.unit_price,
+                        discount_pct: i.discount_pct,
+                      }}
+                      onUpdate={updateQuotationItem}
+                      successMessage="Đã cập nhật dòng báo giá"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteQuotationItem.bind(null, i.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

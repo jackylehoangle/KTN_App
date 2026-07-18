@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,28 +24,34 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { supplierSchema, type SupplierInput } from '@/lib/validations/vat-tu';
-import { createSupplier } from '@/lib/actions/vat-tu';
+import { createSupplier, updateSupplier } from '@/lib/actions/vat-tu';
+import type { Supplier } from '@/types/database';
 
-export function SupplierFormDialog() {
+export function SupplierFormDialog({ supplier }: { supplier?: Supplier }) {
   const [open, setOpen] = useState(false);
+  const isEdit = Boolean(supplier);
 
   const form = useForm<SupplierInput>({
     resolver: zodResolver(supplierSchema),
     defaultValues: {
-      code: '',
-      name: '',
-      tax_code: '',
-      address: '',
-      phone: '',
-      email: '',
-      contact_person: '',
+      code: supplier?.code ?? '',
+      name: supplier?.name ?? '',
+      tax_code: supplier?.tax_code ?? '',
+      address: supplier?.address ?? '',
+      phone: supplier?.phone ?? '',
+      email: supplier?.email ?? '',
+      contact_person: supplier?.contact_person ?? '',
     },
   });
 
   async function onSubmit(values: SupplierInput) {
     try {
-      await createSupplier(values);
-      toast.success('Đã thêm nhà cung cấp');
+      if (isEdit && supplier) {
+        await updateSupplier(supplier.id, values);
+      } else {
+        await createSupplier(values);
+      }
+      toast.success(isEdit ? 'Đã cập nhật nhà cung cấp' : 'Đã thêm nhà cung cấp');
       setOpen(false);
       form.reset();
     } catch (e) {
@@ -56,14 +62,20 @@ export function SupplierFormDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="size-4" />
-          Thêm nhà cung cấp
-        </Button>
+        {isEdit ? (
+          <Button variant="ghost" size="icon">
+            <Pencil className="size-4" />
+          </Button>
+        ) : (
+          <Button size="sm">
+            <Plus className="size-4" />
+            Thêm nhà cung cấp
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Thêm nhà cung cấp</DialogTitle>
+          <DialogTitle>{isEdit ? 'Sửa nhà cung cấp' : 'Thêm nhà cung cấp'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

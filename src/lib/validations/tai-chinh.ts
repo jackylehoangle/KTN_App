@@ -17,6 +17,7 @@ export const transactionSchema = z.object({
   amount: z.number().positive('Số tiền phải > 0'),
   transaction_date: z.string().min(1, 'Bắt buộc'),
   description: z.string().optional(),
+  receipt_url: z.string().optional(),
 });
 export type TransactionInput = z.infer<typeof transactionSchema>;
 
@@ -38,6 +39,7 @@ export const invoicePaymentSchema = z.object({
   payment_date: z.string().min(1, 'Bắt buộc'),
   method: z.string().optional(),
   note: z.string().optional(),
+  receipt_url: z.string().optional(),
 });
 export type InvoicePaymentInput = z.infer<typeof invoicePaymentSchema>;
 

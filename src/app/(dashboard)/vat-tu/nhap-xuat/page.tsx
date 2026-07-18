@@ -80,7 +80,14 @@ export default async function NhapXuatPage() {
                 <TableCell className="text-right">{m.quantity}</TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(m.created_at)}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteStockMovement.bind(null, m.id)} />
+                  <div className="flex justify-end gap-1">
+                    <StockMovementFormDialog
+                      materials={(materials as Material[]) ?? []}
+                      warehouses={(warehouses as Warehouse[]) ?? []}
+                      movement={m}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteStockMovement.bind(null, m.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

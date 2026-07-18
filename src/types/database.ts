@@ -210,6 +210,7 @@ export interface Employee {
   status: EmployeeStatus;
   base_salary: number;
   bank_account: string | null;
+  avatar_url: string | null;
   user_id: string | null;
   created_at: string;
 }
@@ -281,6 +282,7 @@ export interface Transaction {
   related_type: 'contract' | 'purchase_order' | 'payroll' | 'invoice' | 'other' | null;
   related_id: string | null;
   description: string | null;
+  receipt_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -311,6 +313,7 @@ export interface InvoicePayment {
   payment_date: string;
   method: string | null;
   note: string | null;
+  receipt_url: string | null;
 }
 
 export interface Budget {

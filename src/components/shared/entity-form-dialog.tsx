@@ -37,12 +37,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { SCHEMA_REGISTRY, type SchemaKey } from '@/lib/validations/registry';
+import { ImageUploadField } from '@/components/shared/image-upload-field';
 
 export type EntityField<T extends FieldValues> = {
   name: Path<T>;
   label: string;
   placeholder?: string;
-  type?: 'text' | 'number' | 'email' | 'textarea' | 'select' | 'date';
+  type?: 'text' | 'number' | 'email' | 'textarea' | 'select' | 'date' | 'image';
   options?: { label: string; value: string }[];
   half?: boolean; // render in a 2-col grid alongside the next `half` field
 };
@@ -53,10 +54,14 @@ interface EntityFormDialogProps<T extends FieldValues> {
   schemaKey: SchemaKey;
   defaultValues: DefaultValues<T>;
   fields: EntityField<T>[];
-  onSubmit: (values: T) => Promise<void>;
+  onSubmit?: (values: T) => Promise<void>;
   trigger: ReactNode;
   title: string;
   successMessage?: string;
+  // Edit mode: when set, submit calls onUpdate(recordId, values) instead of onSubmit(values).
+  mode?: 'create' | 'edit';
+  recordId?: string;
+  onUpdate?: (id: string, values: T) => Promise<void>;
 }
 
 export function EntityFormDialog<T extends FieldValues>({
@@ -67,6 +72,9 @@ export function EntityFormDialog<T extends FieldValues>({
   trigger,
   title,
   successMessage = 'Đã lưu',
+  mode = 'create',
+  recordId,
+  onUpdate,
 }: EntityFormDialogProps<T>) {
   const [open, setOpen] = useState(false);
   const form = useForm<T>({
@@ -76,7 +84,11 @@ export function EntityFormDialog<T extends FieldValues>({
 
   async function handleSubmit(values: T) {
     try {
-      await onSubmit(values);
+      if (mode === 'edit' && recordId && onUpdate) {
+        await onUpdate(recordId, values);
+      } else if (onSubmit) {
+        await onSubmit(values);
+      }
       toast.success(successMessage);
       setOpen(false);
       form.reset(defaultValues);
@@ -122,7 +134,9 @@ export function EntityFormDialog<T extends FieldValues>({
                       <FormItem>
                         <FormLabel>{f.label}</FormLabel>
                         <FormControl>
-                          {f.type === 'textarea' ? (
+                          {f.type === 'image' ? (
+                            <ImageUploadField value={field.value} onChange={field.onChange} />
+                          ) : f.type === 'textarea' ? (
                             <Textarea placeholder={f.placeholder} {...field} value={field.value ?? ''} />
                           ) : f.type === 'select' ? (
                             <Select onValueChange={field.onChange} defaultValue={field.value}>

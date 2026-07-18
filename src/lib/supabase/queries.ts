@@ -1,7 +1,16 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { MODULES, formatVND } from '@/lib/constants';
-import type { Profile, Material, StockBalance } from '@/types/database';
+import type {
+  Profile,
+  Material,
+  StockBalance,
+  Opportunity,
+  OpportunityStage,
+  Department,
+  EmployeeStatus,
+  TransactionType,
+} from '@/types/database';
 
 export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = await createClient();
@@ -96,4 +105,119 @@ export async function getDashboardStats(): Promise<Record<string, ModuleStat[]>>
       { label: 'Kế hoạch SX đang chạy', value: String(activePlanCount ?? 0) },
     ],
   };
+}
+
+export interface RevenueExpensePoint {
+  month: string;
+  income: number;
+  expense: number;
+}
+
+export interface PipelineStagePoint {
+  stage: OpportunityStage;
+  count: number;
+  value: number;
+}
+
+export interface LowStockItem {
+  code: string;
+  name: string;
+  onHand: number;
+  minStock: number;
+}
+
+export interface HeadcountPoint {
+  department: string;
+  active: number;
+  probation: number;
+  inactive: number;
+  terminated: number;
+}
+
+export interface ReportData {
+  revenueExpense: RevenueExpensePoint[];
+  pipeline: PipelineStagePoint[];
+  lowStock: LowStockItem[];
+  headcount: HeadcountPoint[];
+}
+
+const STAGE_ORDER: OpportunityStage[] = ['new', 'contacted', 'quoted', 'negotiating', 'won', 'lost'];
+
+// Raw numeric data for the /bao-cao charts — unlike getDashboardStats, values are
+// left unformatted so the client chart components can plot them directly.
+export async function getReportData(): Promise<ReportData> {
+  const supabase = await createClient();
+
+  const [
+    { data: transactions },
+    { data: opportunities },
+    { data: materials },
+    { data: balances },
+    { data: employees },
+    { data: departments },
+  ] = await Promise.all([
+    supabase.from('transactions').select('transaction_type, amount, transaction_date'),
+    supabase.from('opportunities').select('stage, value'),
+    supabase.from('materials').select('*'),
+    supabase.from('stock_balances').select('*'),
+    supabase.from('employees').select('department_id, status'),
+    supabase.from('departments').select('*'),
+  ]);
+
+  const monthMap = new Map<string, { income: number; expense: number }>();
+  (
+    (transactions as { transaction_type: TransactionType; amount: number; transaction_date: string }[]) ?? []
+  ).forEach((t) => {
+    const month = t.transaction_date.slice(0, 7);
+    const entry = monthMap.get(month) ?? { income: 0, expense: 0 };
+    if (t.transaction_type === 'income') entry.income += t.amount;
+    else if (t.transaction_type === 'expense') entry.expense += t.amount;
+    monthMap.set(month, entry);
+  });
+  const revenueExpense = Array.from(monthMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-6)
+    .map(([month, v]) => ({ month, ...v }));
+
+  const stageMap = new Map<OpportunityStage, { count: number; value: number }>();
+  ((opportunities as Pick<Opportunity, 'stage' | 'value'>[]) ?? []).forEach((o) => {
+    const entry = stageMap.get(o.stage) ?? { count: 0, value: 0 };
+    entry.count += 1;
+    entry.value += o.value;
+    stageMap.set(o.stage, entry);
+  });
+  const pipeline = STAGE_ORDER.filter((s) => stageMap.has(s)).map((stage) => ({
+    stage,
+    ...stageMap.get(stage)!,
+  }));
+
+  const onHandByMaterial = new Map<string, number>();
+  ((balances as StockBalance[]) ?? []).forEach((b) => {
+    onHandByMaterial.set(b.material_id, (onHandByMaterial.get(b.material_id) ?? 0) + b.quantity_on_hand);
+  });
+  const lowStock = ((materials as Material[]) ?? [])
+    .map((m) => ({
+      code: m.code,
+      name: m.name,
+      onHand: onHandByMaterial.get(m.id) ?? 0,
+      minStock: m.min_stock,
+    }))
+    .filter((m) => m.onHand < m.minStock)
+    .sort((a, b) => a.onHand - b.onHand);
+
+  const deptNameById = new Map<string, string>();
+  ((departments as Department[]) ?? []).forEach((d) => deptNameById.set(d.id, d.name));
+  const headcountMap = new Map<
+    string,
+    { active: number; probation: number; inactive: number; terminated: number }
+  >();
+  ((employees as { department_id: string | null; status: EmployeeStatus }[]) ?? []).forEach((e) => {
+    const dept = e.department_id ? (deptNameById.get(e.department_id) ?? 'Khác') : 'Chưa phân bổ';
+    const entry = headcountMap.get(dept) ?? { active: 0, probation: 0, inactive: 0, terminated: 0 };
+    entry[e.status] += 1;
+    headcountMap.set(dept, entry);
+  });
+  const headcount = Array.from(headcountMap.entries()).map(([department, v]) => ({ department, ...v }));
+
+  return { revenueExpense, pipeline, lowStock, headcount };
 }

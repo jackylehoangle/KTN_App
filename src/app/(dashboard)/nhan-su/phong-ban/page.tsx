@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { DepartmentInput } from '@/lib/validations/nhan-su';
-import { createDepartment, deleteDepartment } from '@/lib/actions/nhan-su';
+import { createDepartment, updateDepartment, deleteDepartment } from '@/lib/actions/nhan-su';
 import type { Department } from '@/types/database';
 import { NHAN_SU_TABS as TABS } from '@/lib/constants';
 
 const defaultValues: DepartmentInput = { name: '' };
+const fields: EntityField<DepartmentInput>[] = [
+  { name: 'name', label: 'Tên phòng ban', placeholder: 'Phòng Kỹ thuật' },
+];
 
 export default async function PhongBanPage() {
   const supabase = await createClient();
@@ -45,7 +48,7 @@ export default async function PhongBanPage() {
               Thêm phòng ban
             </Button>
           }
-          fields={[{ name: 'name', label: 'Tên phòng ban', placeholder: 'Phòng Kỹ thuật' }]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -61,7 +64,24 @@ export default async function PhongBanPage() {
               <TableRow key={d.id}>
                 <TableCell>{d.name}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteDepartment.bind(null, d.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa phòng ban"
+                      schemaKey="department"
+                      mode="edit"
+                      recordId={d.id}
+                      defaultValues={{ name: d.name }}
+                      onUpdate={updateDepartment}
+                      successMessage="Đã cập nhật phòng ban"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteDepartment.bind(null, d.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

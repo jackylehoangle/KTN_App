@@ -23,6 +23,14 @@ export async function createCustomer(input: CustomerInput) {
   revalidatePath('/kinh-doanh');
 }
 
+export async function updateCustomer(id: string, input: CustomerInput) {
+  const data = customerSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('customers').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/kinh-doanh');
+}
+
 export async function deleteCustomer(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('customers').delete().eq('id', id);
@@ -38,6 +46,14 @@ export async function createOpportunity(input: OpportunityInput) {
   revalidatePath('/kinh-doanh/co-hoi');
 }
 
+export async function updateOpportunity(id: string, input: OpportunityInput) {
+  const data = opportunitySchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('opportunities').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/kinh-doanh/co-hoi');
+}
+
 export async function deleteOpportunity(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('opportunities').delete().eq('id', id);
@@ -49,6 +65,14 @@ export async function createContract(input: ContractInput) {
   const data = contractSchema.parse(input);
   const supabase = await createClient();
   const { error } = await supabase.from('contracts').insert(data);
+  if (error) throw new Error(error.message);
+  revalidatePath('/kinh-doanh/hop-dong');
+}
+
+export async function updateContract(id: string, input: ContractInput) {
+  const data = contractSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('contracts').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh/hop-dong');
 }
@@ -70,6 +94,17 @@ export async function createSalesOrder(input: SalesOrderInput) {
   revalidatePath('/kinh-doanh/don-hang');
 }
 
+export async function updateSalesOrder(id: string, input: SalesOrderInput) {
+  const data = salesOrderSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('sales_orders')
+    .update({ ...data, contract_id: data.contract_id || null })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/kinh-doanh/don-hang');
+}
+
 export async function deleteSalesOrder(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('sales_orders').delete().eq('id', id);
@@ -81,6 +116,14 @@ export async function createSalesOrderItem(input: SalesOrderItemInput) {
   const data = salesOrderItemSchema.parse(input);
   const supabase = await createClient();
   const { error } = await supabase.from('sales_order_items').insert(data);
+  if (error) throw new Error(error.message);
+  revalidatePath('/kinh-doanh/chi-tiet-don-hang');
+}
+
+export async function updateSalesOrderItem(id: string, input: SalesOrderItemInput) {
+  const data = salesOrderItemSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('sales_order_items').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/kinh-doanh/chi-tiet-don-hang');
 }

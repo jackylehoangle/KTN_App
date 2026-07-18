@@ -1,9 +1,10 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,9 +15,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, TAI_CHINH_TABS as TABS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { BudgetInput } from '@/lib/validations/tai-chinh';
-import { createBudget, deleteBudget } from '@/lib/actions/tai-chinh';
+import { createBudget, updateBudget, deleteBudget } from '@/lib/actions/tai-chinh';
 import type { Department } from '@/types/database';
+
+interface BudgetRow {
+  id: string;
+  category: string;
+  department_id: string | null;
+  departments?: { name: string } | null;
+  period: string;
+  amount: number;
+}
 
 const defaultValues: BudgetInput = { department_id: '', category: '', period: '', amount: 0 };
 
@@ -30,6 +41,26 @@ export default async function NganSachPage() {
     supabase.from('departments').select('*').order('name'),
   ]);
 
+  const fields: EntityField<BudgetInput>[] = [
+    { name: 'category', label: 'Hạng mục', placeholder: 'Chi phí marketing', half: true },
+    { name: 'period', label: 'Kỳ (YYYY hoặc YYYY-MM)', placeholder: '2026', half: true },
+    {
+      name: 'department_id',
+      label: 'Phòng ban (tuỳ chọn)',
+      type: 'select',
+      half: true,
+      options: ((departments as Department[]) ?? []).map((d) => ({ value: d.id, label: d.name })),
+    },
+    { name: 'amount', label: 'Số tiền (VND)', type: 'number', half: true },
+  ];
+
+  const excelColumns: ExcelColumn<BudgetRow>[] = [
+    { header: 'Hạng mục', value: (b) => b.category },
+    { header: 'Phòng ban', value: (b) => b.departments?.name ?? '' },
+    { header: 'Kỳ', value: (b) => b.period },
+    { header: 'Số tiền', value: (b) => b.amount },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -38,7 +69,8 @@ export default async function NganSachPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <TableActions rows={(budgets as BudgetRow[]) ?? []} columns={excelColumns} filename="ngan-sach" />
         <EntityFormDialog
           title="Thêm ngân sách"
           schemaKey="budget"
@@ -46,23 +78,12 @@ export default async function NganSachPage() {
           onSubmit={createBudget}
           successMessage="Đã thêm ngân sách"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm ngân sách
             </Button>
           }
-          fields={[
-            { name: 'category', label: 'Hạng mục', placeholder: 'Chi phí marketing', half: true },
-            { name: 'period', label: 'Kỳ (YYYY hoặc YYYY-MM)', placeholder: '2026', half: true },
-            {
-              name: 'department_id',
-              label: 'Phòng ban (tuỳ chọn)',
-              type: 'select',
-              half: true,
-              options: ((departments as Department[]) ?? []).map((d) => ({ value: d.id, label: d.name })),
-            },
-            { name: 'amount', label: 'Số tiền (VND)', type: 'number', half: true },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -73,7 +94,7 @@ export default async function NganSachPage() {
               <TableHead>Phòng ban</TableHead>
               <TableHead>Kỳ</TableHead>
               <TableHead className="text-right">Số tiền</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -84,8 +105,30 @@ export default async function NganSachPage() {
                 <TableCell className="text-muted-foreground">{b.departments?.name ?? '—'}</TableCell>
                 <TableCell className="font-mono text-sm">{b.period}</TableCell>
                 <TableCell className="text-right">{formatVND(b.amount)}</TableCell>
-                <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteBudget.bind(null, b.id)} />
+                <TableCell className="print:hidden">
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa ngân sách"
+                      schemaKey="budget"
+                      mode="edit"
+                      recordId={b.id}
+                      defaultValues={{
+                        department_id: b.department_id ?? '',
+                        category: b.category,
+                        period: b.period,
+                        amount: b.amount,
+                      }}
+                      onUpdate={updateBudget}
+                      successMessage="Đã cập nhật ngân sách"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteBudget.bind(null, b.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

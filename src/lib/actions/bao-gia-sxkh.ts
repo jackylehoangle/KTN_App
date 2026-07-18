@@ -25,6 +25,14 @@ export async function createQuotation(input: QuotationInput) {
   revalidatePath('/bao-gia-sxkh');
 }
 
+export async function updateQuotation(id: string, input: QuotationInput) {
+  const data = quotationSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('quotations').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/bao-gia-sxkh');
+}
+
 export async function deleteQuotation(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('quotations').delete().eq('id', id);
@@ -36,6 +44,14 @@ export async function createProductionPlan(input: ProductionPlanInput) {
   const data = productionPlanSchema.parse(input);
   const supabase = await createClient();
   const { error } = await supabase.from('production_plans').insert(data);
+  if (error) throw new Error(error.message);
+  revalidatePath('/bao-gia-sxkh/ke-hoach');
+}
+
+export async function updateProductionPlan(id: string, input: ProductionPlanInput) {
+  const data = productionPlanSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('production_plans').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh/ke-hoach');
 }
@@ -55,6 +71,14 @@ export async function createQuotationItem(input: QuotationItemInput) {
   revalidatePath('/bao-gia-sxkh/chi-tiet-bao-gia');
 }
 
+export async function updateQuotationItem(id: string, input: QuotationItemInput) {
+  const data = quotationItemSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('quotation_items').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/bao-gia-sxkh/chi-tiet-bao-gia');
+}
+
 export async function deleteQuotationItem(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('quotation_items').delete().eq('id', id);
@@ -66,6 +90,14 @@ export async function createBomItem(input: BomItemInput) {
   const data = bomItemSchema.parse(input);
   const supabase = await createClient();
   const { error } = await supabase.from('bom_items').insert(data);
+  if (error) throw new Error(error.message);
+  revalidatePath('/bao-gia-sxkh/dinh-muc');
+}
+
+export async function updateBomItem(id: string, input: BomItemInput) {
+  const data = bomItemSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('bom_items').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh/dinh-muc');
 }
@@ -85,6 +117,14 @@ export async function createProductionPlanItem(input: ProductionPlanItemInput) {
   revalidatePath('/bao-gia-sxkh/chi-tiet-ke-hoach');
 }
 
+export async function updateProductionPlanItem(id: string, input: ProductionPlanItemInput) {
+  const data = productionPlanItemSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('production_plan_items').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/bao-gia-sxkh/chi-tiet-ke-hoach');
+}
+
 export async function deleteProductionPlanItem(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('production_plan_items').delete().eq('id', id);
@@ -98,6 +138,17 @@ export async function createProductionTask(input: ProductionTaskInput) {
   const { error } = await supabase
     .from('production_tasks')
     .insert({ ...data, assigned_to: data.assigned_to || null });
+  if (error) throw new Error(error.message);
+  revalidatePath('/bao-gia-sxkh/cong-viec');
+}
+
+export async function updateProductionTask(id: string, input: ProductionTaskInput) {
+  const data = productionTaskSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('production_tasks')
+    .update({ ...data, assigned_to: data.assigned_to || null })
+    .eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh/cong-viec');
 }

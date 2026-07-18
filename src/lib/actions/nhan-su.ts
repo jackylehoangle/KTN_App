@@ -25,6 +25,14 @@ export async function createDepartment(input: DepartmentInput) {
   revalidatePath('/nhan-su/phong-ban');
 }
 
+export async function updateDepartment(id: string, input: DepartmentInput) {
+  const data = departmentSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('departments').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su/phong-ban');
+}
+
 export async function deleteDepartment(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('departments').delete().eq('id', id);
@@ -38,6 +46,17 @@ export async function createEmployee(input: EmployeeInput) {
   const { error } = await supabase
     .from('employees')
     .insert({ ...data, department_id: data.department_id || null });
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su');
+}
+
+export async function updateEmployee(id: string, input: EmployeeInput) {
+  const data = employeeSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('employees')
+    .update({ ...data, department_id: data.department_id || null })
+    .eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/nhan-su');
 }
@@ -87,6 +106,17 @@ export async function createPosition(input: PositionInput) {
   revalidatePath('/nhan-su/chuc-vu');
 }
 
+export async function updatePosition(id: string, input: PositionInput) {
+  const data = positionSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('positions')
+    .update({ ...data, department_id: data.department_id || null })
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su/chuc-vu');
+}
+
 export async function deletePosition(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('positions').delete().eq('id', id);
@@ -102,6 +132,14 @@ export async function createAttendance(input: AttendanceInput) {
   revalidatePath('/nhan-su/cham-cong');
 }
 
+export async function updateAttendance(id: string, input: AttendanceInput) {
+  const data = attendanceSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('attendance').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su/cham-cong');
+}
+
 export async function deleteAttendance(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('attendance').delete().eq('id', id);
@@ -113,6 +151,14 @@ export async function createPayroll(input: PayrollInput) {
   const data = payrollSchema.parse(input);
   const supabase = await createClient();
   const { error } = await supabase.from('payroll').insert(data);
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su/luong');
+}
+
+export async function updatePayroll(id: string, input: PayrollInput) {
+  const data = payrollSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('payroll').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/nhan-su/luong');
 }

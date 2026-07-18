@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,20 +24,30 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { warehouseSchema, type WarehouseInput } from '@/lib/validations/vat-tu';
-import { createWarehouse } from '@/lib/actions/vat-tu';
+import { createWarehouse, updateWarehouse } from '@/lib/actions/vat-tu';
+import type { Warehouse } from '@/types/database';
 
-export function WarehouseFormDialog() {
+export function WarehouseFormDialog({ warehouse }: { warehouse?: Warehouse }) {
   const [open, setOpen] = useState(false);
+  const isEdit = Boolean(warehouse);
 
   const form = useForm<WarehouseInput>({
     resolver: zodResolver(warehouseSchema),
-    defaultValues: { code: '', name: '', address: '' },
+    defaultValues: {
+      code: warehouse?.code ?? '',
+      name: warehouse?.name ?? '',
+      address: warehouse?.address ?? '',
+    },
   });
 
   async function onSubmit(values: WarehouseInput) {
     try {
-      await createWarehouse(values);
-      toast.success('Đã thêm kho');
+      if (isEdit && warehouse) {
+        await updateWarehouse(warehouse.id, values);
+      } else {
+        await createWarehouse(values);
+      }
+      toast.success(isEdit ? 'Đã cập nhật kho' : 'Đã thêm kho');
       setOpen(false);
       form.reset();
     } catch (e) {
@@ -48,14 +58,20 @@ export function WarehouseFormDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="size-4" />
-          Thêm kho
-        </Button>
+        {isEdit ? (
+          <Button variant="ghost" size="icon">
+            <Pencil className="size-4" />
+          </Button>
+        ) : (
+          <Button size="sm">
+            <Plus className="size-4" />
+            Thêm kho
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Thêm kho mới</DialogTitle>
+          <DialogTitle>{isEdit ? 'Sửa kho' : 'Thêm kho mới'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

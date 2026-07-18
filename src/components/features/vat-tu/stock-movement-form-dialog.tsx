@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,35 +32,42 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { stockMovementSchema, type StockMovementInput } from '@/lib/validations/vat-tu';
-import { createStockMovement } from '@/lib/actions/vat-tu';
-import type { Material, Warehouse } from '@/types/database';
+import { createStockMovement, updateStockMovement } from '@/lib/actions/vat-tu';
+import type { Material, Warehouse, StockMovement } from '@/types/database';
 
 export function StockMovementFormDialog({
   materials,
   warehouses,
+  movement,
 }: {
   materials: Material[];
   warehouses: Warehouse[];
+  movement?: StockMovement;
 }) {
   const [open, setOpen] = useState(false);
+  const isEdit = Boolean(movement);
 
   const form = useForm<StockMovementInput>({
     resolver: zodResolver(stockMovementSchema),
     defaultValues: {
-      code: '',
-      material_id: '',
-      warehouse_id: '',
-      movement_type: 'in',
-      quantity: 1,
-      unit_cost: 0,
-      note: '',
+      code: movement?.code ?? '',
+      material_id: movement?.material_id ?? '',
+      warehouse_id: movement?.warehouse_id ?? '',
+      movement_type: (movement?.movement_type as 'in' | 'out' | 'adjust') ?? 'in',
+      quantity: movement?.quantity ?? 1,
+      unit_cost: movement?.unit_cost ?? 0,
+      note: movement?.note ?? '',
     },
   });
 
   async function onSubmit(values: StockMovementInput) {
     try {
-      await createStockMovement(values);
-      toast.success('Đã ghi nhận phiếu kho');
+      if (isEdit && movement) {
+        await updateStockMovement(movement.id, values);
+      } else {
+        await createStockMovement(values);
+      }
+      toast.success(isEdit ? 'Đã cập nhật phiếu kho' : 'Đã ghi nhận phiếu kho');
       setOpen(false);
       form.reset();
     } catch (e) {
@@ -71,14 +78,20 @@ export function StockMovementFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="size-4" />
-          Tạo phiếu nhập/xuất
-        </Button>
+        {isEdit ? (
+          <Button variant="ghost" size="icon">
+            <Pencil className="size-4" />
+          </Button>
+        ) : (
+          <Button size="sm">
+            <Plus className="size-4" />
+            Tạo phiếu nhập/xuất
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Phiếu nhập / xuất kho</DialogTitle>
+          <DialogTitle>{isEdit ? 'Sửa phiếu kho' : 'Phiếu nhập / xuất kho'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

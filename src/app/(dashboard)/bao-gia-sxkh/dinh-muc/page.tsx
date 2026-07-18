@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 import type { BomItemInput } from '@/lib/validations/bao-gia-sxkh';
-import { createBomItem, deleteBomItem } from '@/lib/actions/bao-gia-sxkh';
+import { createBomItem, updateBomItem, deleteBomItem } from '@/lib/actions/bao-gia-sxkh';
 import type { Material } from '@/types/database';
 
 const defaultValues: BomItemInput = {
@@ -34,6 +34,21 @@ export default async function DinhMucPage() {
       .order('product_name'),
     supabase.from('materials').select('*').order('code'),
   ]);
+
+  const fields: EntityField<BomItemInput>[] = [
+    { name: 'product_name', label: 'Tên sản phẩm', placeholder: 'Tủ điện hạ thế' },
+    {
+      name: 'material_id',
+      label: 'Vật tư',
+      type: 'select',
+      options: ((materials as Material[]) ?? []).map((m) => ({
+        value: m.id,
+        label: `${m.code} — ${m.name}`,
+      })),
+    },
+    { name: 'quantity_required', label: 'Số lượng cần', type: 'number', half: true },
+    { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
+  ];
 
   return (
     <div className="space-y-4">
@@ -56,20 +71,7 @@ export default async function DinhMucPage() {
               Thêm định mức
             </Button>
           }
-          fields={[
-            { name: 'product_name', label: 'Tên sản phẩm', placeholder: 'Tủ điện hạ thế' },
-            {
-              name: 'material_id',
-              label: 'Vật tư',
-              type: 'select',
-              options: ((materials as Material[]) ?? []).map((m) => ({
-                value: m.id,
-                label: `${m.code} — ${m.name}`,
-              })),
-            },
-            { name: 'quantity_required', label: 'Số lượng cần', type: 'number', half: true },
-            { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -94,7 +96,29 @@ export default async function DinhMucPage() {
                 <TableCell className="text-right">{i.quantity_required}</TableCell>
                 <TableCell>{i.unit}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteBomItem.bind(null, i.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa định mức"
+                      schemaKey="bomItem"
+                      mode="edit"
+                      recordId={i.id}
+                      defaultValues={{
+                        product_name: i.product_name,
+                        material_id: i.material_id ?? '',
+                        quantity_required: i.quantity_required,
+                        unit: i.unit,
+                      }}
+                      onUpdate={updateBomItem}
+                      successMessage="Đã cập nhật định mức"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteBomItem.bind(null, i.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

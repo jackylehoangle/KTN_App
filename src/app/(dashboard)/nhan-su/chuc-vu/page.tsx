@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { NHAN_SU_TABS as TABS } from '@/lib/constants';
 import type { PositionInput } from '@/lib/validations/nhan-su';
-import { createPosition, deletePosition } from '@/lib/actions/nhan-su';
+import { createPosition, updatePosition, deletePosition } from '@/lib/actions/nhan-su';
 import type { Department } from '@/types/database';
 
 const defaultValues: PositionInput = { name: '', department_id: '' };
@@ -26,6 +26,16 @@ export default async function ChucVuPage() {
     supabase.from('positions').select('*, departments(name)').order('name'),
     supabase.from('departments').select('*').order('name'),
   ]);
+
+  const fields: EntityField<PositionInput>[] = [
+    { name: 'name', label: 'Tên chức vụ', placeholder: 'Kỹ sư điện' },
+    {
+      name: 'department_id',
+      label: 'Phòng ban (tuỳ chọn)',
+      type: 'select',
+      options: ((departments as Department[]) ?? []).map((d) => ({ value: d.id, label: d.name })),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -48,15 +58,7 @@ export default async function ChucVuPage() {
               Thêm chức vụ
             </Button>
           }
-          fields={[
-            { name: 'name', label: 'Tên chức vụ', placeholder: 'Kỹ sư điện' },
-            {
-              name: 'department_id',
-              label: 'Phòng ban (tuỳ chọn)',
-              type: 'select',
-              options: ((departments as Department[]) ?? []).map((d) => ({ value: d.id, label: d.name })),
-            },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -75,7 +77,24 @@ export default async function ChucVuPage() {
                 <TableCell>{p.name}</TableCell>
                 <TableCell className="text-muted-foreground">{p.departments?.name ?? '—'}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deletePosition.bind(null, p.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa chức vụ"
+                      schemaKey="position"
+                      mode="edit"
+                      recordId={p.id}
+                      defaultValues={{ name: p.name, department_id: p.department_id ?? '' }}
+                      onUpdate={updatePosition}
+                      successMessage="Đã cập nhật chức vụ"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deletePosition.bind(null, p.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

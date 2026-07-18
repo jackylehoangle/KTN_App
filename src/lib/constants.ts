@@ -41,6 +41,11 @@ export const MODULES: ModuleNavItem[] = [
     href: '/bao-gia-sxkh',
     roles: ['admin', 'kinh_doanh', 'san_xuat'],
   },
+  {
+    title: 'Báo cáo',
+    href: '/bao-cao',
+    roles: ['admin'],
+  },
 ];
 
 export type TabItem = { title: string; href: string };
@@ -93,6 +98,7 @@ export const PAGE_TITLES: Record<string, string> = {
   '/': 'Trang chủ',
   '/setup': 'Thiết lập hệ thống',
   '/login': 'Đăng nhập',
+  '/bao-cao': 'Báo cáo',
 };
 for (const tabs of [KINH_DOANH_TABS, VAT_TU_TABS, NHAN_SU_TABS, TAI_CHINH_TABS, BAO_GIA_SXKH_TABS]) {
   for (const tab of tabs) PAGE_TITLES[tab.href] = tab.title;

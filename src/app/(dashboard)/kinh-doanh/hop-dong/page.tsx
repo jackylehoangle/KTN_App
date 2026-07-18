@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
 import type { ContractInput } from '@/lib/validations/kinh-doanh';
-import { createContract, deleteContract } from '@/lib/actions/kinh-doanh';
+import { createContract, updateContract, deleteContract } from '@/lib/actions/kinh-doanh';
 import type { Customer, ContractStatus } from '@/types/database';
 import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
@@ -42,6 +42,26 @@ export default async function HopDongPage() {
     supabase.from('customers').select('*').order('name'),
   ]);
 
+  const fields: EntityField<ContractInput>[] = [
+    { name: 'code', label: 'Mã hợp đồng', placeholder: 'HD001', half: true },
+    {
+      name: 'status',
+      label: 'Trạng thái',
+      type: 'select',
+      half: true,
+      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    { name: 'title', label: 'Tên hợp đồng', placeholder: 'Hợp đồng cung cấp thiết bị điện' },
+    {
+      name: 'customer_id',
+      label: 'Khách hàng',
+      type: 'select',
+      half: true,
+      options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
+    },
+    { name: 'value', label: 'Giá trị (VND)', type: 'number', half: true },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -63,25 +83,7 @@ export default async function HopDongPage() {
               Thêm hợp đồng
             </Button>
           }
-          fields={[
-            { name: 'code', label: 'Mã hợp đồng', placeholder: 'HD001', half: true },
-            {
-              name: 'status',
-              label: 'Trạng thái',
-              type: 'select',
-              half: true,
-              options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
-            },
-            { name: 'title', label: 'Tên hợp đồng', placeholder: 'Hợp đồng cung cấp thiết bị điện' },
-            {
-              name: 'customer_id',
-              label: 'Khách hàng',
-              type: 'select',
-              half: true,
-              options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
-            },
-            { name: 'value', label: 'Giá trị (VND)', type: 'number', half: true },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -110,7 +112,30 @@ export default async function HopDongPage() {
                 </TableCell>
                 <TableCell className="text-right">{formatVND(c.value)}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteContract.bind(null, c.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa hợp đồng"
+                      schemaKey="contract"
+                      mode="edit"
+                      recordId={c.id}
+                      defaultValues={{
+                        code: c.code,
+                        customer_id: c.customer_id ?? '',
+                        title: c.title,
+                        value: c.value,
+                        status: c.status,
+                      }}
+                      onUpdate={updateContract}
+                      successMessage="Đã cập nhật hợp đồng"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteContract.bind(null, c.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

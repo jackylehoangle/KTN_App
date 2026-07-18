@@ -9,6 +9,7 @@ import {
   Wallet,
   FileSpreadsheet,
   LayoutDashboard,
+  BarChart3,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -31,6 +32,7 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
   '/nhan-su': Users,
   '/tai-chinh': Wallet,
   '/bao-gia-sxkh': FileSpreadsheet,
+  '/bao-cao': BarChart3,
 };
 
 export function AppSidebar({ profile }: { profile: Profile }) {
@@ -38,7 +40,7 @@ export function AppSidebar({ profile }: { profile: Profile }) {
   const visibleModules = MODULES.filter((m) => m.roles.includes(profile.role));
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="print:hidden">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

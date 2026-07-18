@@ -49,7 +49,10 @@ export default async function NhaCungCapPage() {
                 <TableCell className="text-muted-foreground">{s.contact_person ?? '—'}</TableCell>
                 <TableCell className="text-muted-foreground">{s.phone ?? '—'}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteSupplier.bind(null, s.id)} />
+                  <div className="flex justify-end gap-1">
+                    <SupplierFormDialog supplier={s} />
+                    <ConfirmDeleteButton onConfirm={deleteSupplier.bind(null, s.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

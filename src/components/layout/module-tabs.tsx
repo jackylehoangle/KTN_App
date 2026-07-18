@@ -8,7 +8,7 @@ export function ModuleTabs({ items }: { items: { title: string; href: string }[]
   const pathname = usePathname();
 
   return (
-    <div className="flex gap-1 border-b">
+    <div className="flex gap-1 border-b print:hidden">
       {items.map((item) => {
         const isActive = pathname === item.href;
         return (

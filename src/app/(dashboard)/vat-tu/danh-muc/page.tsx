@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
 import type { MaterialCategoryInput } from '@/lib/validations/vat-tu';
-import { createMaterialCategory, deleteMaterialCategory } from '@/lib/actions/vat-tu';
+import { createMaterialCategory, updateMaterialCategory, deleteMaterialCategory } from '@/lib/actions/vat-tu';
 import type { MaterialCategory } from '@/types/database';
 
 const defaultValues: MaterialCategoryInput = { name: '', parent_id: '' };
@@ -29,6 +29,16 @@ export default async function DanhMucPage() {
 
   const list = (categories as MaterialCategory[]) ?? [];
   const nameById = new Map(list.map((c) => [c.id, c.name]));
+
+  const fields: EntityField<MaterialCategoryInput>[] = [
+    { name: 'name', label: 'Tên danh mục', placeholder: 'Thiết bị điện' },
+    {
+      name: 'parent_id',
+      label: 'Danh mục cha (tuỳ chọn)',
+      type: 'select',
+      options: list.map((c) => ({ value: c.id, label: c.name })),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -51,15 +61,7 @@ export default async function DanhMucPage() {
               Thêm danh mục
             </Button>
           }
-          fields={[
-            { name: 'name', label: 'Tên danh mục', placeholder: 'Thiết bị điện' },
-            {
-              name: 'parent_id',
-              label: 'Danh mục cha (tuỳ chọn)',
-              type: 'select',
-              options: list.map((c) => ({ value: c.id, label: c.name })),
-            },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -79,7 +81,24 @@ export default async function DanhMucPage() {
                   {c.parent_id ? (nameById.get(c.parent_id) ?? '—') : '—'}
                 </TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteMaterialCategory.bind(null, c.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa danh mục"
+                      schemaKey="materialCategory"
+                      mode="edit"
+                      recordId={c.id}
+                      defaultValues={{ name: c.name, parent_id: c.parent_id ?? '' }}
+                      onUpdate={updateMaterialCategory}
+                      successMessage="Đã cập nhật danh mục"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteMaterialCategory.bind(null, c.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

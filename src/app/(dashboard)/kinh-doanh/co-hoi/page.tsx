@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
 import type { OpportunityInput } from '@/lib/validations/kinh-doanh';
-import { createOpportunity, deleteOpportunity } from '@/lib/actions/kinh-doanh';
+import { createOpportunity, updateOpportunity, deleteOpportunity } from '@/lib/actions/kinh-doanh';
 import type { Customer, OpportunityStage } from '@/types/database';
 import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
@@ -44,6 +44,26 @@ export default async function CoHoiPage() {
     supabase.from('customers').select('*').order('name'),
   ]);
 
+  const fields: EntityField<OpportunityInput>[] = [
+    { name: 'code', label: 'Mã cơ hội', placeholder: 'CH001', half: true },
+    {
+      name: 'stage',
+      label: 'Giai đoạn',
+      type: 'select',
+      half: true,
+      options: Object.entries(STAGE_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    { name: 'name', label: 'Tên cơ hội', placeholder: 'Dự án lắp điện nhà máy X' },
+    {
+      name: 'customer_id',
+      label: 'Khách hàng',
+      type: 'select',
+      half: true,
+      options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
+    },
+    { name: 'value', label: 'Giá trị dự kiến (VND)', type: 'number', half: true },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -65,25 +85,7 @@ export default async function CoHoiPage() {
               Thêm cơ hội
             </Button>
           }
-          fields={[
-            { name: 'code', label: 'Mã cơ hội', placeholder: 'CH001', half: true },
-            {
-              name: 'stage',
-              label: 'Giai đoạn',
-              type: 'select',
-              half: true,
-              options: Object.entries(STAGE_LABEL).map(([value, label]) => ({ value, label })),
-            },
-            { name: 'name', label: 'Tên cơ hội', placeholder: 'Dự án lắp điện nhà máy X' },
-            {
-              name: 'customer_id',
-              label: 'Khách hàng',
-              type: 'select',
-              half: true,
-              options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
-            },
-            { name: 'value', label: 'Giá trị dự kiến (VND)', type: 'number', half: true },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -112,7 +114,30 @@ export default async function CoHoiPage() {
                 </TableCell>
                 <TableCell className="text-right">{formatVND(o.value)}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteOpportunity.bind(null, o.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa cơ hội"
+                      schemaKey="opportunity"
+                      mode="edit"
+                      recordId={o.id}
+                      defaultValues={{
+                        code: o.code,
+                        customer_id: o.customer_id ?? '',
+                        name: o.name,
+                        stage: o.stage,
+                        value: o.value,
+                      }}
+                      onUpdate={updateOpportunity}
+                      successMessage="Đã cập nhật cơ hội"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteOpportunity.bind(null, o.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

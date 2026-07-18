@@ -50,6 +50,14 @@ export async function createWarehouse(input: WarehouseInput) {
   revalidatePath('/vat-tu/kho');
 }
 
+export async function updateWarehouse(id: string, input: WarehouseInput) {
+  const data = warehouseSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('warehouses').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/vat-tu/kho');
+}
+
 export async function deleteWarehouse(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('warehouses').delete().eq('id', id);
@@ -61,6 +69,14 @@ export async function createSupplier(input: SupplierInput) {
   const data = supplierSchema.parse(input);
   const supabase = await createClient();
   const { error } = await supabase.from('suppliers').insert(data);
+  if (error) throw new Error(error.message);
+  revalidatePath('/vat-tu/nha-cung-cap');
+}
+
+export async function updateSupplier(id: string, input: SupplierInput) {
+  const data = supplierSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('suppliers').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/nha-cung-cap');
 }
@@ -86,6 +102,15 @@ export async function createStockMovement(input: StockMovementInput) {
   revalidatePath('/vat-tu');
 }
 
+export async function updateStockMovement(id: string, input: StockMovementInput) {
+  const data = stockMovementSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('stock_movements').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/vat-tu/nhap-xuat');
+  revalidatePath('/vat-tu');
+}
+
 export async function deleteStockMovement(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('stock_movements').delete().eq('id', id);
@@ -100,6 +125,17 @@ export async function createMaterialCategory(input: MaterialCategoryInput) {
   const { error } = await supabase
     .from('material_categories')
     .insert({ ...data, parent_id: data.parent_id || null });
+  if (error) throw new Error(error.message);
+  revalidatePath('/vat-tu/danh-muc');
+}
+
+export async function updateMaterialCategory(id: string, input: MaterialCategoryInput) {
+  const data = materialCategorySchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('material_categories')
+    .update({ ...data, parent_id: data.parent_id || null })
+    .eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/danh-muc');
 }
@@ -119,6 +155,14 @@ export async function createPurchaseOrder(input: PurchaseOrderInput) {
   revalidatePath('/vat-tu/don-mua');
 }
 
+export async function updatePurchaseOrder(id: string, input: PurchaseOrderInput) {
+  const data = purchaseOrderSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('purchase_orders').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/vat-tu/don-mua');
+}
+
 export async function deletePurchaseOrder(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from('purchase_orders').delete().eq('id', id);
@@ -130,6 +174,14 @@ export async function createPurchaseOrderItem(input: PurchaseOrderItemInput) {
   const data = purchaseOrderItemSchema.parse(input);
   const supabase = await createClient();
   const { error } = await supabase.from('purchase_order_items').insert(data);
+  if (error) throw new Error(error.message);
+  revalidatePath('/vat-tu/chi-tiet-don-mua');
+}
+
+export async function updatePurchaseOrderItem(id: string, input: PurchaseOrderItemInput) {
+  const data = purchaseOrderItemSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('purchase_order_items').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/chi-tiet-don-mua');
 }

@@ -47,7 +47,10 @@ export default async function KhoPage() {
                 <TableCell>{w.name}</TableCell>
                 <TableCell className="text-muted-foreground">{w.address ?? '—'}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteWarehouse.bind(null, w.id)} />
+                  <div className="flex justify-end gap-1">
+                    <WarehouseFormDialog warehouse={w} />
+                    <ConfirmDeleteButton onConfirm={deleteWarehouse.bind(null, w.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

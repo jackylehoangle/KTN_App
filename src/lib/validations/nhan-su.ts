@@ -14,6 +14,7 @@ export const employeeSchema = z.object({
   hire_date: z.string().optional(),
   status: z.enum(['active', 'probation', 'inactive', 'terminated']),
   base_salary: z.number().min(0),
+  avatar_url: z.string().optional(),
 });
 export type EmployeeInput = z.infer<typeof employeeSchema>;
 

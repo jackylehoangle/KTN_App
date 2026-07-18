@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { formatVND, formatDate } from '@/lib/constants';
 import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
-import { createQuotation, deleteQuotation } from '@/lib/actions/bao-gia-sxkh';
+import { createQuotation, updateQuotation, deleteQuotation } from '@/lib/actions/bao-gia-sxkh';
 import type { Customer, QuotationStatus } from '@/types/database';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 
@@ -47,6 +47,27 @@ export default async function BaoGiaPage() {
     supabase.from('customers').select('*').order('name'),
   ]);
 
+  const fields: EntityField<QuotationInput>[] = [
+    { name: 'code', label: 'Số báo giá', placeholder: 'BG0001', half: true },
+    {
+      name: 'status',
+      label: 'Trạng thái',
+      type: 'select',
+      half: true,
+      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    {
+      name: 'customer_id',
+      label: 'Khách hàng',
+      type: 'select',
+      options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
+    },
+    { name: 'quotation_date', label: 'Ngày báo giá', type: 'date', half: true },
+    { name: 'valid_until', label: 'Có hiệu lực đến', type: 'date', half: true },
+    { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number', half: true },
+    { name: 'notes', label: 'Ghi chú', type: 'textarea' },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -68,26 +89,7 @@ export default async function BaoGiaPage() {
               Tạo báo giá
             </Button>
           }
-          fields={[
-            { name: 'code', label: 'Số báo giá', placeholder: 'BG0001', half: true },
-            {
-              name: 'status',
-              label: 'Trạng thái',
-              type: 'select',
-              half: true,
-              options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
-            },
-            {
-              name: 'customer_id',
-              label: 'Khách hàng',
-              type: 'select',
-              options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
-            },
-            { name: 'quotation_date', label: 'Ngày báo giá', type: 'date', half: true },
-            { name: 'valid_until', label: 'Có hiệu lực đến', type: 'date', half: true },
-            { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number', half: true },
-            { name: 'notes', label: 'Ghi chú', type: 'textarea' },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -116,7 +118,32 @@ export default async function BaoGiaPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteQuotation.bind(null, q.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa báo giá"
+                      schemaKey="quotation"
+                      mode="edit"
+                      recordId={q.id}
+                      defaultValues={{
+                        code: q.code,
+                        customer_id: q.customer_id ?? '',
+                        quotation_date: q.quotation_date,
+                        valid_until: q.valid_until ?? '',
+                        status: q.status,
+                        total_amount: q.total_amount,
+                        notes: q.notes ?? '',
+                      }}
+                      onUpdate={updateQuotation}
+                      successMessage="Đã cập nhật báo giá"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteQuotation.bind(null, q.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

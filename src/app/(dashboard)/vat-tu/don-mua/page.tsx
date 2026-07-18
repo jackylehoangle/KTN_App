@@ -1,22 +1,13 @@
 import { Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
-import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { formatVND, formatDate, VAT_TU_TABS as TABS } from '@/lib/constants';
+import { PurchaseOrderTable } from '@/components/features/vat-tu/purchase-order-table';
+import { VAT_TU_TABS as TABS } from '@/lib/constants';
 import type { PurchaseOrderInput } from '@/lib/validations/vat-tu';
-import { createPurchaseOrder, deletePurchaseOrder } from '@/lib/actions/vat-tu';
+import { createPurchaseOrder } from '@/lib/actions/vat-tu';
 import type { Supplier, PurchaseOrderStatus } from '@/types/database';
 
 const STATUS_LABEL: Record<PurchaseOrderStatus, string> = {
@@ -45,6 +36,26 @@ export default async function DonMuaPage() {
     supabase.from('suppliers').select('*').order('name'),
   ]);
 
+  const fields: EntityField<PurchaseOrderInput>[] = [
+    { name: 'code', label: 'Mã đơn mua', placeholder: 'PO0001', half: true },
+    {
+      name: 'status',
+      label: 'Trạng thái',
+      type: 'select',
+      half: true,
+      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    {
+      name: 'supplier_id',
+      label: 'Nhà cung cấp',
+      type: 'select',
+      options: ((suppliers as Supplier[]) ?? []).map((s) => ({ value: s.id, label: s.name })),
+    },
+    { name: 'order_date', label: 'Ngày đặt hàng', type: 'date', half: true },
+    { name: 'expected_date', label: 'Ngày dự kiến nhận', type: 'date', half: true },
+    { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number' },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -66,71 +77,11 @@ export default async function DonMuaPage() {
               Thêm đơn mua
             </Button>
           }
-          fields={[
-            { name: 'code', label: 'Mã đơn mua', placeholder: 'PO0001', half: true },
-            {
-              name: 'status',
-              label: 'Trạng thái',
-              type: 'select',
-              half: true,
-              options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
-            },
-            {
-              name: 'supplier_id',
-              label: 'Nhà cung cấp',
-              type: 'select',
-              options: ((suppliers as Supplier[]) ?? []).map((s) => ({ value: s.id, label: s.name })),
-            },
-            { name: 'order_date', label: 'Ngày đặt hàng', type: 'date', half: true },
-            { name: 'expected_date', label: 'Ngày dự kiến nhận', type: 'date', half: true },
-            { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number' },
-          ]}
+          fields={fields}
         />
       </div>
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Mã</TableHead>
-              <TableHead>Nhà cung cấp</TableHead>
-              <TableHead>Ngày đặt</TableHead>
-              <TableHead className="text-right">Tổng giá trị</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-16" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {((orders as any[]) ?? []).map((o) => (
-              <TableRow key={o.id}>
-                <TableCell className="font-mono text-sm">{o.code}</TableCell>
-                <TableCell className="text-muted-foreground">{o.suppliers?.name ?? '—'}</TableCell>
-                <TableCell className="text-muted-foreground">{formatDate(o.order_date)}</TableCell>
-                <TableCell className="text-right">{formatVND(o.total_amount)}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      o.status === 'received' ? 'default' : o.status === 'cancelled' ? 'destructive' : 'secondary'
-                    }
-                  >
-                    {STATUS_LABEL[o.status as PurchaseOrderStatus]}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <ConfirmDeleteButton onConfirm={deletePurchaseOrder.bind(null, o.id)} />
-                </TableCell>
-              </TableRow>
-            ))}
-            {(!orders || orders.length === 0) && (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                  Chưa có đơn mua hàng nào.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <PurchaseOrderTable orders={(orders as any[]) ?? []} fields={fields} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { formatVND, KINH_DOANH_TABS as TABS } from '@/lib/constants';
 import type { SalesOrderItemInput } from '@/lib/validations/kinh-doanh';
-import { createSalesOrderItem, deleteSalesOrderItem } from '@/lib/actions/kinh-doanh';
+import { createSalesOrderItem, updateSalesOrderItem, deleteSalesOrderItem } from '@/lib/actions/kinh-doanh';
 import type { SalesOrder } from '@/types/database';
 
 const defaultValues: SalesOrderItemInput = {
@@ -35,6 +35,19 @@ export default async function ChiTietDonHangPage() {
       .order('id', { ascending: false }),
     supabase.from('sales_orders').select('*').order('code'),
   ]);
+
+  const fields: EntityField<SalesOrderItemInput>[] = [
+    {
+      name: 'sales_order_id',
+      label: 'Đơn hàng',
+      type: 'select',
+      options: ((orders as SalesOrder[]) ?? []).map((o) => ({ value: o.id, label: o.code })),
+    },
+    { name: 'product_name', label: 'Tên sản phẩm', placeholder: 'Tủ điện hạ thế' },
+    { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
+    { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
+    { name: 'unit_price', label: 'Đơn giá (VND)', type: 'number' },
+  ];
 
   return (
     <div className="space-y-4">
@@ -57,18 +70,7 @@ export default async function ChiTietDonHangPage() {
               Thêm dòng
             </Button>
           }
-          fields={[
-            {
-              name: 'sales_order_id',
-              label: 'Đơn hàng',
-              type: 'select',
-              options: ((orders as SalesOrder[]) ?? []).map((o) => ({ value: o.id, label: o.code })),
-            },
-            { name: 'product_name', label: 'Tên sản phẩm', placeholder: 'Tủ điện hạ thế' },
-            { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
-            { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
-            { name: 'unit_price', label: 'Đơn giá (VND)', type: 'number' },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -95,7 +97,30 @@ export default async function ChiTietDonHangPage() {
                 <TableCell className="text-right">{formatVND(i.unit_price)}</TableCell>
                 <TableCell className="text-right">{formatVND(i.subtotal)}</TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteSalesOrderItem.bind(null, i.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa dòng đơn hàng"
+                      schemaKey="salesOrderItem"
+                      mode="edit"
+                      recordId={i.id}
+                      defaultValues={{
+                        sales_order_id: i.sales_order_id,
+                        product_name: i.product_name,
+                        quantity: i.quantity,
+                        unit: i.unit,
+                        unit_price: i.unit_price,
+                      }}
+                      onUpdate={updateSalesOrderItem}
+                      successMessage="Đã cập nhật dòng đơn hàng"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteSalesOrderItem.bind(null, i.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

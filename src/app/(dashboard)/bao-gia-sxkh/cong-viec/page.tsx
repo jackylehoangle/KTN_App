@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
-import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
+import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { formatDate, BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 import type { ProductionTaskInput } from '@/lib/validations/bao-gia-sxkh';
-import { createProductionTask, deleteProductionTask } from '@/lib/actions/bao-gia-sxkh';
+import { createProductionTask, updateProductionTask, deleteProductionTask } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlan, Profile, ProductionTaskStatus } from '@/types/database';
 
 const STATUS_LABEL: Record<ProductionTaskStatus, string> = {
@@ -46,6 +46,33 @@ export default async function CongViecPage() {
     supabase.from('profiles').select('*').order('full_name'),
   ]);
 
+  const fields: EntityField<ProductionTaskInput>[] = [
+    {
+      name: 'production_plan_id',
+      label: 'Kế hoạch sản xuất',
+      type: 'select',
+      options: ((plans as ProductionPlan[]) ?? []).map((p) => ({ value: p.id, label: p.code })),
+    },
+    { name: 'task_name', label: 'Tên công việc', placeholder: 'Gia công khung tủ' },
+    {
+      name: 'assigned_to',
+      label: 'Người phụ trách (tuỳ chọn)',
+      type: 'select',
+      half: true,
+      options: ((profiles as Profile[]) ?? []).map((p) => ({ value: p.id, label: p.full_name })),
+    },
+    {
+      name: 'status',
+      label: 'Trạng thái',
+      type: 'select',
+      half: true,
+      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    { name: 'start_date', label: 'Ngày bắt đầu', type: 'date', half: true },
+    { name: 'end_date', label: 'Ngày kết thúc', type: 'date', half: true },
+    { name: 'progress_pct', label: 'Tiến độ (%)', type: 'number' },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -67,32 +94,7 @@ export default async function CongViecPage() {
               Thêm công việc
             </Button>
           }
-          fields={[
-            {
-              name: 'production_plan_id',
-              label: 'Kế hoạch sản xuất',
-              type: 'select',
-              options: ((plans as ProductionPlan[]) ?? []).map((p) => ({ value: p.id, label: p.code })),
-            },
-            { name: 'task_name', label: 'Tên công việc', placeholder: 'Gia công khung tủ' },
-            {
-              name: 'assigned_to',
-              label: 'Người phụ trách (tuỳ chọn)',
-              type: 'select',
-              half: true,
-              options: ((profiles as Profile[]) ?? []).map((p) => ({ value: p.id, label: p.full_name })),
-            },
-            {
-              name: 'status',
-              label: 'Trạng thái',
-              type: 'select',
-              half: true,
-              options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
-            },
-            { name: 'start_date', label: 'Ngày bắt đầu', type: 'date', half: true },
-            { name: 'end_date', label: 'Ngày kết thúc', type: 'date', half: true },
-            { name: 'progress_pct', label: 'Tiến độ (%)', type: 'number' },
-          ]}
+          fields={fields}
         />
       </div>
       <div className="rounded-lg border">
@@ -125,7 +127,32 @@ export default async function CongViecPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <ConfirmDeleteButton onConfirm={deleteProductionTask.bind(null, t.id)} />
+                  <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Sửa công việc"
+                      schemaKey="productionTask"
+                      mode="edit"
+                      recordId={t.id}
+                      defaultValues={{
+                        production_plan_id: t.production_plan_id,
+                        task_name: t.task_name,
+                        assigned_to: t.assigned_to ?? '',
+                        start_date: t.start_date ?? '',
+                        end_date: t.end_date ?? '',
+                        status: t.status,
+                        progress_pct: t.progress_pct,
+                      }}
+                      onUpdate={updateProductionTask}
+                      successMessage="Đã cập nhật công việc"
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                      fields={fields}
+                    />
+                    <ConfirmDeleteButton onConfirm={deleteProductionTask.bind(null, t.id)} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
