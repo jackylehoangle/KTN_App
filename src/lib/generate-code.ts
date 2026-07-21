@@ -2,24 +2,23 @@ import type { createClient } from '@/lib/supabase/server';
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
-// Looks up the highest existing code with this prefix and returns the next one,
-// e.g. prefix "KH", padLength 3, existing max "KH014" -> "KH015".
+// Generates the next code via a Postgres sequence + SECURITY DEFINER RPC
+// (see supabase/permissions_setup.sql), so it's race-safe across concurrent
+// creates and unaffected by the row-level security scoping on the table
+// itself (a staff-level user can't necessarily read every existing row).
 export async function generateNextCode(
   supabase: SupabaseServerClient,
   table: string,
   prefix: string,
   padLength: number
 ): Promise<string> {
-  const { data } = await supabase
-    .from(table)
-    .select('code')
-    .like('code', `${prefix}%`)
-    .order('code', { ascending: false })
-    .limit(1);
-
-  const last = (data?.[0] as { code?: string } | undefined)?.code;
-  const lastNum = last ? parseInt(last.slice(prefix.length), 10) || 0 : 0;
-  return `${prefix}${String(lastNum + 1).padStart(padLength, '0')}`;
+  const { data, error } = await supabase.rpc('next_code', {
+    seq_name: `${table}_code_seq`,
+    prefix,
+    pad_length: padLength,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
 }
 
 // Same as generateNextCode but reserves a contiguous block of `count` codes,
@@ -31,7 +30,13 @@ export async function generateCodeSequence(
   padLength: number,
   count: number
 ): Promise<string[]> {
-  const first = await generateNextCode(supabase, table, prefix, padLength);
-  const startNum = parseInt(first.slice(prefix.length), 10);
-  return Array.from({ length: count }, (_, i) => `${prefix}${String(startNum + i).padStart(padLength, '0')}`);
+  if (count === 0) return [];
+  const { data, error } = await supabase.rpc('next_code_batch', {
+    seq_name: `${table}_code_seq`,
+    prefix,
+    pad_length: padLength,
+    cnt: count,
+  });
+  if (error) throw new Error(error.message);
+  return data as string[];
 }

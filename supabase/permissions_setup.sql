@@ -297,3 +297,85 @@ drop policy if exists "sx_read_task" on production_tasks;
 create policy "sx_read_task" on production_tasks for select using (
   auth_role() = 'admin' or has_module_permission('/bao-gia-sxkh') or auth_role() in ('kinh_doanh', 'san_xuat')
 );
+
+-- ============================================================
+-- 5. Sửa lỗi sinh mã trùng (VD "DX0001" trùng "DX0001")
+--    Nguyên nhân: hàm sinh mã cũ đọc bảng qua session người dùng để tìm mã lớn
+--    nhất — sau khi bật RLS theo phòng ban/cấp bậc ở mục 4, nhân viên không
+--    còn thấy hết mã của người khác cùng phòng nên tính sai mã kế tiếp và
+--    trùng với mã đã tồn tại (lỗi này cũng có thể xảy ra do 2 người tạo cùng
+--    lúc, kể cả trước khi có RLS mới). Giải pháp: dùng sequence Postgres +
+--    hàm SECURITY DEFINER để sinh mã, bỏ qua RLS hoàn toàn và luôn tăng dần
+--    an toàn dù nhiều người tạo cùng lúc.
+-- ============================================================
+create sequence if not exists customers_code_seq;
+create sequence if not exists opportunities_code_seq;
+create sequence if not exists contracts_code_seq;
+create sequence if not exists sales_orders_code_seq;
+create sequence if not exists materials_code_seq;
+create sequence if not exists warehouses_code_seq;
+create sequence if not exists suppliers_code_seq;
+create sequence if not exists stock_movements_code_seq;
+create sequence if not exists purchase_orders_code_seq;
+create sequence if not exists employees_code_seq;
+create sequence if not exists transactions_code_seq;
+create sequence if not exists invoices_code_seq;
+create sequence if not exists quotations_code_seq;
+create sequence if not exists production_plans_code_seq;
+create sequence if not exists approval_requests_code_seq;
+
+-- Khởi tạo giá trị sequence bằng đúng số lớn nhất đang có trong bảng (chạy
+-- với quyền chủ sở hữu bảng nên đọc được toàn bộ, không bị RLS giới hạn),
+-- để không sinh lại mã đã tồn tại.
+create or replace function seed_code_sequence(tbl text, seq_name text, prefix text) returns void as $$
+declare
+  cur_max bigint;
+begin
+  execute format(
+    'select coalesce(max((substring(code from %L))::bigint), 0) from %I where code like %L',
+    length(prefix) + 1, tbl, prefix || '%'
+  ) into cur_max;
+  execute format('select setval(%L, %L)', seq_name, cur_max);
+end;
+$$ language plpgsql;
+
+select seed_code_sequence('customers', 'customers_code_seq', 'KH');
+select seed_code_sequence('opportunities', 'opportunities_code_seq', 'CH');
+select seed_code_sequence('contracts', 'contracts_code_seq', 'HD');
+select seed_code_sequence('sales_orders', 'sales_orders_code_seq', 'DH');
+select seed_code_sequence('materials', 'materials_code_seq', 'VT');
+select seed_code_sequence('warehouses', 'warehouses_code_seq', 'KHO');
+select seed_code_sequence('suppliers', 'suppliers_code_seq', 'NCC');
+select seed_code_sequence('stock_movements', 'stock_movements_code_seq', 'PN');
+select seed_code_sequence('purchase_orders', 'purchase_orders_code_seq', 'PO');
+select seed_code_sequence('employees', 'employees_code_seq', 'NV');
+select seed_code_sequence('transactions', 'transactions_code_seq', 'PT');
+select seed_code_sequence('invoices', 'invoices_code_seq', 'HD');
+select seed_code_sequence('quotations', 'quotations_code_seq', 'BG');
+select seed_code_sequence('production_plans', 'production_plans_code_seq', 'SX');
+select seed_code_sequence('approval_requests', 'approval_requests_code_seq', 'DX');
+
+-- Sinh 1 mã kế tiếp; SECURITY DEFINER nên bỏ qua RLS của bảng liên quan hoàn toàn.
+create or replace function next_code(seq_name text, prefix text, pad_length int) returns text as $$
+declare
+  n bigint;
+begin
+  execute format('select nextval(%L)', seq_name) into n;
+  return prefix || lpad(n::text, pad_length, '0');
+end;
+$$ language plpgsql security definer;
+
+-- Sinh nhiều mã liên tiếp cùng lúc, dùng cho import Excel hàng loạt.
+create or replace function next_code_batch(seq_name text, prefix text, pad_length int, cnt int) returns text[] as $$
+declare
+  result text[] := '{}';
+  n bigint;
+  i int;
+begin
+  for i in 1..cnt loop
+    execute format('select nextval(%L)', seq_name) into n;
+    result := array_append(result, prefix || lpad(n::text, pad_length, '0'));
+  end loop;
+  return result;
+end;
+$$ language plpgsql security definer;
