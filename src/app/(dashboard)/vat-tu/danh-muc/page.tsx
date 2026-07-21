@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,11 +15,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { MaterialCategoryInput } from '@/lib/validations/vat-tu';
 import { createMaterialCategory, updateMaterialCategory, deleteMaterialCategory } from '@/lib/actions/vat-tu';
 import type { MaterialCategory } from '@/types/database';
 
-const defaultValues: MaterialCategoryInput = { name: '', parent_id: '' };
+const defaultValues: MaterialCategoryInput = { name: '', parent_id: '', attachment_url: '' };
 
 export default async function DanhMucPage() {
   const supabase = await createClient();
@@ -38,6 +40,12 @@ export default async function DanhMucPage() {
       type: 'select',
       options: list.map((c) => ({ value: c.id, label: c.name })),
     },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
+  ];
+
+  const excelColumns: ExcelColumn<MaterialCategory>[] = [
+    { header: 'Tên danh mục', value: (c) => c.name },
+    { header: 'Danh mục cha', value: (c) => (c.parent_id ? (nameById.get(c.parent_id) ?? '') : '') },
   ];
 
   return (
@@ -48,7 +56,8 @@ export default async function DanhMucPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <TableActions rows={list} columns={excelColumns} filename="danh-muc-vat-tu" />
         <EntityFormDialog
           title="Thêm danh mục"
           schemaKey="materialCategory"
@@ -56,7 +65,7 @@ export default async function DanhMucPage() {
           onSubmit={createMaterialCategory}
           successMessage="Đã thêm danh mục"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm danh mục
             </Button>
@@ -70,7 +79,7 @@ export default async function DanhMucPage() {
             <TableRow>
               <TableHead>Tên danh mục</TableHead>
               <TableHead>Danh mục cha</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -80,14 +89,18 @@ export default async function DanhMucPage() {
                 <TableCell className="text-muted-foreground">
                   {c.parent_id ? (nameById.get(c.parent_id) ?? '—') : '—'}
                 </TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa danh mục"
                       schemaKey="materialCategory"
                       mode="edit"
                       recordId={c.id}
-                      defaultValues={{ name: c.name, parent_id: c.parent_id ?? '' }}
+                      defaultValues={{
+                        name: c.name,
+                        parent_id: c.parent_id ?? '',
+                        attachment_url: c.attachment_url ?? '',
+                      }}
                       onUpdate={updateMaterialCategory}
                       successMessage="Đã cập nhật danh mục"
                       trigger={

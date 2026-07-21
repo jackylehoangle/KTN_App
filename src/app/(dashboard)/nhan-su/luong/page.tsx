@@ -41,6 +41,7 @@ const defaultValues: PayrollInput = {
   insurance: 0,
   tax: 0,
   status: 'draft',
+  attachment_url: '',
 };
 
 export default async function LuongPage() {
@@ -77,6 +78,7 @@ export default async function LuongPage() {
     { name: 'deductions', label: 'Khấu trừ (VND)', type: 'number', half: true },
     { name: 'insurance', label: 'Bảo hiểm (VND)', type: 'number', half: true },
     { name: 'tax', label: 'Thuế TNCN (VND)', type: 'number', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
 
   const excelColumns: ExcelColumn<PayrollRow>[] = [
@@ -158,6 +160,7 @@ export default async function LuongPage() {
                         insurance: p.insurance,
                         tax: p.tax,
                         status: p.status,
+                        attachment_url: p.attachment_url ?? '',
                       }}
                       onUpdate={updatePayroll}
                       successMessage="Đã cập nhật bảng lương"

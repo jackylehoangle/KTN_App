@@ -1,18 +1,24 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { ImagePlus, Loader2, Sparkles, X } from 'lucide-react';
+import { FileText, Paperclip, Loader2, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { extractReceiptData } from '@/lib/actions/ai';
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 365 * 10;
+const ACCEPT = 'image/*,.pdf,.doc,.docx,.xls,.xlsx';
 
 export interface ReceiptExtraction {
   amount?: number;
   date?: string;
   description?: string;
+}
+
+function isImageUrl(url: string): boolean {
+  const path = url.split('?')[0];
+  return /\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(path);
 }
 
 export function ImageUploadField({
@@ -29,6 +35,7 @@ export function ImageUploadField({
   const [uploading, setUploading] = useState(false);
   const [reading, setReading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const valueIsImage = value ? isImageUrl(value) : false;
 
   async function handleFile(file: File) {
     setUploading(true);
@@ -44,7 +51,7 @@ export function ImageUploadField({
       if (signError) throw signError;
       onChange(data.signedUrl);
 
-      if (onExtracted) {
+      if (onExtracted && file.type.startsWith('image/')) {
         setReading(true);
         try {
           const extracted = await extractReceiptData(data.signedUrl);
@@ -57,7 +64,7 @@ export function ImageUploadField({
         }
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Tải ảnh lên thất bại');
+      toast.error(e instanceof Error ? e.message : 'Tải file lên thất bại');
     } finally {
       setUploading(false);
     }
@@ -66,8 +73,20 @@ export function ImageUploadField({
   return (
     <div className="flex items-center gap-3">
       {value ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={value} alt="" className="size-16 rounded-md border object-cover" />
+        valueIsImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" className="size-16 rounded-md border object-cover" />
+        ) : (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-sm text-navy underline underline-offset-2"
+          >
+            <FileText className="size-4" />
+            Xem file đính kèm
+          </a>
+        )
       ) : null}
       <Button
         type="button"
@@ -76,8 +95,8 @@ export function ImageUploadField({
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
       >
-        {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
-        {value ? 'Đổi ảnh' : 'Chụp / tải ảnh'}
+        {uploading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
+        {value ? 'Đổi file' : 'Đính kèm file / chụp ảnh'}
       </Button>
       {reading && (
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -93,7 +112,7 @@ export function ImageUploadField({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={ACCEPT}
         capture="environment"
         className="hidden"
         onChange={(e) => {

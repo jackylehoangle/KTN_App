@@ -5,6 +5,7 @@ import { EntityFormDialog, type EntityField } from '@/components/shared/entity-f
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { QuotationItemImportDialog } from '@/components/features/bao-gia-sxkh/quotation-item-import-dialog';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { QuotationItemInput } from '@/lib/validations/bao-gia-sxkh';
 import { createQuotationItem, updateQuotationItem, deleteQuotationItem } from '@/lib/actions/bao-gia-sxkh';
 import { generateQuotationDescription } from '@/lib/actions/ai';
@@ -28,6 +30,7 @@ const defaultValues: QuotationItemInput = {
   unit: 'cai',
   unit_price: 0,
   discount_pct: 0,
+  attachment_url: '',
 };
 
 export default async function ChiTietBaoGiaPage() {
@@ -58,6 +61,23 @@ export default async function ChiTietBaoGiaPage() {
     { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
     { name: 'unit_price', label: 'Đơn giá (VND)', type: 'number', half: true },
     { name: 'discount_pct', label: 'Chiết khấu (%)', type: 'number', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
+  ];
+
+  const excelColumns: ExcelColumn<{
+    quotations?: { code: string } | null;
+    product_name: string;
+    quantity: number;
+    unit_price: number;
+    discount_pct: number;
+    subtotal: number;
+  }>[] = [
+    { header: 'Báo giá', value: (i) => i.quotations?.code ?? '' },
+    { header: 'Sản phẩm', value: (i) => i.product_name },
+    { header: 'Số lượng', value: (i) => i.quantity },
+    { header: 'Đơn giá', value: (i) => i.unit_price },
+    { header: 'Chiết khấu (%)', value: (i) => i.discount_pct },
+    { header: 'Thành tiền', value: (i) => i.subtotal },
   ];
 
   return (
@@ -69,6 +89,8 @@ export default async function ChiTietBaoGiaPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dong-bao-gia" />
         <QuotationItemImportDialog quotations={((quotations as Quotation[]) ?? []).map((q) => ({ id: q.id, code: q.code }))} />
         <EntityFormDialog
           title="Thêm dòng báo giá"
@@ -77,7 +99,7 @@ export default async function ChiTietBaoGiaPage() {
           onSubmit={createQuotationItem}
           successMessage="Đã thêm dòng báo giá"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm dòng
             </Button>
@@ -95,7 +117,7 @@ export default async function ChiTietBaoGiaPage() {
               <TableHead className="text-right">Đơn giá</TableHead>
               <TableHead className="text-right">Chiết khấu</TableHead>
               <TableHead className="text-right">Thành tiền</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,7 +130,7 @@ export default async function ChiTietBaoGiaPage() {
                 <TableCell className="text-right">{formatVND(i.unit_price)}</TableCell>
                 <TableCell className="text-right">{i.discount_pct}%</TableCell>
                 <TableCell className="text-right">{formatVND(i.subtotal)}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa dòng báo giá"
@@ -123,6 +145,7 @@ export default async function ChiTietBaoGiaPage() {
                         unit: i.unit,
                         unit_price: i.unit_price,
                         discount_pct: i.discount_pct,
+                        attachment_url: i.attachment_url ?? '',
                       }}
                       onUpdate={updateQuotationItem}
                       successMessage="Đã cập nhật dòng báo giá"

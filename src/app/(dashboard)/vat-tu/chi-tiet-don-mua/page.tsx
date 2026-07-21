@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, VAT_TU_TABS as TABS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { PurchaseOrderItemInput } from '@/lib/validations/vat-tu';
 import { createPurchaseOrderItem, updatePurchaseOrderItem, deletePurchaseOrderItem } from '@/lib/actions/vat-tu';
 import type { PurchaseOrder, Material } from '@/types/database';
@@ -23,6 +25,7 @@ const defaultValues: PurchaseOrderItemInput = {
   material_id: '',
   quantity: 1,
   unit_price: 0,
+  attachment_url: '',
 };
 
 export default async function ChiTietDonMuaPage() {
@@ -54,6 +57,21 @@ export default async function ChiTietDonMuaPage() {
     },
     { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
     { name: 'unit_price', label: 'Đơn giá (VND)', type: 'number', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
+  ];
+
+  const excelColumns: ExcelColumn<{
+    purchase_orders?: { code: string } | null;
+    materials?: { code: string; name: string } | null;
+    quantity: number;
+    unit_price: number;
+    subtotal: number;
+  }>[] = [
+    { header: 'Đơn mua', value: (i) => i.purchase_orders?.code ?? '' },
+    { header: 'Vật tư', value: (i) => `${i.materials?.code ?? ''} — ${i.materials?.name ?? ''}` },
+    { header: 'Số lượng', value: (i) => i.quantity },
+    { header: 'Đơn giá', value: (i) => i.unit_price },
+    { header: 'Thành tiền', value: (i) => i.subtotal },
   ];
 
   return (
@@ -64,7 +82,9 @@ export default async function ChiTietDonMuaPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dong-don-mua" />
         <EntityFormDialog
           title="Thêm dòng đơn mua"
           schemaKey="purchaseOrderItem"
@@ -72,7 +92,7 @@ export default async function ChiTietDonMuaPage() {
           onSubmit={createPurchaseOrderItem}
           successMessage="Đã thêm dòng đơn mua"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm dòng
             </Button>
@@ -89,7 +109,7 @@ export default async function ChiTietDonMuaPage() {
               <TableHead className="text-right">Số lượng</TableHead>
               <TableHead className="text-right">Đơn giá</TableHead>
               <TableHead className="text-right">Thành tiền</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -103,7 +123,7 @@ export default async function ChiTietDonMuaPage() {
                 <TableCell className="text-right">{i.quantity}</TableCell>
                 <TableCell className="text-right">{formatVND(i.unit_price)}</TableCell>
                 <TableCell className="text-right">{formatVND(i.subtotal)}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa dòng đơn mua"
@@ -115,6 +135,7 @@ export default async function ChiTietDonMuaPage() {
                         material_id: i.material_id,
                         quantity: i.quantity,
                         unit_price: i.unit_price,
+                        attachment_url: i.attachment_url ?? '',
                       }}
                       onUpdate={updatePurchaseOrderItem}
                       successMessage="Đã cập nhật dòng đơn mua"

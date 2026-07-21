@@ -25,6 +25,7 @@ const defaultValues: InvoiceInput = {
   amount: 0,
   tax_amount: 0,
   status: 'unpaid',
+  attachment_url: '',
 };
 
 export default async function HoaDonPage() {
@@ -56,6 +57,7 @@ export default async function HoaDonPage() {
     { name: 'due_date', label: 'Ngày đến hạn', type: 'date', half: true },
     { name: 'amount', label: 'Tiền hàng (VND)', type: 'number', half: true },
     { name: 'tax_amount', label: 'Thuế (VND)', type: 'number', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
 

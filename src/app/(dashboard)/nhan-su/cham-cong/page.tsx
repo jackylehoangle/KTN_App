@@ -24,6 +24,7 @@ const defaultValues: AttendanceInput = {
   check_out: '',
   status: 'present',
   note: '',
+  attachment_url: '',
 };
 
 export default async function ChamCongPage() {
@@ -54,6 +55,7 @@ export default async function ChamCongPage() {
     { name: 'check_in', label: 'Giờ vào (HH:MM)', placeholder: '08:00', half: true },
     { name: 'check_out', label: 'Giờ ra (HH:MM)', placeholder: '17:00', half: true },
     { name: 'note', label: 'Ghi chú', type: 'textarea' },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
 
   return (

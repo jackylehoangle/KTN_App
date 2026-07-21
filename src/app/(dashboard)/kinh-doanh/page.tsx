@@ -5,6 +5,7 @@ import { EntityFormDialog, type EntityField } from '@/components/shared/entity-f
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { CustomerImportDialog } from '@/components/features/kinh-doanh/customer-import-dialog';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { CustomerInput } from '@/lib/validations/kinh-doanh';
 import { createCustomer, updateCustomer, deleteCustomer } from '@/lib/actions/kinh-doanh';
 import type { Customer } from '@/types/database';
@@ -28,6 +30,7 @@ const defaultValues: CustomerInput = {
   phone: '',
   email: '',
   contact_person: '',
+  attachment_url: '',
 };
 
 const fields: EntityField<CustomerInput>[] = [
@@ -48,9 +51,18 @@ const fields: EntityField<CustomerInput>[] = [
   { name: 'email', label: 'Email', type: 'email', half: true },
   { name: 'contact_person', label: 'Người liên hệ', half: true },
   { name: 'address', label: 'Địa chỉ', type: 'textarea' },
+  { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
 ];
 
 const createFields = fields.filter((f) => f.name !== 'code');
+
+const excelColumns: ExcelColumn<Customer>[] = [
+  { header: 'Mã KH', value: (c) => c.code },
+  { header: 'Tên khách hàng', value: (c) => c.name },
+  { header: 'Loại', value: (c) => (c.customer_type === 'company' ? 'Doanh nghiệp' : 'Cá nhân') },
+  { header: 'Điện thoại', value: (c) => c.phone ?? '' },
+  { header: 'Email', value: (c) => c.email ?? '' },
+];
 
 export default async function KinhDoanhPage() {
   const supabase = await createClient();
@@ -65,6 +77,7 @@ export default async function KinhDoanhPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
+        <TableActions rows={(customers as Customer[]) ?? []} columns={excelColumns} filename="khach-hang" />
         <CustomerImportDialog />
         <EntityFormDialog
           title="Thêm khách hàng"
@@ -73,7 +86,7 @@ export default async function KinhDoanhPage() {
           onSubmit={createCustomer}
           successMessage="Đã thêm khách hàng"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm khách hàng
             </Button>
@@ -90,7 +103,7 @@ export default async function KinhDoanhPage() {
               <TableHead>Loại</TableHead>
               <TableHead>Điện thoại</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -101,7 +114,7 @@ export default async function KinhDoanhPage() {
                 <TableCell>{c.customer_type === 'company' ? 'Doanh nghiệp' : 'Cá nhân'}</TableCell>
                 <TableCell className="text-muted-foreground">{c.phone ?? '—'}</TableCell>
                 <TableCell className="text-muted-foreground">{c.email ?? '—'}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa khách hàng"
@@ -117,6 +130,7 @@ export default async function KinhDoanhPage() {
                         phone: c.phone ?? '',
                         email: c.email ?? '',
                         contact_person: c.contact_person ?? '',
+                        attachment_url: c.attachment_url ?? '',
                       }}
                       onUpdate={updateCustomer}
                       successMessage="Đã cập nhật khách hàng"

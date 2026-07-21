@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/form';
 import { stockMovementSchema, type StockMovementInput } from '@/lib/validations/vat-tu';
 import { createStockMovement, updateStockMovement } from '@/lib/actions/vat-tu';
+import { ImageUploadField } from '@/components/shared/image-upload-field';
 import type { Material, Warehouse, StockMovement } from '@/types/database';
 
 export function StockMovementFormDialog({
@@ -57,6 +58,7 @@ export function StockMovementFormDialog({
       quantity: movement?.quantity ?? 1,
       unit_cost: movement?.unit_cost ?? 0,
       note: movement?.note ?? '',
+      attachment_url: movement?.attachment_url ?? '',
     },
   });
 
@@ -83,7 +85,7 @@ export function StockMovementFormDialog({
             <Pencil className="size-4" />
           </Button>
         ) : (
-          <Button size="sm">
+          <Button size="sm" className="print:hidden">
             <Plus className="size-4" />
             Tạo phiếu nhập/xuất
           </Button>
@@ -228,6 +230,19 @@ export function StockMovementFormDialog({
                   <FormLabel>Ghi chú</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Tuỳ chọn" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="attachment_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>File đính kèm</FormLabel>
+                  <FormControl>
+                    <ImageUploadField value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

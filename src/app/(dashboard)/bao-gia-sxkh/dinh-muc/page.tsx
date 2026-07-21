@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { BomItemInput } from '@/lib/validations/bao-gia-sxkh';
 import { createBomItem, updateBomItem, deleteBomItem } from '@/lib/actions/bao-gia-sxkh';
 import type { Material } from '@/types/database';
@@ -23,6 +25,7 @@ const defaultValues: BomItemInput = {
   material_id: '',
   quantity_required: 1,
   unit: 'cai',
+  attachment_url: '',
 };
 
 export default async function DinhMucPage() {
@@ -48,6 +51,19 @@ export default async function DinhMucPage() {
     },
     { name: 'quantity_required', label: 'Số lượng cần', type: 'number', half: true },
     { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
+  ];
+
+  const excelColumns: ExcelColumn<{
+    product_name: string;
+    materials?: { code: string; name: string } | null;
+    quantity_required: number;
+    unit: string;
+  }>[] = [
+    { header: 'Sản phẩm', value: (i) => i.product_name },
+    { header: 'Vật tư', value: (i) => (i.materials ? `${i.materials.code} — ${i.materials.name}` : '') },
+    { header: 'Số lượng cần', value: (i) => i.quantity_required },
+    { header: 'ĐVT', value: (i) => i.unit },
   ];
 
   return (
@@ -58,7 +74,9 @@ export default async function DinhMucPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dinh-muc" />
         <EntityFormDialog
           title="Thêm định mức"
           schemaKey="bomItem"
@@ -66,7 +84,7 @@ export default async function DinhMucPage() {
           onSubmit={createBomItem}
           successMessage="Đã thêm định mức"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm định mức
             </Button>
@@ -82,7 +100,7 @@ export default async function DinhMucPage() {
               <TableHead>Vật tư</TableHead>
               <TableHead className="text-right">Số lượng cần</TableHead>
               <TableHead>ĐVT</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -95,7 +113,7 @@ export default async function DinhMucPage() {
                 </TableCell>
                 <TableCell className="text-right">{i.quantity_required}</TableCell>
                 <TableCell>{i.unit}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa định mức"
@@ -107,6 +125,7 @@ export default async function DinhMucPage() {
                         material_id: i.material_id ?? '',
                         quantity_required: i.quantity_required,
                         unit: i.unit,
+                        attachment_url: i.attachment_url ?? '',
                       }}
                       onUpdate={updateBomItem}
                       successMessage="Đã cập nhật định mức"

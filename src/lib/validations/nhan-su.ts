@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const departmentSchema = z.object({
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
+  attachment_url: z.string().optional(),
 });
 export type DepartmentInput = z.infer<typeof departmentSchema>;
 
@@ -25,12 +26,14 @@ export const leaveRequestSchema = z.object({
   end_date: z.string().min(1, 'Bắt buộc'),
   days: z.number().min(0.5),
   reason: z.string().optional(),
+  attachment_url: z.string().optional(),
 });
 export type LeaveRequestInput = z.infer<typeof leaveRequestSchema>;
 
 export const positionSchema = z.object({
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')),
+  attachment_url: z.string().optional(),
 });
 export type PositionInput = z.infer<typeof positionSchema>;
 
@@ -41,6 +44,7 @@ export const attendanceSchema = z.object({
   check_out: z.string().optional(),
   status: z.enum(['present', 'absent', 'leave', 'late']),
   note: z.string().optional(),
+  attachment_url: z.string().optional(),
 });
 export type AttendanceInput = z.infer<typeof attendanceSchema>;
 
@@ -54,5 +58,6 @@ export const payrollSchema = z.object({
   insurance: z.number().min(0),
   tax: z.number().min(0),
   status: z.enum(['draft', 'paid']),
+  attachment_url: z.string().optional(),
 });
 export type PayrollInput = z.infer<typeof payrollSchema>;

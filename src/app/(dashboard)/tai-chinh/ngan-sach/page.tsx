@@ -29,7 +29,13 @@ interface BudgetRow {
   amount: number;
 }
 
-const defaultValues: BudgetInput = { department_id: '', category: '', period: '', amount: 0 };
+const defaultValues: BudgetInput = {
+  department_id: '',
+  category: '',
+  period: '',
+  amount: 0,
+  attachment_url: '',
+};
 
 export default async function NganSachPage() {
   const supabase = await createClient();
@@ -52,6 +58,7 @@ export default async function NganSachPage() {
       options: ((departments as Department[]) ?? []).map((d) => ({ value: d.id, label: d.name })),
     },
     { name: 'amount', label: 'Số tiền (VND)', type: 'number', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
 
   const excelColumns: ExcelColumn<BudgetRow>[] = [
@@ -117,6 +124,7 @@ export default async function NganSachPage() {
                         category: b.category,
                         period: b.period,
                         amount: b.amount,
+                        attachment_url: b.attachment_url ?? '',
                       }}
                       onUpdate={updateBudget}
                       successMessage="Đã cập nhật ngân sách"

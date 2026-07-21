@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { warehouseSchema, type WarehouseInput } from '@/lib/validations/vat-tu';
 import { createWarehouse, updateWarehouse } from '@/lib/actions/vat-tu';
+import { ImageUploadField } from '@/components/shared/image-upload-field';
 import type { Warehouse } from '@/types/database';
 
 export function WarehouseFormDialog({ warehouse }: { warehouse?: Warehouse }) {
@@ -37,6 +38,7 @@ export function WarehouseFormDialog({ warehouse }: { warehouse?: Warehouse }) {
       code: warehouse?.code ?? '',
       name: warehouse?.name ?? '',
       address: warehouse?.address ?? '',
+      attachment_url: warehouse?.attachment_url ?? '',
     },
   });
 
@@ -63,7 +65,7 @@ export function WarehouseFormDialog({ warehouse }: { warehouse?: Warehouse }) {
             <Pencil className="size-4" />
           </Button>
         ) : (
-          <Button size="sm">
+          <Button size="sm" className="print:hidden">
             <Plus className="size-4" />
             Thêm kho
           </Button>
@@ -111,6 +113,19 @@ export function WarehouseFormDialog({ warehouse }: { warehouse?: Warehouse }) {
                   <FormLabel>Địa chỉ</FormLabel>
                   <FormControl>
                     <Input placeholder="Tuỳ chọn" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="attachment_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>File đính kèm</FormLabel>
+                  <FormControl>
+                    <ImageUploadField value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

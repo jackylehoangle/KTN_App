@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, APPROVAL_TYPE_LABELS, APPROVAL_STATUS_LABELS, ROLE_LABELS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import { approveRequest, rejectRequest } from '@/lib/actions/de-xuat';
 import type { ApprovalActionInput } from '@/lib/validations/de-xuat';
 import type { ApprovalType, ApprovalStatus, UserRole, StaffLevel } from '@/types/database';
@@ -65,16 +67,29 @@ export function ApprovalRequestTable({
     return r.status === 'pending_director' && isAdmin;
   }
 
+  const excelColumns: ExcelColumn<ApprovalRequestRow>[] = [
+    { header: 'Mã', value: (r) => r.code },
+    { header: 'Loại', value: (r) => APPROVAL_TYPE_LABELS[r.request_type] },
+    { header: 'Tiêu đề', value: (r) => r.title },
+    { header: 'Người đề xuất', value: (r) => r.requested_by_name },
+    { header: 'Phòng ban', value: (r) => ROLE_LABELS[r.department] },
+    { header: 'Số tiền', value: (r) => r.amount ?? '' },
+    { header: 'Trạng thái', value: (r) => APPROVAL_STATUS_LABELS[r.status] },
+  ];
+
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Tìm theo mã hoặc tiêu đề..." />
-        <FilterSelect
-          label="Trạng thái"
-          value={status}
-          onChange={setStatus}
-          options={Object.entries(APPROVAL_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
-        />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <SearchInput value={search} onChange={setSearch} placeholder="Tìm theo mã hoặc tiêu đề..." />
+          <FilterSelect
+            label="Trạng thái"
+            value={status}
+            onChange={setStatus}
+            options={Object.entries(APPROVAL_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+          />
+        </div>
+        <TableActions rows={filtered} columns={excelColumns} filename="de-xuat" />
       </div>
       <div className="rounded-lg border">
         <Table>
@@ -87,7 +102,7 @@ export function ApprovalRequestTable({
               <TableHead>Phòng ban</TableHead>
               <TableHead className="text-right">Số tiền</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-24 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,7 +123,7 @@ export function ApprovalRequestTable({
                     {APPROVAL_STATUS_LABELS[r.status]}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   {canAct(r) && (
                     <div className="flex justify-end gap-1">
                       <EntityFormDialog

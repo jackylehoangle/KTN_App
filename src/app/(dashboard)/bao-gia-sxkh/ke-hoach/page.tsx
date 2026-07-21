@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { ProductionPlanInput } from '@/lib/validations/bao-gia-sxkh';
 import { createProductionPlan, updateProductionPlan, deleteProductionPlan } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlanStatus } from '@/types/database';
@@ -33,6 +35,7 @@ const defaultValues: ProductionPlanInput = {
   planned_start: '',
   planned_end: '',
   status: 'planning',
+  attachment_url: '',
 };
 
 export default async function KeHoachPage() {
@@ -54,8 +57,23 @@ export default async function KeHoachPage() {
     { name: 'name', label: 'Tên kế hoạch', placeholder: 'Sản xuất lô hàng A' },
     { name: 'planned_start', label: 'Bắt đầu dự kiến', type: 'date', half: true },
     { name: 'planned_end', label: 'Kết thúc dự kiến', type: 'date', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
+
+  const excelColumns: ExcelColumn<{
+    code: string;
+    name: string;
+    planned_start: string;
+    planned_end: string;
+    status: ProductionPlanStatus;
+  }>[] = [
+    { header: 'Mã', value: (p) => p.code },
+    { header: 'Tên kế hoạch', value: (p) => p.name },
+    { header: 'Bắt đầu', value: (p) => formatDate(p.planned_start) },
+    { header: 'Kết thúc', value: (p) => formatDate(p.planned_end) },
+    { header: 'Trạng thái', value: (p) => STATUS_LABEL[p.status] },
+  ];
 
   return (
     <div className="space-y-4">
@@ -65,7 +83,9 @@ export default async function KeHoachPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(plans as any[]) ?? []} columns={excelColumns} filename="ke-hoach-san-xuat" />
         <EntityFormDialog
           title="Tạo kế hoạch sản xuất"
           schemaKey="productionPlan"
@@ -73,7 +93,7 @@ export default async function KeHoachPage() {
           onSubmit={createProductionPlan}
           successMessage="Đã tạo kế hoạch sản xuất"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Tạo kế hoạch
             </Button>
@@ -90,7 +110,7 @@ export default async function KeHoachPage() {
               <TableHead>Bắt đầu</TableHead>
               <TableHead>Kết thúc</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -106,7 +126,7 @@ export default async function KeHoachPage() {
                     {STATUS_LABEL[p.status as ProductionPlanStatus]}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa kế hoạch sản xuất"
@@ -119,6 +139,7 @@ export default async function KeHoachPage() {
                         planned_start: p.planned_start ?? '',
                         planned_end: p.planned_end ?? '',
                         status: p.status,
+                        attachment_url: p.attachment_url ?? '',
                       }}
                       onUpdate={updateProductionPlan}
                       successMessage="Đã cập nhật kế hoạch sản xuất"

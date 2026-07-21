@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,11 +15,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { NHAN_SU_TABS as TABS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { PositionInput } from '@/lib/validations/nhan-su';
 import { createPosition, updatePosition, deletePosition } from '@/lib/actions/nhan-su';
 import type { Department } from '@/types/database';
 
-const defaultValues: PositionInput = { name: '', department_id: '' };
+const defaultValues: PositionInput = { name: '', department_id: '', attachment_url: '' };
 
 export default async function ChucVuPage() {
   const supabase = await createClient();
@@ -35,6 +37,12 @@ export default async function ChucVuPage() {
       type: 'select',
       options: ((departments as Department[]) ?? []).map((d) => ({ value: d.id, label: d.name })),
     },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
+  ];
+
+  const excelColumns: ExcelColumn<{ name: string; departments?: { name: string } | null }>[] = [
+    { header: 'Tên chức vụ', value: (p) => p.name },
+    { header: 'Phòng ban', value: (p) => p.departments?.name ?? '' },
   ];
 
   return (
@@ -45,7 +53,9 @@ export default async function ChucVuPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(positions as any[]) ?? []} columns={excelColumns} filename="chuc-vu" />
         <EntityFormDialog
           title="Thêm chức vụ"
           schemaKey="position"
@@ -53,7 +63,7 @@ export default async function ChucVuPage() {
           onSubmit={createPosition}
           successMessage="Đã thêm chức vụ"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm chức vụ
             </Button>
@@ -67,7 +77,7 @@ export default async function ChucVuPage() {
             <TableRow>
               <TableHead>Tên chức vụ</TableHead>
               <TableHead>Phòng ban</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -76,14 +86,18 @@ export default async function ChucVuPage() {
               <TableRow key={p.id}>
                 <TableCell>{p.name}</TableCell>
                 <TableCell className="text-muted-foreground">{p.departments?.name ?? '—'}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa chức vụ"
                       schemaKey="position"
                       mode="edit"
                       recordId={p.id}
-                      defaultValues={{ name: p.name, department_id: p.department_id ?? '' }}
+                      defaultValues={{
+                        name: p.name,
+                        department_id: p.department_id ?? '',
+                        attachment_url: p.attachment_url ?? '',
+                      }}
                       onUpdate={updatePosition}
                       successMessage="Đã cập nhật chức vụ"
                       trigger={

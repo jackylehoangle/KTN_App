@@ -41,6 +41,7 @@ interface InvoiceRow {
   tax_amount: number;
   total_amount: number;
   status: InvoiceStatus;
+  attachment_url: string | null;
 }
 
 export function InvoiceTable({
@@ -131,6 +132,7 @@ export function InvoiceTable({
                         amount: i.amount,
                         tax_amount: i.tax_amount,
                         status: i.status,
+                        attachment_url: i.attachment_url ?? '',
                       }}
                       onUpdate={updateInvoice}
                       successMessage="Đã cập nhật hoá đơn"

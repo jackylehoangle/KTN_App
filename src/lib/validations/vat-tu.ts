@@ -7,6 +7,7 @@ export const materialSchema = z.object({
   spec: z.string().optional(),
   min_stock: z.number().min(0),
   unit_cost: z.number().min(0),
+  attachment_url: z.string().optional(),
 });
 export type MaterialInput = z.infer<typeof materialSchema>;
 
@@ -14,6 +15,7 @@ export const warehouseSchema = z.object({
   code: z.string().optional(),
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   address: z.string().optional(),
+  attachment_url: z.string().optional(),
 });
 export type WarehouseInput = z.infer<typeof warehouseSchema>;
 
@@ -25,6 +27,7 @@ export const supplierSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
   contact_person: z.string().optional(),
+  attachment_url: z.string().optional(),
 });
 export type SupplierInput = z.infer<typeof supplierSchema>;
 
@@ -36,12 +39,14 @@ export const stockMovementSchema = z.object({
   quantity: z.number().positive('Số lượng phải > 0'),
   unit_cost: z.number().min(0),
   note: z.string().optional(),
+  attachment_url: z.string().optional(),
 });
 export type StockMovementInput = z.infer<typeof stockMovementSchema>;
 
 export const materialCategorySchema = z.object({
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   parent_id: z.string().uuid('Chọn danh mục cha').optional().or(z.literal('')),
+  attachment_url: z.string().optional(),
 });
 export type MaterialCategoryInput = z.infer<typeof materialCategorySchema>;
 
@@ -52,6 +57,7 @@ export const purchaseOrderSchema = z.object({
   expected_date: z.string().optional(),
   status: z.enum(['pending', 'confirmed', 'received', 'cancelled']),
   total_amount: z.number().min(0),
+  attachment_url: z.string().optional(),
 });
 export type PurchaseOrderInput = z.infer<typeof purchaseOrderSchema>;
 
@@ -60,5 +66,6 @@ export const purchaseOrderItemSchema = z.object({
   material_id: z.string().uuid('Chọn vật tư'),
   quantity: z.number().positive('Số lượng phải > 0'),
   unit_price: z.number().min(0),
+  attachment_url: z.string().optional(),
 });
 export type PurchaseOrderItemInput = z.infer<typeof purchaseOrderItemSchema>;

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { materialSchema, type MaterialInput } from '@/lib/validations/vat-tu';
 import { createMaterial, updateMaterial } from '@/lib/actions/vat-tu';
+import { ImageUploadField } from '@/components/shared/image-upload-field';
 import type { Material } from '@/types/database';
 
 export function MaterialFormDialog({ material }: { material?: Material }) {
@@ -40,6 +41,7 @@ export function MaterialFormDialog({ material }: { material?: Material }) {
       spec: material?.spec ?? '',
       min_stock: material?.min_stock ?? 0,
       unit_cost: material?.unit_cost ?? 0,
+      attachment_url: material?.attachment_url ?? '',
     },
   });
 
@@ -66,7 +68,7 @@ export function MaterialFormDialog({ material }: { material?: Material }) {
             Sửa
           </Button>
         ) : (
-          <Button size="sm">
+          <Button size="sm" className="print:hidden">
             <Plus className="size-4" />
             Thêm vật tư
           </Button>
@@ -172,6 +174,19 @@ export function MaterialFormDialog({ material }: { material?: Material }) {
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="attachment_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>File đính kèm</FormLabel>
+                  <FormControl>
+                    <ImageUploadField value={field.value} onChange={field.onChange} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <DialogFooter>
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Đang lưu...' : 'Lưu'}

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { supplierSchema, type SupplierInput } from '@/lib/validations/vat-tu';
 import { createSupplier, updateSupplier } from '@/lib/actions/vat-tu';
+import { ImageUploadField } from '@/components/shared/image-upload-field';
 import type { Supplier } from '@/types/database';
 
 export function SupplierFormDialog({ supplier }: { supplier?: Supplier }) {
@@ -41,6 +42,7 @@ export function SupplierFormDialog({ supplier }: { supplier?: Supplier }) {
       phone: supplier?.phone ?? '',
       email: supplier?.email ?? '',
       contact_person: supplier?.contact_person ?? '',
+      attachment_url: supplier?.attachment_url ?? '',
     },
   });
 
@@ -67,7 +69,7 @@ export function SupplierFormDialog({ supplier }: { supplier?: Supplier }) {
             <Pencil className="size-4" />
           </Button>
         ) : (
-          <Button size="sm">
+          <Button size="sm" className="print:hidden">
             <Plus className="size-4" />
             Thêm nhà cung cấp
           </Button>
@@ -171,6 +173,19 @@ export function SupplierFormDialog({ supplier }: { supplier?: Supplier }) {
                   <FormLabel>Người liên hệ</FormLabel>
                   <FormControl>
                     <Input placeholder="Tuỳ chọn" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="attachment_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>File đính kèm</FormLabel>
+                  <FormControl>
+                    <ImageUploadField value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -1,9 +1,10 @@
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,10 +16,20 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { OpportunityInput } from '@/lib/validations/kinh-doanh';
+import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
 import { createOpportunity, updateOpportunity, deleteOpportunity } from '@/lib/actions/kinh-doanh';
-import type { Customer, OpportunityStage } from '@/types/database';
+import { createQuotation } from '@/lib/actions/bao-gia-sxkh';
+import type { Customer, OpportunityStage, QuotationStatus } from '@/types/database';
 import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
+
+const QUOTATION_STATUS_LABEL: Record<QuotationStatus, string> = {
+  draft: 'Nháp',
+  sent: 'Đã gửi',
+  accepted: 'Đã chấp nhận',
+  rejected: 'Từ chối',
+};
 
 const STAGE_LABEL: Record<OpportunityStage, string> = {
   new: 'Mới',
@@ -35,6 +46,7 @@ const defaultValues: OpportunityInput = {
   name: '',
   stage: 'new',
   value: 0,
+  attachment_url: '',
 };
 
 export default async function CoHoiPage() {
@@ -62,8 +74,46 @@ export default async function CoHoiPage() {
       options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
     },
     { name: 'value', label: 'Giá trị dự kiến (VND)', type: 'number', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
+
+  const quotationFields: EntityField<QuotationInput>[] = [
+    {
+      name: 'status',
+      label: 'Trạng thái',
+      type: 'select',
+      half: true,
+      options: Object.entries(QUOTATION_STATUS_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    {
+      name: 'customer_id',
+      label: 'Khách hàng',
+      type: 'select',
+      half: true,
+      options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
+    },
+    { name: 'quotation_date', label: 'Ngày báo giá', type: 'date', half: true },
+    { name: 'valid_until', label: 'Có hiệu lực đến', type: 'date', half: true },
+    { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number', half: true },
+    { name: 'notes', label: 'Ghi chú', type: 'textarea' },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
+  ];
+  const today = new Date().toISOString().slice(0, 10);
+
+  const excelColumns: ExcelColumn<{
+    code: string;
+    name: string;
+    customers?: { name: string } | null;
+    stage: OpportunityStage;
+    value: number;
+  }>[] = [
+    { header: 'Mã', value: (o) => o.code },
+    { header: 'Tên cơ hội', value: (o) => o.name },
+    { header: 'Khách hàng', value: (o) => o.customers?.name ?? '' },
+    { header: 'Giai đoạn', value: (o) => STAGE_LABEL[o.stage] },
+    { header: 'Giá trị', value: (o) => o.value },
+  ];
 
   return (
     <div className="space-y-4">
@@ -73,7 +123,9 @@ export default async function CoHoiPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(opportunities as any[]) ?? []} columns={excelColumns} filename="co-hoi" />
         <EntityFormDialog
           title="Thêm cơ hội"
           schemaKey="opportunity"
@@ -81,7 +133,7 @@ export default async function CoHoiPage() {
           onSubmit={createOpportunity}
           successMessage="Đã thêm cơ hội"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm cơ hội
             </Button>
@@ -98,7 +150,7 @@ export default async function CoHoiPage() {
               <TableHead>Khách hàng</TableHead>
               <TableHead>Giai đoạn</TableHead>
               <TableHead className="text-right">Giá trị</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -114,8 +166,30 @@ export default async function CoHoiPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">{formatVND(o.value)}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
+                    <EntityFormDialog
+                      title="Tạo báo giá từ cơ hội"
+                      schemaKey="quotation"
+                      defaultValues={{
+                        customer_id: o.customer_id ?? '',
+                        opportunity_id: o.id,
+                        quotation_date: today,
+                        valid_until: '',
+                        status: 'draft',
+                        total_amount: o.value ?? 0,
+                        notes: '',
+                        attachment_url: '',
+                      }}
+                      onSubmit={createQuotation}
+                      successMessage="Đã tạo báo giá"
+                      trigger={
+                        <Button variant="ghost" size="icon" title="Tạo báo giá">
+                          <FileText className="size-4" />
+                        </Button>
+                      }
+                      fields={quotationFields}
+                    />
                     <EntityFormDialog
                       title="Sửa cơ hội"
                       schemaKey="opportunity"
@@ -127,6 +201,7 @@ export default async function CoHoiPage() {
                         name: o.name,
                         stage: o.stage,
                         value: o.value,
+                        attachment_url: o.attachment_url ?? '',
                       }}
                       onUpdate={updateOpportunity}
                       successMessage="Đã cập nhật cơ hội"

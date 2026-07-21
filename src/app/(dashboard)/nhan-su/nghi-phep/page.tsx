@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog } from '@/components/shared/entity-form-dialog';
 import { LeaveActionButtons } from '@/components/features/nhan-su/leave-action-buttons';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { LeaveRequestInput } from '@/lib/validations/nhan-su';
 import { createLeaveRequest } from '@/lib/actions/nhan-su';
 import type { Employee, LeaveStatus, LeaveType } from '@/types/database';
@@ -40,6 +42,7 @@ const defaultValues: LeaveRequestInput = {
   end_date: '',
   days: 1,
   reason: '',
+  attachment_url: '',
 };
 
 export default async function NghiPhepPage() {
@@ -52,6 +55,20 @@ export default async function NghiPhepPage() {
     supabase.from('employees').select('*').order('full_name'),
   ]);
 
+  const excelColumns: ExcelColumn<{
+    employees?: { full_name: string } | null;
+    leave_type: LeaveType;
+    start_date: string;
+    end_date: string;
+    status: LeaveStatus;
+  }>[] = [
+    { header: 'Nhân viên', value: (l) => l.employees?.full_name ?? '' },
+    { header: 'Loại', value: (l) => TYPE_LABEL[l.leave_type] },
+    { header: 'Từ ngày', value: (l) => formatDate(l.start_date) },
+    { header: 'Đến ngày', value: (l) => formatDate(l.end_date) },
+    { header: 'Trạng thái', value: (l) => STATUS_LABEL[l.status] },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -60,7 +77,9 @@ export default async function NghiPhepPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(leaves as any[]) ?? []} columns={excelColumns} filename="nghi-phep" />
         <EntityFormDialog
           title="Tạo đơn nghỉ phép"
           schemaKey="leaveRequest"
@@ -68,7 +87,7 @@ export default async function NghiPhepPage() {
           onSubmit={createLeaveRequest}
           successMessage="Đã tạo đơn nghỉ phép"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Tạo đơn nghỉ phép
             </Button>
@@ -91,6 +110,7 @@ export default async function NghiPhepPage() {
             { name: 'start_date', label: 'Từ ngày', type: 'date', half: true },
             { name: 'end_date', label: 'Đến ngày', type: 'date', half: true },
             { name: 'reason', label: 'Lý do', type: 'textarea' },
+            { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
           ]}
         />
       </div>
@@ -103,7 +123,7 @@ export default async function NghiPhepPage() {
               <TableHead>Từ ngày</TableHead>
               <TableHead>Đến ngày</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-24 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -123,7 +143,9 @@ export default async function NghiPhepPage() {
                     {STATUS_LABEL[l.status as LeaveStatus]}
                   </Badge>
                 </TableCell>
-                <TableCell>{l.status === 'pending' && <LeaveActionButtons id={l.id} />}</TableCell>
+                <TableCell className="print:hidden">
+                  {l.status === 'pending' && <LeaveActionButtons id={l.id} />}
+                </TableCell>
               </TableRow>
             ))}
             {(!leaves || leaves.length === 0) && (

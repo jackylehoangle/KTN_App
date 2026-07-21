@@ -3,6 +3,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { StockMovementFormDialog } from '@/components/features/vat-tu/stock-movement-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { deleteStockMovement } from '@/lib/actions/vat-tu';
 import { formatDate } from '@/lib/constants';
 import {
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { Material, Warehouse } from '@/types/database';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
@@ -36,6 +38,22 @@ export default async function NhapXuatPage() {
     supabase.from('warehouses').select('*').order('code'),
   ]);
 
+  const excelColumns: ExcelColumn<{
+    code: string;
+    movement_type: string;
+    materials?: { code: string; name: string } | null;
+    warehouses?: { name: string } | null;
+    quantity: number;
+    created_at: string;
+  }>[] = [
+    { header: 'Mã phiếu', value: (m) => m.code },
+    { header: 'Loại', value: (m) => TYPE_LABEL[m.movement_type] ?? m.movement_type },
+    { header: 'Vật tư', value: (m) => `${m.materials?.code ?? ''} — ${m.materials?.name ?? ''}` },
+    { header: 'Kho', value: (m) => m.warehouses?.name ?? '' },
+    { header: 'Số lượng', value: (m) => m.quantity },
+    { header: 'Ngày', value: (m) => formatDate(m.created_at) },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -44,7 +62,9 @@ export default async function NhapXuatPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(movements as any[]) ?? []} columns={excelColumns} filename="nhap-xuat-kho" />
         <StockMovementFormDialog
           materials={(materials as Material[]) ?? []}
           warehouses={(warehouses as Warehouse[]) ?? []}
@@ -60,7 +80,7 @@ export default async function NhapXuatPage() {
               <TableHead>Kho</TableHead>
               <TableHead className="text-right">Số lượng</TableHead>
               <TableHead>Ngày</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -79,7 +99,7 @@ export default async function NhapXuatPage() {
                 <TableCell>{m.warehouses?.name}</TableCell>
                 <TableCell className="text-right">{m.quantity}</TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(m.created_at)}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <StockMovementFormDialog
                       materials={(materials as Material[]) ?? []}

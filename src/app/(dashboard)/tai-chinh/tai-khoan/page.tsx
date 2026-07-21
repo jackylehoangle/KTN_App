@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { AccountInput } from '@/lib/validations/tai-chinh';
 import { createAccount, updateAccount, deleteAccount } from '@/lib/actions/tai-chinh';
 import type { Account } from '@/types/database';
@@ -25,6 +27,7 @@ const defaultValues: AccountInput = {
   account_number: '',
   bank_name: '',
   opening_balance: 0,
+  attachment_url: '',
 };
 
 const fields: EntityField<AccountInput>[] = [
@@ -42,11 +45,19 @@ const fields: EntityField<AccountInput>[] = [
   { name: 'bank_name', label: 'Tên ngân hàng', half: true },
   { name: 'account_number', label: 'Số tài khoản', half: true },
   { name: 'opening_balance', label: 'Số dư đầu kỳ (VND)', type: 'number' },
+  { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
 ];
 
 export default async function TaiKhoanPage() {
   const supabase = await createClient();
   const { data: accounts, error } = await supabase.from('accounts').select('*').order('name');
+
+  const excelColumns: ExcelColumn<Account>[] = [
+    { header: 'Tên tài khoản', value: (a) => a.name },
+    { header: 'Loại', value: (a) => (a.type === 'cash' ? 'Tiền mặt' : 'Ngân hàng') },
+    { header: 'Ngân hàng', value: (a) => a.bank_name ?? '' },
+    { header: 'Số dư đầu kỳ', value: (a) => a.opening_balance },
+  ];
 
   return (
     <div className="space-y-4">
@@ -56,7 +67,8 @@ export default async function TaiKhoanPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <TableActions rows={(accounts as Account[]) ?? []} columns={excelColumns} filename="tai-khoan" />
         <EntityFormDialog
           title="Thêm tài khoản"
           schemaKey="account"
@@ -64,7 +76,7 @@ export default async function TaiKhoanPage() {
           onSubmit={createAccount}
           successMessage="Đã thêm tài khoản"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm tài khoản
             </Button>
@@ -80,7 +92,7 @@ export default async function TaiKhoanPage() {
               <TableHead>Loại</TableHead>
               <TableHead>Ngân hàng</TableHead>
               <TableHead className="text-right">Số dư đầu kỳ</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,7 +102,7 @@ export default async function TaiKhoanPage() {
                 <TableCell>{a.type === 'cash' ? 'Tiền mặt' : 'Ngân hàng'}</TableCell>
                 <TableCell className="text-muted-foreground">{a.bank_name ?? '—'}</TableCell>
                 <TableCell className="text-right">{formatVND(a.opening_balance)}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa tài khoản"
@@ -103,6 +115,7 @@ export default async function TaiKhoanPage() {
                         account_number: a.account_number ?? '',
                         bank_name: a.bank_name ?? '',
                         opening_balance: a.opening_balance,
+                        attachment_url: a.attachment_url ?? '',
                       }}
                       onUpdate={updateAccount}
                       successMessage="Đã cập nhật tài khoản"

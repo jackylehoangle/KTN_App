@@ -8,6 +8,8 @@ export const quotationSchema = z.object({
   status: z.enum(['draft', 'sent', 'accepted', 'rejected']),
   total_amount: z.number().min(0),
   notes: z.string().optional(),
+  opportunity_id: z.string().uuid('Chọn cơ hội').optional().or(z.literal('')),
+  attachment_url: z.string().optional(),
 });
 export type QuotationInput = z.infer<typeof quotationSchema>;
 
@@ -17,6 +19,7 @@ export const productionPlanSchema = z.object({
   planned_start: z.string().optional(),
   planned_end: z.string().optional(),
   status: z.enum(['planning', 'in_progress', 'completed', 'cancelled']),
+  attachment_url: z.string().optional(),
 });
 export type ProductionPlanInput = z.infer<typeof productionPlanSchema>;
 
@@ -28,6 +31,7 @@ export const quotationItemSchema = z.object({
   unit: z.string().min(1, 'Bắt buộc'),
   unit_price: z.number().min(0),
   discount_pct: z.number().min(0).max(100),
+  attachment_url: z.string().optional(),
 });
 export type QuotationItemInput = z.infer<typeof quotationItemSchema>;
 
@@ -36,6 +40,7 @@ export const bomItemSchema = z.object({
   material_id: z.string().uuid('Chọn vật tư'),
   quantity_required: z.number().positive('Số lượng phải > 0'),
   unit: z.string().min(1, 'Bắt buộc'),
+  attachment_url: z.string().optional(),
 });
 export type BomItemInput = z.infer<typeof bomItemSchema>;
 
@@ -44,6 +49,7 @@ export const productionPlanItemSchema = z.object({
   product_name: z.string().min(1, 'Bắt buộc'),
   quantity: z.number().positive('Số lượng phải > 0'),
   unit: z.string().min(1, 'Bắt buộc'),
+  attachment_url: z.string().optional(),
 });
 export type ProductionPlanItemInput = z.infer<typeof productionPlanItemSchema>;
 
@@ -55,5 +61,6 @@ export const productionTaskSchema = z.object({
   end_date: z.string().optional(),
   status: z.enum(['pending', 'in_progress', 'done']),
   progress_pct: z.number().min(0).max(100),
+  attachment_url: z.string().optional(),
 });
 export type ProductionTaskInput = z.infer<typeof productionTaskSchema>;

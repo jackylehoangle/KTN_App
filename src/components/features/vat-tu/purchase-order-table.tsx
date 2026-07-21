@@ -5,6 +5,8 @@ import { Pencil } from 'lucide-react';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
+import { TableActions } from '@/components/shared/table-actions';
+import type { ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -36,6 +38,7 @@ interface PurchaseOrderRow {
   expected_date: string | null;
   status: PurchaseOrderStatus;
   total_amount: number;
+  attachment_url: string | null;
 }
 
 export function PurchaseOrderTable({
@@ -58,16 +61,27 @@ export function PurchaseOrderTable({
     });
   }, [orders, search, status]);
 
+  const excelColumns: ExcelColumn<PurchaseOrderRow>[] = [
+    { header: 'Mã', value: (o) => o.code },
+    { header: 'Nhà cung cấp', value: (o) => o.suppliers?.name ?? '' },
+    { header: 'Ngày đặt', value: (o) => formatDate(o.order_date) },
+    { header: 'Tổng giá trị', value: (o) => o.total_amount },
+    { header: 'Trạng thái', value: (o) => STATUS_LABEL[o.status] },
+  ];
+
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Tìm theo mã đơn hoặc NCC..." />
-        <FilterSelect
-          label="Trạng thái"
-          value={status}
-          onChange={setStatus}
-          options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
-        />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <SearchInput value={search} onChange={setSearch} placeholder="Tìm theo mã đơn hoặc NCC..." />
+          <FilterSelect
+            label="Trạng thái"
+            value={status}
+            onChange={setStatus}
+            options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
+          />
+        </div>
+        <TableActions rows={filtered} columns={excelColumns} filename="don-mua" />
       </div>
       <div className="rounded-lg border">
         <Table>
@@ -78,7 +92,7 @@ export function PurchaseOrderTable({
               <TableHead>Ngày đặt</TableHead>
               <TableHead className="text-right">Tổng giá trị</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -97,7 +111,7 @@ export function PurchaseOrderTable({
                     {STATUS_LABEL[o.status]}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa đơn mua hàng"
@@ -111,6 +125,7 @@ export function PurchaseOrderTable({
                         expected_date: o.expected_date ?? '',
                         status: o.status,
                         total_amount: o.total_amount,
+                        attachment_url: o.attachment_url ?? '',
                       }}
                       onUpdate={updatePurchaseOrder}
                       successMessage="Đã cập nhật đơn mua hàng"

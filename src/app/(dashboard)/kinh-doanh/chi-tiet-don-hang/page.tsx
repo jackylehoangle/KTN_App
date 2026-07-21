@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, KINH_DOANH_TABS as TABS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { SalesOrderItemInput } from '@/lib/validations/kinh-doanh';
 import { createSalesOrderItem, updateSalesOrderItem, deleteSalesOrderItem } from '@/lib/actions/kinh-doanh';
 import type { SalesOrder } from '@/types/database';
@@ -24,6 +26,7 @@ const defaultValues: SalesOrderItemInput = {
   quantity: 1,
   unit: 'cai',
   unit_price: 0,
+  attachment_url: '',
 };
 
 export default async function ChiTietDonHangPage() {
@@ -47,6 +50,23 @@ export default async function ChiTietDonHangPage() {
     { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
     { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
     { name: 'unit_price', label: 'Đơn giá (VND)', type: 'number' },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
+  ];
+
+  const excelColumns: ExcelColumn<{
+    sales_orders?: { code: string } | null;
+    product_name: string;
+    quantity: number;
+    unit: string;
+    unit_price: number;
+    subtotal: number;
+  }>[] = [
+    { header: 'Đơn hàng', value: (i) => i.sales_orders?.code ?? '' },
+    { header: 'Sản phẩm', value: (i) => i.product_name },
+    { header: 'Số lượng', value: (i) => i.quantity },
+    { header: 'ĐVT', value: (i) => i.unit },
+    { header: 'Đơn giá', value: (i) => i.unit_price },
+    { header: 'Thành tiền', value: (i) => i.subtotal },
   ];
 
   return (
@@ -57,7 +77,9 @@ export default async function ChiTietDonHangPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dong-don-hang" />
         <EntityFormDialog
           title="Thêm dòng đơn hàng"
           schemaKey="salesOrderItem"
@@ -65,7 +87,7 @@ export default async function ChiTietDonHangPage() {
           onSubmit={createSalesOrderItem}
           successMessage="Đã thêm dòng đơn hàng"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm dòng
             </Button>
@@ -83,7 +105,7 @@ export default async function ChiTietDonHangPage() {
               <TableHead>ĐVT</TableHead>
               <TableHead className="text-right">Đơn giá</TableHead>
               <TableHead className="text-right">Thành tiền</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -96,7 +118,7 @@ export default async function ChiTietDonHangPage() {
                 <TableCell>{i.unit}</TableCell>
                 <TableCell className="text-right">{formatVND(i.unit_price)}</TableCell>
                 <TableCell className="text-right">{formatVND(i.subtotal)}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa dòng đơn hàng"
@@ -109,6 +131,7 @@ export default async function ChiTietDonHangPage() {
                         quantity: i.quantity,
                         unit: i.unit,
                         unit_price: i.unit_price,
+                        attachment_url: i.attachment_url ?? '',
                       }}
                       onUpdate={updateSalesOrderItem}
                       successMessage="Đã cập nhật dòng đơn hàng"

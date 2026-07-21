@@ -9,6 +9,7 @@ export const customerSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
   contact_person: z.string().optional(),
+  attachment_url: z.string().optional(),
 });
 export type CustomerInput = z.infer<typeof customerSchema>;
 
@@ -18,6 +19,7 @@ export const opportunitySchema = z.object({
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
   stage: z.enum(['new', 'contacted', 'quoted', 'negotiating', 'won', 'lost']),
   value: z.number().min(0),
+  attachment_url: z.string().optional(),
 });
 export type OpportunityInput = z.infer<typeof opportunitySchema>;
 
@@ -27,6 +29,7 @@ export const contractSchema = z.object({
   title: z.string().min(2, 'Tối thiểu 2 ký tự'),
   value: z.number().min(0),
   status: z.enum(['draft', 'active', 'completed', 'cancelled']),
+  attachment_url: z.string().optional(),
 });
 export type ContractInput = z.infer<typeof contractSchema>;
 
@@ -38,6 +41,7 @@ export const salesOrderSchema = z.object({
   delivery_date: z.string().optional(),
   status: z.enum(['pending', 'confirmed', 'delivered', 'cancelled']),
   total_amount: z.number().min(0),
+  attachment_url: z.string().optional(),
 });
 export type SalesOrderInput = z.infer<typeof salesOrderSchema>;
 
@@ -47,5 +51,6 @@ export const salesOrderItemSchema = z.object({
   quantity: z.number().positive('Số lượng phải > 0'),
   unit: z.string().min(1, 'Bắt buộc'),
   unit_price: z.number().min(0),
+  attachment_url: z.string().optional(),
 });
 export type SalesOrderItemInput = z.infer<typeof salesOrderItemSchema>;

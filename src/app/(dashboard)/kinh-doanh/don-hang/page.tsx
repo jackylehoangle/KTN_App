@@ -25,6 +25,7 @@ const defaultValues: SalesOrderInput = {
   delivery_date: '',
   status: 'pending',
   total_amount: 0,
+  attachment_url: '',
 };
 
 export default async function DonHangPage() {
@@ -64,6 +65,7 @@ export default async function DonHangPage() {
     { name: 'order_date', label: 'Ngày đặt hàng', type: 'date', half: true },
     { name: 'delivery_date', label: 'Ngày giao hàng', type: 'date', half: true },
     { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number' },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
 

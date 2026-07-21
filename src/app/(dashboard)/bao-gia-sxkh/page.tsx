@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,9 +16,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, formatDate } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
 import { createQuotation, updateQuotation, deleteQuotation } from '@/lib/actions/bao-gia-sxkh';
-import type { Customer, QuotationStatus } from '@/types/database';
+import type { Customer, Opportunity, QuotationStatus } from '@/types/database';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 
 const STATUS_LABEL: Record<QuotationStatus, string> = {
@@ -35,16 +37,19 @@ const defaultValues: QuotationInput = {
   status: 'draft',
   total_amount: 0,
   notes: '',
+  opportunity_id: '',
+  attachment_url: '',
 };
 
 export default async function BaoGiaPage() {
   const supabase = await createClient();
-  const [{ data: quotations, error }, { data: customers }] = await Promise.all([
+  const [{ data: quotations, error }, { data: customers }, { data: opportunities }] = await Promise.all([
     supabase
       .from('quotations')
       .select('*, customers(name)')
       .order('quotation_date', { ascending: false }),
     supabase.from('customers').select('*').order('name'),
+    supabase.from('opportunities').select('*').order('code'),
   ]);
 
   const fields: EntityField<QuotationInput>[] = [
@@ -60,14 +65,37 @@ export default async function BaoGiaPage() {
       name: 'customer_id',
       label: 'Khách hàng',
       type: 'select',
+      half: true,
       options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
+    },
+    {
+      name: 'opportunity_id',
+      label: 'Cơ hội bán hàng (tuỳ chọn)',
+      type: 'select',
+      half: true,
+      options: ((opportunities as Opportunity[]) ?? []).map((o) => ({ value: o.id, label: `${o.code} — ${o.name}` })),
     },
     { name: 'quotation_date', label: 'Ngày báo giá', type: 'date', half: true },
     { name: 'valid_until', label: 'Có hiệu lực đến', type: 'date', half: true },
     { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number', half: true },
     { name: 'notes', label: 'Ghi chú', type: 'textarea' },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
+
+  const excelColumns: ExcelColumn<{
+    code: string;
+    customers?: { name: string } | null;
+    quotation_date: string;
+    total_amount: number;
+    status: QuotationStatus;
+  }>[] = [
+    { header: 'Số BG', value: (q) => q.code },
+    { header: 'Khách hàng', value: (q) => q.customers?.name ?? '' },
+    { header: 'Ngày', value: (q) => formatDate(q.quotation_date) },
+    { header: 'Tổng giá trị', value: (q) => q.total_amount },
+    { header: 'Trạng thái', value: (q) => STATUS_LABEL[q.status] },
+  ];
 
   return (
     <div className="space-y-4">
@@ -77,7 +105,9 @@ export default async function BaoGiaPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(quotations as any[]) ?? []} columns={excelColumns} filename="bao-gia" />
         <EntityFormDialog
           title="Tạo báo giá"
           schemaKey="quotation"
@@ -85,7 +115,7 @@ export default async function BaoGiaPage() {
           onSubmit={createQuotation}
           successMessage="Đã tạo báo giá"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Tạo báo giá
             </Button>
@@ -102,7 +132,7 @@ export default async function BaoGiaPage() {
               <TableHead>Ngày</TableHead>
               <TableHead className="text-right">Tổng giá trị</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -118,7 +148,7 @@ export default async function BaoGiaPage() {
                     {STATUS_LABEL[q.status as QuotationStatus]}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa báo giá"
@@ -133,6 +163,8 @@ export default async function BaoGiaPage() {
                         status: q.status,
                         total_amount: q.total_amount,
                         notes: q.notes ?? '',
+                        opportunity_id: q.opportunity_id ?? '',
+                        attachment_url: q.attachment_url ?? '',
                       }}
                       onUpdate={updateQuotation}
                       successMessage="Đã cập nhật báo giá"

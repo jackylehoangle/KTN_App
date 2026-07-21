@@ -5,6 +5,7 @@ export const approvalRequestSchema = z.object({
   title: z.string().min(2, 'Tối thiểu 2 ký tự'),
   description: z.string().optional(),
   amount: z.number().min(0).optional(),
+  attachment_url: z.string().optional(),
 });
 export type ApprovalRequestInput = z.infer<typeof approvalRequestSchema>;
 

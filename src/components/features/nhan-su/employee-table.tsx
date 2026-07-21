@@ -5,6 +5,8 @@ import { Pencil } from 'lucide-react';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
+import { TableActions } from '@/components/shared/table-actions';
+import type { ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -71,35 +73,46 @@ export function EmployeeTable({
     });
   }, [employees, search, status, department]);
 
+  const excelColumns: ExcelColumn<EmployeeRow>[] = [
+    { header: 'Mã NV', value: (e) => e.code },
+    { header: 'Họ và tên', value: (e) => e.full_name },
+    { header: 'Phòng ban', value: (e) => e.departments?.name ?? '' },
+    { header: 'Trạng thái', value: (e) => STATUS_LABEL[e.status] },
+    { header: 'Lương cơ bản', value: (e) => e.base_salary },
+  ];
+
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc mã NV..." />
-        <FilterSelect
-          label="Trạng thái"
-          value={status}
-          onChange={setStatus}
-          options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
-        />
-        <FilterSelect label="Phòng ban" value={department} onChange={setDepartment} options={departmentOptions} />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2 print:hidden">
+          <SearchInput value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc mã NV..." />
+          <FilterSelect
+            label="Trạng thái"
+            value={status}
+            onChange={setStatus}
+            options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
+          />
+          <FilterSelect label="Phòng ban" value={department} onChange={setDepartment} options={departmentOptions} />
+        </div>
+        <TableActions rows={filtered} columns={excelColumns} filename="nhan-vien" />
       </div>
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12" />
+              <TableHead className="w-12 print:hidden" />
               <TableHead>Mã NV</TableHead>
               <TableHead>Họ và tên</TableHead>
               <TableHead>Phòng ban</TableHead>
               <TableHead>Trạng thái</TableHead>
               <TableHead className="text-right">Lương cơ bản</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.map((e) => (
               <TableRow key={e.id}>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <Avatar>
                     <AvatarImage src={e.avatar_url ?? undefined} alt={e.full_name} />
                     <AvatarFallback>{e.full_name.charAt(0).toUpperCase()}</AvatarFallback>
@@ -112,7 +125,7 @@ export function EmployeeTable({
                   <Badge variant={e.status === 'active' ? 'default' : 'secondary'}>{STATUS_LABEL[e.status]}</Badge>
                 </TableCell>
                 <TableCell className="text-right">{formatVND(e.base_salary)}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa nhân viên"

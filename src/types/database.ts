@@ -37,6 +37,7 @@ export interface ApprovalRequest {
   requested_by: string;
   requested_by_name: string;
   status: ApprovalStatus;
+  attachment_url: string | null;
   created_at: string;
 }
 
@@ -65,6 +66,7 @@ export interface Customer {
   email: string | null;
   contact_person: string | null;
   notes: string | null;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -81,6 +83,7 @@ export interface Opportunity {
   expected_close_date: string | null;
   assigned_to: string | null;
   notes: string | null;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -98,6 +101,7 @@ export interface Contract {
   end_date: string | null;
   status: ContractStatus;
   file_url: string | null;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -113,6 +117,7 @@ export interface SalesOrder {
   delivery_date: string | null;
   status: SalesOrderStatus;
   total_amount: number;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -125,6 +130,7 @@ export interface SalesOrderItem {
   unit: string;
   unit_price: number;
   subtotal: number;
+  attachment_url: string | null;
 }
 
 // ---------- Module 2: Vat tu ----------
@@ -137,6 +143,7 @@ export interface Supplier {
   phone: string | null;
   email: string | null;
   contact_person: string | null;
+  attachment_url: string | null;
   created_at: string;
 }
 
@@ -146,12 +153,14 @@ export interface Warehouse {
   name: string;
   address: string | null;
   manager_id: string | null;
+  attachment_url: string | null;
 }
 
 export interface MaterialCategory {
   id: string;
   name: string;
   parent_id: string | null;
+  attachment_url: string | null;
 }
 
 export interface Material {
@@ -165,6 +174,7 @@ export interface Material {
   unit_cost: number;
   default_supplier_id: string | null;
   active: boolean;
+  attachment_url: string | null;
   created_at: string;
 }
 
@@ -178,6 +188,7 @@ export interface PurchaseOrder {
   expected_date: string | null;
   status: PurchaseOrderStatus;
   total_amount: number;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -189,6 +200,7 @@ export interface PurchaseOrderItem {
   quantity: number;
   unit_price: number;
   subtotal: number;
+  attachment_url: string | null;
 }
 
 export type StockMovementType = 'in' | 'out' | 'transfer' | 'adjust';
@@ -204,6 +216,7 @@ export interface StockMovement {
   reference_type: 'purchase_order' | 'sales_order' | 'production' | 'manual' | null;
   reference_id: string | null;
   note: string | null;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -223,12 +236,14 @@ export interface Department {
   name: string;
   parent_id: string | null;
   manager_id: string | null;
+  attachment_url: string | null;
 }
 
 export interface Position {
   id: string;
   name: string;
   department_id: string | null;
+  attachment_url: string | null;
 }
 
 export type EmployeeStatus = 'active' | 'probation' | 'inactive' | 'terminated';
@@ -265,6 +280,7 @@ export interface Attendance {
   check_out: string | null;
   status: AttendanceStatus;
   note: string | null;
+  attachment_url: string | null;
 }
 
 export type LeaveType = 'annual' | 'sick' | 'unpaid' | 'other';
@@ -280,6 +296,7 @@ export interface LeaveRequest {
   status: LeaveStatus;
   approved_by: string | null;
   reason: string | null;
+  attachment_url: string | null;
   created_at: string;
 }
 
@@ -296,6 +313,7 @@ export interface Payroll {
   net_salary: number;
   status: 'draft' | 'paid';
   paid_at: string | null;
+  attachment_url: string | null;
 }
 
 // ---------- Module 4: Tai chinh ----------
@@ -307,6 +325,7 @@ export interface Account {
   type: 'cash' | 'bank';
   currency: string;
   opening_balance: number;
+  attachment_url: string | null;
 }
 
 export type TransactionType = 'income' | 'expense' | 'transfer';
@@ -341,6 +360,7 @@ export interface Invoice {
   tax_amount: number;
   total_amount: number;
   status: InvoiceStatus;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -362,6 +382,7 @@ export interface Budget {
   category: string;
   period: string;
   amount: number;
+  attachment_url: string | null;
 }
 
 // ---------- Module 5: Bao gia & SXKH ----------
@@ -377,6 +398,7 @@ export interface Quotation {
   status: QuotationStatus;
   total_amount: number;
   notes: string | null;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -391,6 +413,7 @@ export interface QuotationItem {
   unit_price: number;
   discount_pct: number;
   subtotal: number;
+  attachment_url: string | null;
 }
 
 export interface BomItem {
@@ -399,6 +422,7 @@ export interface BomItem {
   material_id: string | null;
   quantity_required: number;
   unit: string;
+  attachment_url: string | null;
 }
 
 export type ProductionPlanStatus = 'planning' | 'in_progress' | 'completed' | 'cancelled';
@@ -412,6 +436,7 @@ export interface ProductionPlan {
   planned_start: string | null;
   planned_end: string | null;
   status: ProductionPlanStatus;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -422,6 +447,7 @@ export interface ProductionPlanItem {
   product_name: string;
   quantity: number;
   unit: string;
+  attachment_url: string | null;
 }
 
 export type ProductionTaskStatus = 'pending' | 'in_progress' | 'done';
@@ -435,5 +461,6 @@ export interface ProductionTask {
   end_date: string | null;
   status: ProductionTaskStatus;
   progress_pct: number;
+  attachment_url: string | null;
 }
 

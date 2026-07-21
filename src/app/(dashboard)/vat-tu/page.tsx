@@ -4,6 +4,7 @@ import { MaterialFormDialog } from '@/components/features/vat-tu/material-form-d
 import { MaterialImportDialog } from '@/components/features/vat-tu/material-import-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { deleteMaterial } from '@/lib/actions/vat-tu';
 import { formatVND } from '@/lib/constants';
 import {
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { Material, StockBalance } from '@/types/database';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
@@ -30,6 +32,14 @@ export default async function VatTuPage() {
     totalByMaterial.set(b.material_id, (totalByMaterial.get(b.material_id) ?? 0) + b.quantity_on_hand);
   });
 
+  const excelColumns: ExcelColumn<Material>[] = [
+    { header: 'Mã', value: (m) => m.code },
+    { header: 'Tên vật tư', value: (m) => m.name },
+    { header: 'ĐVT', value: (m) => m.unit },
+    { header: 'Tồn kho', value: (m) => totalByMaterial.get(m.id) ?? 0 },
+    { header: 'Đơn giá', value: (m) => m.unit_cost },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -39,6 +49,7 @@ export default async function VatTuPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
+        <TableActions rows={(materials as Material[]) ?? []} columns={excelColumns} filename="vat-tu" />
         <MaterialImportDialog />
         <MaterialFormDialog />
       </div>
@@ -51,7 +62,7 @@ export default async function VatTuPage() {
               <TableHead>ĐVT</TableHead>
               <TableHead className="text-right">Tồn kho</TableHead>
               <TableHead className="text-right">Đơn giá</TableHead>
-              <TableHead className="w-24" />
+              <TableHead className="w-24 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,7 +86,7 @@ export default async function VatTuPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">{formatVND(m.unit_cost)}</TableCell>
-                  <TableCell>
+                  <TableCell className="print:hidden">
                     <div className="flex justify-end gap-1">
                       <MaterialFormDialog material={m} />
                       <ConfirmDeleteButton onConfirm={deleteMaterial.bind(null, m.id)} />

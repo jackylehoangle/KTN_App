@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { ContractInput } from '@/lib/validations/kinh-doanh';
 import { createContract, updateContract, deleteContract } from '@/lib/actions/kinh-doanh';
 import type { Customer, ContractStatus } from '@/types/database';
@@ -33,6 +35,7 @@ const defaultValues: ContractInput = {
   title: '',
   value: 0,
   status: 'draft',
+  attachment_url: '',
 };
 
 export default async function HopDongPage() {
@@ -60,8 +63,23 @@ export default async function HopDongPage() {
       options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
     },
     { name: 'value', label: 'Giá trị (VND)', type: 'number', half: true },
+    { name: 'attachment_url', label: 'File hợp đồng đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
+
+  const excelColumns: ExcelColumn<{
+    code: string;
+    title: string;
+    customers?: { name: string } | null;
+    status: ContractStatus;
+    value: number;
+  }>[] = [
+    { header: 'Mã', value: (c) => c.code },
+    { header: 'Tên hợp đồng', value: (c) => c.title },
+    { header: 'Khách hàng', value: (c) => c.customers?.name ?? '' },
+    { header: 'Trạng thái', value: (c) => STATUS_LABEL[c.status] },
+    { header: 'Giá trị', value: (c) => c.value },
+  ];
 
   return (
     <div className="space-y-4">
@@ -71,7 +89,9 @@ export default async function HopDongPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(contracts as any[]) ?? []} columns={excelColumns} filename="hop-dong" />
         <EntityFormDialog
           title="Thêm hợp đồng"
           schemaKey="contract"
@@ -79,7 +99,7 @@ export default async function HopDongPage() {
           onSubmit={createContract}
           successMessage="Đã thêm hợp đồng"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm hợp đồng
             </Button>
@@ -96,7 +116,7 @@ export default async function HopDongPage() {
               <TableHead>Khách hàng</TableHead>
               <TableHead>Trạng thái</TableHead>
               <TableHead className="text-right">Giá trị</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -112,7 +132,7 @@ export default async function HopDongPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">{formatVND(c.value)}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa hợp đồng"
@@ -125,6 +145,7 @@ export default async function HopDongPage() {
                         title: c.title,
                         value: c.value,
                         status: c.status,
+                        attachment_url: c.attachment_url ?? '',
                       }}
                       onUpdate={updateContract}
                       successMessage="Đã cập nhật hợp đồng"

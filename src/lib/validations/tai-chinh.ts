@@ -6,6 +6,7 @@ export const accountSchema = z.object({
   account_number: z.string().optional(),
   bank_name: z.string().optional(),
   opening_balance: z.number(),
+  attachment_url: z.string().optional(),
 });
 export type AccountInput = z.infer<typeof accountSchema>;
 
@@ -29,6 +30,7 @@ export const invoiceSchema = z.object({
   amount: z.number().min(0),
   tax_amount: z.number().min(0),
   status: z.enum(['unpaid', 'partial', 'paid', 'overdue']),
+  attachment_url: z.string().optional(),
 });
 export type InvoiceInput = z.infer<typeof invoiceSchema>;
 
@@ -48,5 +50,6 @@ export const budgetSchema = z.object({
   category: z.string().min(1, 'Bắt buộc'),
   period: z.string().min(1, 'Bắt buộc (VD: 2026 hoặc 2026-07)'),
   amount: z.number().min(0),
+  attachment_url: z.string().optional(),
 });
 export type BudgetInput = z.infer<typeof budgetSchema>;

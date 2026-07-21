@@ -4,6 +4,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { ProductionPlanItemInput } from '@/lib/validations/bao-gia-sxkh';
 import { createProductionPlanItem, updateProductionPlanItem, deleteProductionPlanItem } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlan } from '@/types/database';
@@ -23,6 +25,7 @@ const defaultValues: ProductionPlanItemInput = {
   product_name: '',
   quantity: 1,
   unit: 'cai',
+  attachment_url: '',
 };
 
 export default async function ChiTietKeHoachPage() {
@@ -45,6 +48,19 @@ export default async function ChiTietKeHoachPage() {
     { name: 'product_name', label: 'Tên sản phẩm', placeholder: 'Tủ điện hạ thế' },
     { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
     { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
+  ];
+
+  const excelColumns: ExcelColumn<{
+    production_plans?: { code: string } | null;
+    product_name: string;
+    quantity: number;
+    unit: string;
+  }>[] = [
+    { header: 'Kế hoạch', value: (i) => i.production_plans?.code ?? '' },
+    { header: 'Sản phẩm', value: (i) => i.product_name },
+    { header: 'Số lượng', value: (i) => i.quantity },
+    { header: 'ĐVT', value: (i) => i.unit },
   ];
 
   return (
@@ -55,7 +71,9 @@ export default async function ChiTietKeHoachPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dong-ke-hoach" />
         <EntityFormDialog
           title="Thêm dòng kế hoạch"
           schemaKey="productionPlanItem"
@@ -63,7 +81,7 @@ export default async function ChiTietKeHoachPage() {
           onSubmit={createProductionPlanItem}
           successMessage="Đã thêm dòng kế hoạch"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm dòng
             </Button>
@@ -79,7 +97,7 @@ export default async function ChiTietKeHoachPage() {
               <TableHead>Sản phẩm</TableHead>
               <TableHead className="text-right">Số lượng</TableHead>
               <TableHead>ĐVT</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,7 +108,7 @@ export default async function ChiTietKeHoachPage() {
                 <TableCell>{i.product_name}</TableCell>
                 <TableCell className="text-right">{i.quantity}</TableCell>
                 <TableCell>{i.unit}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <EntityFormDialog
                       title="Sửa dòng kế hoạch"
@@ -102,6 +120,7 @@ export default async function ChiTietKeHoachPage() {
                         product_name: i.product_name,
                         quantity: i.quantity,
                         unit: i.unit,
+                        attachment_url: i.attachment_url ?? '',
                       }}
                       onUpdate={updateProductionPlanItem}
                       successMessage="Đã cập nhật dòng kế hoạch"

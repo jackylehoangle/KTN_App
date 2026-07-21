@@ -17,6 +17,7 @@ const defaultValues: ApprovalRequestInput = {
   title: '',
   description: '',
   amount: 0,
+  attachment_url: '',
 };
 
 const fields: EntityField<ApprovalRequestInput>[] = [
@@ -30,6 +31,7 @@ const fields: EntityField<ApprovalRequestInput>[] = [
   { name: 'amount', label: 'Số tiền (VND, tuỳ chọn)', type: 'number', half: true },
   { name: 'title', label: 'Tiêu đề', placeholder: 'Đề xuất mua máy in mới' },
   { name: 'description', label: 'Mô tả', type: 'textarea' },
+  { name: 'attachment_url', label: 'Chứng từ đính kèm', type: 'image' },
 ];
 
 export default async function DeXuatPage() {
@@ -54,7 +56,7 @@ export default async function DeXuatPage() {
           onSubmit={createApprovalRequest}
           successMessage="Đã gửi đề xuất"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Tạo đề xuất
             </Button>

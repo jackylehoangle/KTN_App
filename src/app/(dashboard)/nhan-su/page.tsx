@@ -79,7 +79,7 @@ export default async function NhanSuPage() {
           onSubmit={createEmployee}
           successMessage="Đã thêm nhân viên"
           trigger={
-            <Button size="sm">
+            <Button size="sm" className="print:hidden">
               <Plus className="size-4" />
               Thêm nhân viên
             </Button>

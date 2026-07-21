@@ -24,6 +24,7 @@ const defaultValues: PurchaseOrderInput = {
   expected_date: '',
   status: 'pending',
   total_amount: 0,
+  attachment_url: '',
 };
 
 export default async function DonMuaPage() {
@@ -54,6 +55,7 @@ export default async function DonMuaPage() {
     { name: 'order_date', label: 'Ngày đặt hàng', type: 'date', half: true },
     { name: 'expected_date', label: 'Ngày dự kiến nhận', type: 'date', half: true },
     { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number' },
+    { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
 

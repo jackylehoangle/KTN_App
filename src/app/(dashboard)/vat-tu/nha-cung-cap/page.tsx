@@ -3,6 +3,7 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { SupplierFormDialog } from '@/components/features/vat-tu/supplier-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { TableActions } from '@/components/shared/table-actions';
 import { deleteSupplier } from '@/lib/actions/vat-tu';
 import {
   Table,
@@ -12,12 +13,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import type { ExcelColumn } from '@/lib/export-excel';
 import type { Supplier } from '@/types/database';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
 export default async function NhaCungCapPage() {
   const supabase = await createClient();
   const { data: suppliers, error } = await supabase.from('suppliers').select('*').order('code');
+
+  const excelColumns: ExcelColumn<Supplier>[] = [
+    { header: 'Mã NCC', value: (s) => s.code },
+    { header: 'Tên nhà cung cấp', value: (s) => s.name },
+    { header: 'Liên hệ', value: (s) => s.contact_person ?? '' },
+    { header: 'Điện thoại', value: (s) => s.phone ?? '' },
+  ];
 
   return (
     <div className="space-y-4">
@@ -27,7 +36,8 @@ export default async function NhaCungCapPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <TableActions rows={(suppliers as Supplier[]) ?? []} columns={excelColumns} filename="nha-cung-cap" />
         <SupplierFormDialog />
       </div>
       <div className="rounded-lg border">
@@ -38,7 +48,7 @@ export default async function NhaCungCapPage() {
               <TableHead>Tên nhà cung cấp</TableHead>
               <TableHead>Liên hệ</TableHead>
               <TableHead>Điện thoại</TableHead>
-              <TableHead className="w-16" />
+              <TableHead className="w-16 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -48,7 +58,7 @@ export default async function NhaCungCapPage() {
                 <TableCell>{s.name}</TableCell>
                 <TableCell className="text-muted-foreground">{s.contact_person ?? '—'}</TableCell>
                 <TableCell className="text-muted-foreground">{s.phone ?? '—'}</TableCell>
-                <TableCell>
+                <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
                     <SupplierFormDialog supplier={s} />
                     <ConfirmDeleteButton onConfirm={deleteSupplier.bind(null, s.id)} />
