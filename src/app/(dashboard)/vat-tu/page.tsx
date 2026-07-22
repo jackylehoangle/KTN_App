@@ -1,3 +1,4 @@
+import { AlertTriangle, ShoppingCart } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { MaterialFormDialog } from '@/components/features/vat-tu/material-form-dialog';
@@ -5,8 +6,10 @@ import { MaterialImportDialog } from '@/components/features/vat-tu/material-impo
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
+import { StatCard } from '@/components/shared/stat-card';
 import { deleteMaterial } from '@/lib/actions/vat-tu';
 import { formatVND } from '@/lib/constants';
+import { getVatTuStats } from '@/lib/supabase/queries';
 import {
   Table,
   TableBody,
@@ -22,9 +25,10 @@ import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
 export default async function VatTuPage() {
   const supabase = await createClient();
-  const [{ data: materials, error }, { data: balances }] = await Promise.all([
+  const [{ data: materials, error }, { data: balances }, stats] = await Promise.all([
     supabase.from('materials').select('*').order('code'),
     supabase.from('stock_balances').select('*'),
+    getVatTuStats(),
   ]);
 
   const totalByMaterial = new Map<string, number>();
@@ -45,6 +49,10 @@ export default async function VatTuPage() {
       <div>
         <h1 className="text-2xl font-semibold text-navy">Vật tư</h1>
         <p className="text-sm text-muted-foreground">Danh mục vật tư và tồn kho hiện tại</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard icon={AlertTriangle} label={stats[0].label} value={stats[0].value} color="amber" />
+        <StatCard icon={ShoppingCart} label={stats[1].label} value={stats[1].value} color="blue" />
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />

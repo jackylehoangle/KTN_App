@@ -8,7 +8,7 @@ import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Table,
   TableBody,
@@ -17,17 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, formatDate } from '@/lib/constants';
+import { formatVND, formatDate, PURCHASE_ORDER_STATUS } from '@/lib/constants';
 import { updatePurchaseOrder, deletePurchaseOrder } from '@/lib/actions/vat-tu';
 import type { PurchaseOrderInput } from '@/lib/validations/vat-tu';
 import type { PurchaseOrderStatus } from '@/types/database';
-
-const STATUS_LABEL: Record<PurchaseOrderStatus, string> = {
-  pending: 'Chờ xử lý',
-  confirmed: 'Đã xác nhận',
-  received: 'Đã nhận hàng',
-  cancelled: 'Đã huỷ',
-};
 
 interface PurchaseOrderRow {
   id: string;
@@ -66,7 +59,7 @@ export function PurchaseOrderTable({
     { header: 'Nhà cung cấp', value: (o) => o.suppliers?.name ?? '' },
     { header: 'Ngày đặt', value: (o) => formatDate(o.order_date) },
     { header: 'Tổng giá trị', value: (o) => o.total_amount },
-    { header: 'Trạng thái', value: (o) => STATUS_LABEL[o.status] },
+    { header: 'Trạng thái', value: (o) => PURCHASE_ORDER_STATUS[o.status].label },
   ];
 
   return (
@@ -78,7 +71,7 @@ export function PurchaseOrderTable({
             label="Trạng thái"
             value={status}
             onChange={setStatus}
-            options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
+            options={Object.entries(PURCHASE_ORDER_STATUS).map(([value, meta]) => ({ value, label: meta.label }))}
           />
         </div>
         <TableActions rows={buildExcelRows(filtered, excelColumns)} filename="don-mua" />
@@ -103,13 +96,7 @@ export function PurchaseOrderTable({
                 <TableCell className="text-muted-foreground">{formatDate(o.order_date)}</TableCell>
                 <TableCell className="text-right">{formatVND(o.total_amount)}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      o.status === 'received' ? 'default' : o.status === 'cancelled' ? 'destructive' : 'secondary'
-                    }
-                  >
-                    {STATUS_LABEL[o.status]}
-                  </Badge>
+                  <StatusBadge value={o.status} map={PURCHASE_ORDER_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">

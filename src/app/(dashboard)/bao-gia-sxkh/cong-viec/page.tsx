@@ -6,7 +6,7 @@ import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Table,
   TableBody,
@@ -15,17 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDate, BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
+import { formatDate, BAO_GIA_SXKH_TABS as TABS, PRODUCTION_TASK_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ProductionTaskInput } from '@/lib/validations/bao-gia-sxkh';
 import { createProductionTask, updateProductionTask, deleteProductionTask } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlan, Profile, ProductionTaskStatus } from '@/types/database';
-
-const STATUS_LABEL: Record<ProductionTaskStatus, string> = {
-  pending: 'Chờ thực hiện',
-  in_progress: 'Đang thực hiện',
-  done: 'Hoàn thành',
-};
 
 const defaultValues: ProductionTaskInput = {
   production_plan_id: '',
@@ -69,7 +63,7 @@ export default async function CongViecPage() {
       label: 'Trạng thái',
       type: 'select',
       half: true,
-      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+      options: Object.entries(PRODUCTION_TASK_STATUS).map(([value, meta]) => ({ value, label: meta.label })),
     },
     { name: 'start_date', label: 'Ngày bắt đầu', type: 'date', half: true },
     { name: 'end_date', label: 'Ngày kết thúc', type: 'date', half: true },
@@ -92,7 +86,7 @@ export default async function CongViecPage() {
     { header: 'Bắt đầu', value: (t) => formatDate(t.start_date) },
     { header: 'Kết thúc', value: (t) => formatDate(t.end_date) },
     { header: 'Tiến độ (%)', value: (t) => t.progress_pct },
-    { header: 'Trạng thái', value: (t) => STATUS_LABEL[t.status] },
+    { header: 'Trạng thái', value: (t) => PRODUCTION_TASK_STATUS[t.status].label },
   ];
 
   return (
@@ -146,9 +140,7 @@ export default async function CongViecPage() {
                 <TableCell className="text-muted-foreground">{formatDate(t.end_date)}</TableCell>
                 <TableCell className="text-right">{t.progress_pct}%</TableCell>
                 <TableCell>
-                  <Badge variant={t.status === 'done' ? 'default' : t.status === 'pending' ? 'secondary' : 'secondary'}>
-                    {STATUS_LABEL[t.status as ProductionTaskStatus]}
-                  </Badge>
+                  <StatusBadge value={t.status as ProductionTaskStatus} map={PRODUCTION_TASK_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">

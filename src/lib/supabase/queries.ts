@@ -40,34 +40,24 @@ export interface ModuleStat {
   value: string;
 }
 
-// Lightweight KPI counts for the dashboard home cards, keyed by module href.
-export async function getDashboardStats(): Promise<Record<string, ModuleStat[]>> {
+export async function getKinhDoanhStats(): Promise<ModuleStat[]> {
   const supabase = await createClient();
-
-  const [
-    { count: customerCount },
-    { count: openOpportunityCount },
-    { data: materials },
-    { data: balances },
-    { count: pendingPoCount },
-    { count: activeEmployeeCount },
-    { count: pendingLeaveCount },
-    { data: unpaidInvoices },
-    { count: overdueInvoiceCount },
-    { count: pendingQuotationCount },
-    { count: activePlanCount },
-  ] = await Promise.all([
+  const [{ count: customerCount }, { count: openOpportunityCount }] = await Promise.all([
     supabase.from('customers').select('*', { count: 'exact', head: true }),
     supabase.from('opportunities').select('*', { count: 'exact', head: true }).not('stage', 'in', '(won,lost)'),
+  ]);
+  return [
+    { label: 'Khách hàng', value: String(customerCount ?? 0) },
+    { label: 'Cơ hội đang mở', value: String(openOpportunityCount ?? 0) },
+  ];
+}
+
+export async function getVatTuStats(): Promise<ModuleStat[]> {
+  const supabase = await createClient();
+  const [{ data: materials }, { data: balances }, { count: pendingPoCount }] = await Promise.all([
     supabase.from('materials').select('*'),
     supabase.from('stock_balances').select('*'),
     supabase.from('purchase_orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('employees').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-    supabase.from('leave_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('invoices').select('total_amount').neq('status', 'paid'),
-    supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('status', 'overdue'),
-    supabase.from('quotations').select('*', { count: 'exact', head: true }).in('status', ['draft', 'sent']),
-    supabase.from('production_plans').select('*', { count: 'exact', head: true }).eq('status', 'in_progress'),
   ]);
 
   const onHandByMaterial = new Map<string, number>();
@@ -78,32 +68,99 @@ export async function getDashboardStats(): Promise<Record<string, ModuleStat[]>>
     (m) => (onHandByMaterial.get(m.id) ?? 0) < m.min_stock
   ).length;
 
+  return [
+    { label: 'Vật tư dưới mức tồn', value: String(lowStockCount) },
+    { label: 'Đơn mua đang chờ', value: String(pendingPoCount ?? 0) },
+  ];
+}
+
+export async function getNhanSuStats(): Promise<ModuleStat[]> {
+  const supabase = await createClient();
+  const [{ count: activeEmployeeCount }, { count: pendingLeaveCount }] = await Promise.all([
+    supabase.from('employees').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase.from('leave_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+  ]);
+  return [
+    { label: 'Nhân viên đang làm việc', value: String(activeEmployeeCount ?? 0) },
+    { label: 'Đơn nghỉ phép chờ duyệt', value: String(pendingLeaveCount ?? 0) },
+  ];
+}
+
+export async function getTaiChinhStats(): Promise<ModuleStat[]> {
+  const supabase = await createClient();
+  const [{ data: unpaidInvoices }, { count: overdueInvoiceCount }] = await Promise.all([
+    supabase.from('invoices').select('total_amount').neq('status', 'paid'),
+    supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('status', 'overdue'),
+  ]);
   const unpaidTotal = ((unpaidInvoices as { total_amount: number }[]) ?? []).reduce(
     (sum, i) => sum + i.total_amount,
     0
   );
+  return [
+    { label: 'Công nợ chưa thu', value: formatVND(unpaidTotal) },
+    { label: 'Hoá đơn quá hạn', value: String(overdueInvoiceCount ?? 0) },
+  ];
+}
+
+export async function getBaoGiaSxkhStats(): Promise<ModuleStat[]> {
+  const supabase = await createClient();
+  const [{ count: pendingQuotationCount }, { count: activePlanCount }] = await Promise.all([
+    supabase.from('quotations').select('*', { count: 'exact', head: true }).in('status', ['draft', 'sent']),
+    supabase.from('production_plans').select('*', { count: 'exact', head: true }).eq('status', 'in_progress'),
+  ]);
+  return [
+    { label: 'Báo giá đang chờ', value: String(pendingQuotationCount ?? 0) },
+    { label: 'Kế hoạch SX đang chạy', value: String(activePlanCount ?? 0) },
+  ];
+}
+
+export async function getDeXuatStats(): Promise<ModuleStat[]> {
+  const supabase = await createClient();
+  const [{ count: pendingCount }, { count: approvedCount }] = await Promise.all([
+    supabase
+      .from('approval_requests')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['pending_manager', 'pending_director']),
+    supabase.from('approval_requests').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+  ]);
+  return [
+    { label: 'Đang chờ duyệt', value: String(pendingCount ?? 0) },
+    { label: 'Đã duyệt', value: String(approvedCount ?? 0) },
+  ];
+}
+
+export async function getPhanQuyenStats(): Promise<ModuleStat[]> {
+  const supabase = await createClient();
+  const [{ count: userCount }, { count: extraGrantCount }] = await Promise.all([
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('user_permissions').select('*', { count: 'exact', head: true }),
+  ]);
+  return [
+    { label: 'Người dùng', value: String(userCount ?? 0) },
+    { label: 'Quyền cấp thêm', value: String(extraGrantCount ?? 0) },
+  ];
+}
+
+// Lightweight KPI counts for the dashboard home cards, keyed by module href.
+export async function getDashboardStats(): Promise<Record<string, ModuleStat[]>> {
+  const [kinhDoanh, vatTu, nhanSu, taiChinh, baoGiaSxkh, deXuat, phanQuyen] = await Promise.all([
+    getKinhDoanhStats(),
+    getVatTuStats(),
+    getNhanSuStats(),
+    getTaiChinhStats(),
+    getBaoGiaSxkhStats(),
+    getDeXuatStats(),
+    getPhanQuyenStats(),
+  ]);
 
   return {
-    '/kinh-doanh': [
-      { label: 'Khách hàng', value: String(customerCount ?? 0) },
-      { label: 'Cơ hội đang mở', value: String(openOpportunityCount ?? 0) },
-    ],
-    '/vat-tu': [
-      { label: 'Vật tư dưới mức tồn', value: String(lowStockCount) },
-      { label: 'Đơn mua đang chờ', value: String(pendingPoCount ?? 0) },
-    ],
-    '/nhan-su': [
-      { label: 'Nhân viên đang làm việc', value: String(activeEmployeeCount ?? 0) },
-      { label: 'Đơn nghỉ phép chờ duyệt', value: String(pendingLeaveCount ?? 0) },
-    ],
-    '/tai-chinh': [
-      { label: 'Công nợ chưa thu', value: formatVND(unpaidTotal) },
-      { label: 'Hoá đơn quá hạn', value: String(overdueInvoiceCount ?? 0) },
-    ],
-    '/bao-gia-sxkh': [
-      { label: 'Báo giá đang chờ', value: String(pendingQuotationCount ?? 0) },
-      { label: 'Kế hoạch SX đang chạy', value: String(activePlanCount ?? 0) },
-    ],
+    '/kinh-doanh': kinhDoanh,
+    '/vat-tu': vatTu,
+    '/nhan-su': nhanSu,
+    '/tai-chinh': taiChinh,
+    '/bao-gia-sxkh': baoGiaSxkh,
+    '/de-xuat': deXuat,
+    '/phan-quyen': phanQuyen,
   };
 }
 

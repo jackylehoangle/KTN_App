@@ -1,4 +1,4 @@
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Users, Target } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
@@ -6,6 +6,8 @@ import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { CustomerImportDialog } from '@/components/features/kinh-doanh/customer-import-dialog';
 import { TableActions } from '@/components/shared/table-actions';
+import { StatCard } from '@/components/shared/stat-card';
+import { getKinhDoanhStats } from '@/lib/supabase/queries';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -66,13 +68,20 @@ const excelColumns: ExcelColumn<Customer>[] = [
 
 export default async function KinhDoanhPage() {
   const supabase = await createClient();
-  const { data: customers, error } = await supabase.from('customers').select('*').order('code');
+  const [{ data: customers, error }, stats] = await Promise.all([
+    supabase.from('customers').select('*').order('code'),
+    getKinhDoanhStats(),
+  ]);
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-semibold text-navy">Kinh doanh</h1>
         <p className="text-sm text-muted-foreground">Danh sách khách hàng</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard icon={Users} label={stats[0].label} value={stats[0].value} color="blue" />
+        <StatCard icon={Target} label={stats[1].label} value={stats[1].value} color="violet" />
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />

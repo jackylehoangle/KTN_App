@@ -6,7 +6,7 @@ import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Table,
   TableBody,
@@ -15,19 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDate } from '@/lib/constants';
+import { formatDate, PRODUCTION_PLAN_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ProductionPlanInput } from '@/lib/validations/bao-gia-sxkh';
 import { createProductionPlan, updateProductionPlan, deleteProductionPlan } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlanStatus } from '@/types/database';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
-
-const STATUS_LABEL: Record<ProductionPlanStatus, string> = {
-  planning: 'Lên kế hoạch',
-  in_progress: 'Đang sản xuất',
-  completed: 'Hoàn thành',
-  cancelled: 'Đã huỷ',
-};
 
 const defaultValues: ProductionPlanInput = {
   code: '',
@@ -52,7 +45,7 @@ export default async function KeHoachPage() {
       label: 'Trạng thái',
       type: 'select',
       half: true,
-      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+      options: Object.entries(PRODUCTION_PLAN_STATUS).map(([value, meta]) => ({ value, label: meta.label })),
     },
     { name: 'name', label: 'Tên kế hoạch', placeholder: 'Sản xuất lô hàng A' },
     { name: 'planned_start', label: 'Bắt đầu dự kiến', type: 'date', half: true },
@@ -72,7 +65,7 @@ export default async function KeHoachPage() {
     { header: 'Tên kế hoạch', value: (p) => p.name },
     { header: 'Bắt đầu', value: (p) => formatDate(p.planned_start) },
     { header: 'Kết thúc', value: (p) => formatDate(p.planned_end) },
-    { header: 'Trạng thái', value: (p) => STATUS_LABEL[p.status] },
+    { header: 'Trạng thái', value: (p) => PRODUCTION_PLAN_STATUS[p.status].label },
   ];
 
   return (
@@ -122,9 +115,7 @@ export default async function KeHoachPage() {
                 <TableCell className="text-muted-foreground">{formatDate(p.planned_start)}</TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(p.planned_end)}</TableCell>
                 <TableCell>
-                  <Badge variant={p.status === 'completed' ? 'default' : p.status === 'cancelled' ? 'destructive' : 'secondary'}>
-                    {STATUS_LABEL[p.status as ProductionPlanStatus]}
-                  </Badge>
+                  <StatusBadge value={p.status as ProductionPlanStatus} map={PRODUCTION_PLAN_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">

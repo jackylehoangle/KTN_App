@@ -8,7 +8,7 @@ import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Table,
   TableBody,
@@ -17,17 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, formatDate } from '@/lib/constants';
+import { formatVND, formatDate, SALES_ORDER_STATUS } from '@/lib/constants';
 import { updateSalesOrder, deleteSalesOrder } from '@/lib/actions/kinh-doanh';
 import type { SalesOrderInput } from '@/lib/validations/kinh-doanh';
 import type { SalesOrderStatus } from '@/types/database';
-
-const STATUS_LABEL: Record<SalesOrderStatus, string> = {
-  pending: 'Chờ xử lý',
-  confirmed: 'Đã xác nhận',
-  delivered: 'Đã giao',
-  cancelled: 'Đã huỷ',
-};
 
 interface SalesOrderRow {
   id: string;
@@ -67,7 +60,7 @@ export function SalesOrderTable({
     { header: 'Khách hàng', value: (o) => o.customers?.name ?? '' },
     { header: 'Ngày đặt', value: (o) => formatDate(o.order_date) },
     { header: 'Tổng giá trị', value: (o) => o.total_amount },
-    { header: 'Trạng thái', value: (o) => STATUS_LABEL[o.status] },
+    { header: 'Trạng thái', value: (o) => SALES_ORDER_STATUS[o.status].label },
   ];
 
   return (
@@ -79,7 +72,7 @@ export function SalesOrderTable({
             label="Trạng thái"
             value={status}
             onChange={setStatus}
-            options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
+            options={Object.entries(SALES_ORDER_STATUS).map(([value, meta]) => ({ value, label: meta.label }))}
           />
         </div>
         <TableActions rows={buildExcelRows(filtered, excelColumns)} filename="don-hang" />
@@ -104,13 +97,7 @@ export function SalesOrderTable({
                 <TableCell className="text-muted-foreground">{formatDate(o.order_date)}</TableCell>
                 <TableCell className="text-right">{formatVND(o.total_amount)}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      o.status === 'delivered' ? 'default' : o.status === 'cancelled' ? 'destructive' : 'secondary'
-                    }
-                  >
-                    {STATUS_LABEL[o.status]}
-                  </Badge>
+                  <StatusBadge value={o.status} map={SALES_ORDER_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">

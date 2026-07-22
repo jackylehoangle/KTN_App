@@ -1,14 +1,15 @@
-import { Plus } from 'lucide-react';
+import { Plus, Clock, CheckCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { StatCard } from '@/components/shared/stat-card';
 import { Button } from '@/components/ui/button';
 import {
   ApprovalRequestTable,
   type ApprovalRequestRow,
 } from '@/components/features/de-xuat/approval-request-table';
 import { APPROVAL_TYPE_LABELS } from '@/lib/constants';
-import { getCurrentProfile } from '@/lib/supabase/queries';
+import { getCurrentProfile, getDeXuatStats } from '@/lib/supabase/queries';
 import { createApprovalRequest } from '@/lib/actions/de-xuat';
 import type { ApprovalRequestInput } from '@/lib/validations/de-xuat';
 
@@ -36,9 +37,10 @@ const fields: EntityField<ApprovalRequestInput>[] = [
 
 export default async function DeXuatPage() {
   const supabase = await createClient();
-  const [profile, { data: requests, error }] = await Promise.all([
+  const [profile, { data: requests, error }, stats] = await Promise.all([
     getCurrentProfile(),
     supabase.from('approval_requests').select('*').order('created_at', { ascending: false }),
+    getDeXuatStats(),
   ]);
 
   return (
@@ -46,6 +48,10 @@ export default async function DeXuatPage() {
       <div>
         <h1 className="text-2xl font-semibold text-navy">Đề xuất & Phê duyệt</h1>
         <p className="text-sm text-muted-foreground">Gửi và duyệt đề xuất theo 2 cấp: Trưởng phòng rồi Giám đốc</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard icon={Clock} label={stats[0].label} value={stats[0].value} color="amber" />
+        <StatCard icon={CheckCircle} label={stats[1].label} value={stats[1].value} color="emerald" />
       </div>
       <ErrorAlert error={error} />
       <div className="flex justify-end">

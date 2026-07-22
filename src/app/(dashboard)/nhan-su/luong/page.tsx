@@ -6,7 +6,7 @@ import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, NHAN_SU_TABS as TABS } from '@/lib/constants';
+import { formatVND, NHAN_SU_TABS as TABS, PAYROLL_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { PayrollInput } from '@/lib/validations/nhan-su';
 import { createPayroll, updatePayroll, deletePayroll } from '@/lib/actions/nhan-su';
@@ -86,7 +86,7 @@ export default async function LuongPage() {
     { header: 'Kỳ lương', value: (p) => p.period },
     { header: 'Lương cơ bản', value: (p) => p.base_salary },
     { header: 'Thực lãnh', value: (p) => p.net_salary },
-    { header: 'Trạng thái', value: (p) => (p.status === 'paid' ? 'Đã trả' : 'Nháp') },
+    { header: 'Trạng thái', value: (p) => PAYROLL_STATUS[p.status as 'draft' | 'paid'].label },
   ];
 
   return (
@@ -138,9 +138,7 @@ export default async function LuongPage() {
                 <TableCell className="text-right">{formatVND(p.base_salary)}</TableCell>
                 <TableCell className="text-right font-medium">{formatVND(p.net_salary)}</TableCell>
                 <TableCell>
-                  <Badge variant={p.status === 'paid' ? 'default' : 'secondary'}>
-                    {p.status === 'paid' ? 'Đã trả' : 'Nháp'}
-                  </Badge>
+                  <StatusBadge value={p.status as 'draft' | 'paid'} map={PAYROLL_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">

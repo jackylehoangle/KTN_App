@@ -1,13 +1,15 @@
-import { Plus } from 'lucide-react';
+import { Plus, Banknote, AlertCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { StatCard } from '@/components/shared/stat-card';
 import { Button } from '@/components/ui/button';
 import { TransactionTable } from '@/components/features/tai-chinh/transaction-table';
 import { TAI_CHINH_TABS as TABS } from '@/lib/constants';
 import type { TransactionInput } from '@/lib/validations/tai-chinh';
 import { createTransaction } from '@/lib/actions/tai-chinh';
+import { getTaiChinhStats } from '@/lib/supabase/queries';
 import type { Account, TransactionType } from '@/types/database';
 
 const TYPE_LABEL: Record<TransactionType, string> = {
@@ -29,13 +31,14 @@ const defaultValues: TransactionInput = {
 
 export default async function TaiChinhPage() {
   const supabase = await createClient();
-  const [{ data: transactions, error }, { data: accounts }] = await Promise.all([
+  const [{ data: transactions, error }, { data: accounts }, stats] = await Promise.all([
     supabase
       .from('transactions')
       .select('*, accounts(name)')
       .order('transaction_date', { ascending: false })
       .limit(100),
     supabase.from('accounts').select('*').order('name'),
+    getTaiChinhStats(),
   ]);
 
   const fields: EntityField<TransactionInput>[] = [
@@ -72,6 +75,10 @@ export default async function TaiChinhPage() {
       <div>
         <h1 className="text-2xl font-semibold text-navy">Tài chính</h1>
         <p className="text-sm text-muted-foreground">Sổ thu chi</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard icon={Banknote} label={stats[0].label} value={stats[0].value} color="emerald" />
+        <StatCard icon={AlertCircle} label={stats[1].label} value={stats[1].value} color="red" />
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />

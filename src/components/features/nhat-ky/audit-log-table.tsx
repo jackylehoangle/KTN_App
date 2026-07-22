@@ -5,7 +5,7 @@ import { Eye } from 'lucide-react';
 import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AUDIT_ACTION_LABELS, MODULES } from '@/lib/constants';
+import { AUDIT_ACTION_LABELS, AUDIT_ACTION_STATUS, MODULES } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { AuditLog } from '@/types/database';
 
@@ -37,14 +37,6 @@ function formatDateTime(date: string) {
     minute: '2-digit',
   }).format(new Date(date));
 }
-
-const ACTION_VARIANT: Record<AuditLog['action'], 'default' | 'secondary' | 'destructive'> = {
-  create: 'secondary',
-  update: 'secondary',
-  delete: 'destructive',
-  approve: 'default',
-  reject: 'destructive',
-};
 
 export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
   const [search, setSearch] = useState('');
@@ -119,7 +111,7 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
                 </TableCell>
                 <TableCell>{l.user_name ?? '—'}</TableCell>
                 <TableCell>
-                  <Badge variant={ACTION_VARIANT[l.action]}>{AUDIT_ACTION_LABELS[l.action]}</Badge>
+                  <StatusBadge value={l.action} map={AUDIT_ACTION_STATUS} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">{moduleLabel(l.module)}</TableCell>
                 <TableCell>{l.record_label ?? l.table_name}</TableCell>

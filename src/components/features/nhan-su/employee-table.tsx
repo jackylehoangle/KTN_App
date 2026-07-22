@@ -8,7 +8,7 @@ import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Table,
@@ -18,17 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND } from '@/lib/constants';
+import { formatVND, EMPLOYEE_STATUS } from '@/lib/constants';
 import { updateEmployee, deleteEmployee } from '@/lib/actions/nhan-su';
 import type { EmployeeInput } from '@/lib/validations/nhan-su';
 import type { EmployeeStatus } from '@/types/database';
-
-const STATUS_LABEL: Record<EmployeeStatus, string> = {
-  active: 'Đang làm việc',
-  probation: 'Thử việc',
-  inactive: 'Tạm nghỉ',
-  terminated: 'Đã nghỉ việc',
-};
 
 interface EmployeeRow {
   id: string;
@@ -77,7 +70,7 @@ export function EmployeeTable({
     { header: 'Mã NV', value: (e) => e.code },
     { header: 'Họ và tên', value: (e) => e.full_name },
     { header: 'Phòng ban', value: (e) => e.departments?.name ?? '' },
-    { header: 'Trạng thái', value: (e) => STATUS_LABEL[e.status] },
+    { header: 'Trạng thái', value: (e) => EMPLOYEE_STATUS[e.status].label },
     { header: 'Lương cơ bản', value: (e) => e.base_salary },
   ];
 
@@ -90,7 +83,7 @@ export function EmployeeTable({
             label="Trạng thái"
             value={status}
             onChange={setStatus}
-            options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
+            options={Object.entries(EMPLOYEE_STATUS).map(([value, meta]) => ({ value, label: meta.label }))}
           />
           <FilterSelect label="Phòng ban" value={department} onChange={setDepartment} options={departmentOptions} />
         </div>
@@ -122,7 +115,7 @@ export function EmployeeTable({
                 <TableCell>{e.full_name}</TableCell>
                 <TableCell className="text-muted-foreground">{e.departments?.name ?? '—'}</TableCell>
                 <TableCell>
-                  <Badge variant={e.status === 'active' ? 'default' : 'secondary'}>{STATUS_LABEL[e.status]}</Badge>
+                  <StatusBadge value={e.status} map={EMPLOYEE_STATUS} />
                 </TableCell>
                 <TableCell className="text-right">{formatVND(e.base_salary)}</TableCell>
                 <TableCell className="print:hidden">

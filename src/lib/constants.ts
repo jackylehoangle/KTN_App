@@ -1,13 +1,79 @@
-import type { ApprovalStatus, ApprovalType, AuditAction, StaffLevel, UserRole } from '@/types/database';
+import type {
+  ApprovalStatus,
+  ApprovalType,
+  AttendanceStatus,
+  AuditAction,
+  ContractStatus,
+  EmployeeStatus,
+  InvoiceStatus,
+  LeaveStatus,
+  OpportunityStage,
+  ProductionPlanStatus,
+  ProductionTaskStatus,
+  PurchaseOrderStatus,
+  QuotationStatus,
+  SalesOrderStatus,
+  StaffLevel,
+  StockMovementType,
+  TransactionType,
+  UserRole,
+} from '@/types/database';
 
-export const ROLE_LABELS: Record<UserRole, string> = {
-  admin: 'Quản trị viên',
-  kinh_doanh: 'Kinh doanh',
-  vat_tu: 'Vật tư',
-  nhan_su: 'Nhân sự',
-  tai_chinh: 'Tài chính',
-  san_xuat: 'Sản xuất',
+// Màu nền dùng chung cho StatusBadge (bg/text/border) — mỗi class name viết đầy đủ, không nội suy,
+// để Tailwind quét được ở build time.
+export type ColorKey =
+  | 'slate'
+  | 'blue'
+  | 'violet'
+  | 'amber'
+  | 'emerald'
+  | 'red'
+  | 'cyan'
+  | 'indigo'
+  | 'rose';
+
+export const BADGE_COLOR_CLASSES: Record<ColorKey, string> = {
+  slate: 'bg-slate-100 text-slate-700 border-slate-200',
+  blue: 'bg-blue-50 text-blue-700 border-blue-200',
+  violet: 'bg-violet-50 text-violet-700 border-violet-200',
+  amber: 'bg-amber-50 text-amber-700 border-amber-200',
+  emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  red: 'bg-red-50 text-red-700 border-red-200',
+  cyan: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  rose: 'bg-rose-50 text-rose-700 border-rose-200',
 };
+
+// Màu icon-circle dùng chung cho StatCard.
+export const STAT_CARD_COLOR_CLASSES: Record<ColorKey, string> = {
+  slate: 'bg-slate-100 text-slate-600',
+  blue: 'bg-blue-100 text-blue-600',
+  violet: 'bg-violet-100 text-violet-600',
+  amber: 'bg-amber-100 text-amber-600',
+  emerald: 'bg-emerald-100 text-emerald-600',
+  red: 'bg-red-100 text-red-600',
+  cyan: 'bg-cyan-100 text-cyan-600',
+  indigo: 'bg-indigo-100 text-indigo-600',
+  rose: 'bg-rose-100 text-rose-600',
+};
+
+export interface StatusMeta {
+  label: string;
+  color: ColorKey;
+}
+
+export const ROLE_STATUS: Record<UserRole, StatusMeta> = {
+  admin: { label: 'Quản trị viên', color: 'slate' },
+  kinh_doanh: { label: 'Kinh doanh', color: 'blue' },
+  vat_tu: { label: 'Vật tư', color: 'amber' },
+  nhan_su: { label: 'Nhân sự', color: 'violet' },
+  tai_chinh: { label: 'Tài chính', color: 'emerald' },
+  san_xuat: { label: 'Sản xuất', color: 'indigo' },
+};
+
+export const ROLE_LABELS: Record<UserRole, string> = Object.fromEntries(
+  Object.entries(ROLE_STATUS).map(([k, v]) => [k, v.label])
+) as Record<UserRole, string>;
 
 export const ALL_ROLES: UserRole[] = ['admin', 'kinh_doanh', 'vat_tu', 'nhan_su', 'tai_chinh', 'san_xuat'];
 
@@ -16,26 +82,134 @@ export const LEVEL_LABELS: Record<StaffLevel, string> = {
   manager: 'Quản lý',
 };
 
-export const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
-  purchase: 'Mua hàng',
-  advance: 'Tạm ứng',
-  other: 'Khác',
-  quotation: 'Báo giá',
+export const APPROVAL_TYPE_STATUS: Record<ApprovalType, StatusMeta> = {
+  purchase: { label: 'Mua hàng', color: 'blue' },
+  advance: { label: 'Tạm ứng', color: 'amber' },
+  other: { label: 'Khác', color: 'slate' },
+  quotation: { label: 'Báo giá', color: 'violet' },
 };
 
-export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = {
-  pending_manager: 'Chờ Trưởng phòng duyệt',
-  pending_director: 'Chờ Giám đốc duyệt',
-  approved: 'Đã duyệt',
-  rejected: 'Từ chối',
+export const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = Object.fromEntries(
+  Object.entries(APPROVAL_TYPE_STATUS).map(([k, v]) => [k, v.label])
+) as Record<ApprovalType, string>;
+
+export const APPROVAL_STATUS: Record<ApprovalStatus, StatusMeta> = {
+  pending_manager: { label: 'Chờ Trưởng phòng duyệt', color: 'amber' },
+  pending_director: { label: 'Chờ Giám đốc duyệt', color: 'violet' },
+  approved: { label: 'Đã duyệt', color: 'emerald' },
+  rejected: { label: 'Từ chối', color: 'red' },
 };
 
-export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
-  create: 'Tạo mới',
-  update: 'Cập nhật',
-  delete: 'Xoá',
-  approve: 'Duyệt',
-  reject: 'Từ chối',
+export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = Object.fromEntries(
+  Object.entries(APPROVAL_STATUS).map(([k, v]) => [k, v.label])
+) as Record<ApprovalStatus, string>;
+
+export const AUDIT_ACTION_STATUS: Record<AuditAction, StatusMeta> = {
+  create: { label: 'Tạo mới', color: 'blue' },
+  update: { label: 'Cập nhật', color: 'amber' },
+  delete: { label: 'Xoá', color: 'red' },
+  approve: { label: 'Duyệt', color: 'emerald' },
+  reject: { label: 'Từ chối', color: 'red' },
+};
+
+export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = Object.fromEntries(
+  Object.entries(AUDIT_ACTION_STATUS).map(([k, v]) => [k, v.label])
+) as Record<AuditAction, string>;
+
+export const OPPORTUNITY_STAGE_STATUS: Record<OpportunityStage, StatusMeta> = {
+  new: { label: 'Mới', color: 'slate' },
+  contacted: { label: 'Đã liên hệ', color: 'blue' },
+  quoted: { label: 'Đã báo giá', color: 'amber' },
+  negotiating: { label: 'Đang đàm phán', color: 'violet' },
+  won: { label: 'Thắng', color: 'emerald' },
+  lost: { label: 'Thua', color: 'red' },
+};
+
+export const CONTRACT_STATUS: Record<ContractStatus, StatusMeta> = {
+  draft: { label: 'Nháp', color: 'slate' },
+  active: { label: 'Đang hiệu lực', color: 'blue' },
+  completed: { label: 'Hoàn tất', color: 'emerald' },
+  cancelled: { label: 'Đã huỷ', color: 'red' },
+};
+
+export const SALES_ORDER_STATUS: Record<SalesOrderStatus, StatusMeta> = {
+  pending: { label: 'Chờ xử lý', color: 'slate' },
+  confirmed: { label: 'Đã xác nhận', color: 'blue' },
+  delivered: { label: 'Đã giao', color: 'emerald' },
+  cancelled: { label: 'Đã huỷ', color: 'red' },
+};
+
+export const PURCHASE_ORDER_STATUS: Record<PurchaseOrderStatus, StatusMeta> = {
+  pending: { label: 'Chờ xử lý', color: 'slate' },
+  confirmed: { label: 'Đã xác nhận', color: 'blue' },
+  received: { label: 'Đã nhận hàng', color: 'emerald' },
+  cancelled: { label: 'Đã huỷ', color: 'red' },
+};
+
+export const STOCK_MOVEMENT_TYPE_STATUS: Record<StockMovementType, StatusMeta> = {
+  in: { label: 'Nhập kho', color: 'emerald' },
+  out: { label: 'Xuất kho', color: 'red' },
+  transfer: { label: 'Chuyển kho', color: 'blue' },
+  adjust: { label: 'Điều chỉnh', color: 'amber' },
+};
+
+export const LEAVE_STATUS: Record<LeaveStatus, StatusMeta> = {
+  pending: { label: 'Chờ duyệt', color: 'amber' },
+  approved: { label: 'Đã duyệt', color: 'emerald' },
+  rejected: { label: 'Từ chối', color: 'red' },
+};
+
+export const ATTENDANCE_STATUS: Record<AttendanceStatus, StatusMeta> = {
+  present: { label: 'Có mặt', color: 'emerald' },
+  absent: { label: 'Vắng', color: 'red' },
+  leave: { label: 'Nghỉ phép', color: 'blue' },
+  late: { label: 'Đi trễ', color: 'amber' },
+};
+
+export const EMPLOYEE_STATUS: Record<EmployeeStatus, StatusMeta> = {
+  active: { label: 'Đang làm việc', color: 'emerald' },
+  probation: { label: 'Thử việc', color: 'amber' },
+  inactive: { label: 'Tạm nghỉ', color: 'slate' },
+  terminated: { label: 'Đã nghỉ việc', color: 'red' },
+};
+
+export const PAYROLL_STATUS: Record<'draft' | 'paid', StatusMeta> = {
+  draft: { label: 'Nháp', color: 'slate' },
+  paid: { label: 'Đã thanh toán', color: 'emerald' },
+};
+
+export const INVOICE_STATUS: Record<InvoiceStatus, StatusMeta> = {
+  unpaid: { label: 'Chưa thu', color: 'slate' },
+  partial: { label: 'Thu một phần', color: 'amber' },
+  paid: { label: 'Đã thu đủ', color: 'emerald' },
+  overdue: { label: 'Quá hạn', color: 'red' },
+};
+
+export const TRANSACTION_TYPE_STATUS: Record<TransactionType, StatusMeta> = {
+  income: { label: 'Thu', color: 'emerald' },
+  expense: { label: 'Chi', color: 'red' },
+  transfer: { label: 'Chuyển khoản', color: 'blue' },
+};
+
+export const QUOTATION_STATUS: Record<QuotationStatus, StatusMeta> = {
+  draft: { label: 'Nháp', color: 'slate' },
+  pending_approval: { label: 'Chờ phê duyệt', color: 'amber' },
+  sent: { label: 'Đã gửi', color: 'blue' },
+  accepted: { label: 'Đã chấp nhận', color: 'emerald' },
+  rejected: { label: 'Từ chối', color: 'red' },
+};
+
+export const PRODUCTION_PLAN_STATUS: Record<ProductionPlanStatus, StatusMeta> = {
+  planning: { label: 'Lên kế hoạch', color: 'slate' },
+  in_progress: { label: 'Đang thực hiện', color: 'blue' },
+  completed: { label: 'Hoàn tất', color: 'emerald' },
+  cancelled: { label: 'Đã huỷ', color: 'red' },
+};
+
+export const PRODUCTION_TASK_STATUS: Record<ProductionTaskStatus, StatusMeta> = {
+  pending: { label: 'Chờ thực hiện', color: 'slate' },
+  in_progress: { label: 'Đang thực hiện', color: 'blue' },
+  done: { label: 'Hoàn tất', color: 'emerald' },
 };
 
 export interface ModuleNavItem {
@@ -91,6 +265,18 @@ export const MODULES: ModuleNavItem[] = [
     roles: ['admin'],
   },
 ];
+
+export const MODULE_COLORS: Record<string, ColorKey> = {
+  '/kinh-doanh': 'blue',
+  '/vat-tu': 'amber',
+  '/nhan-su': 'violet',
+  '/tai-chinh': 'emerald',
+  '/bao-gia-sxkh': 'indigo',
+  '/bao-cao': 'cyan',
+  '/de-xuat': 'rose',
+  '/phan-quyen': 'slate',
+  '/nhat-ky': 'slate',
+};
 
 export type TabItem = { title: string; href: string };
 
@@ -148,6 +334,7 @@ export const PAGE_TITLES: Record<string, string> = {
   '/bao-cao': 'Báo cáo',
   '/de-xuat': 'Đề xuất & Phê duyệt',
   '/phan-quyen': 'Phân quyền',
+  '/nhat-ky': 'Nhật ký',
 };
 for (const tabs of [KINH_DOANH_TABS, VAT_TU_TABS, NHAN_SU_TABS, TAI_CHINH_TABS, BAO_GIA_SXKH_TABS]) {
   for (const tab of tabs) PAGE_TITLES[tab.href] = tab.title;

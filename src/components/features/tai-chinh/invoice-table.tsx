@@ -8,7 +8,7 @@ import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -18,17 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, formatDate } from '@/lib/constants';
+import { formatVND, formatDate, INVOICE_STATUS } from '@/lib/constants';
 import { updateInvoice, deleteInvoice } from '@/lib/actions/tai-chinh';
 import type { InvoiceInput } from '@/lib/validations/tai-chinh';
 import type { InvoiceStatus } from '@/types/database';
-
-const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  unpaid: 'Chưa thanh toán',
-  partial: 'Thanh toán một phần',
-  paid: 'Đã thanh toán',
-  overdue: 'Quá hạn',
-};
 
 interface InvoiceRow {
   id: string;
@@ -73,7 +66,7 @@ export function InvoiceTable({
     { header: 'Khách hàng', value: (i) => i.customers?.name ?? '' },
     { header: 'Ngày', value: (i) => formatDate(i.invoice_date) },
     { header: 'Tổng tiền', value: (i) => i.total_amount },
-    { header: 'Trạng thái', value: (i) => STATUS_LABEL[i.status] },
+    { header: 'Trạng thái', value: (i) => INVOICE_STATUS[i.status].label },
   ];
 
   return (
@@ -85,7 +78,7 @@ export function InvoiceTable({
             label="Trạng thái"
             value={status}
             onChange={setStatus}
-            options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
+            options={Object.entries(INVOICE_STATUS).map(([value, meta]) => ({ value, label: meta.label }))}
           />
           <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[150px]" />
           <span className="text-sm text-muted-foreground">đến</span>
@@ -113,9 +106,7 @@ export function InvoiceTable({
                 <TableCell className="text-muted-foreground">{formatDate(i.invoice_date)}</TableCell>
                 <TableCell className="text-right">{formatVND(i.total_amount)}</TableCell>
                 <TableCell>
-                  <Badge variant={i.status === 'paid' ? 'default' : i.status === 'overdue' ? 'destructive' : 'secondary'}>
-                    {STATUS_LABEL[i.status]}
-                  </Badge>
+                  <StatusBadge value={i.status} map={INVOICE_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">

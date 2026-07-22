@@ -8,7 +8,7 @@ import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -18,16 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, formatDate } from '@/lib/constants';
+import { formatVND, formatDate, TRANSACTION_TYPE_STATUS } from '@/lib/constants';
 import { updateTransaction, deleteTransaction } from '@/lib/actions/tai-chinh';
 import type { TransactionInput } from '@/lib/validations/tai-chinh';
 import type { TransactionType } from '@/types/database';
-
-const TYPE_LABEL: Record<TransactionType, string> = {
-  income: 'Thu',
-  expense: 'Chi',
-  transfer: 'Chuyển khoản',
-};
 
 interface TransactionRow {
   id: string;
@@ -67,7 +61,7 @@ export function TransactionTable({
 
   const excelColumns: ExcelColumn<TransactionRow>[] = [
     { header: 'Mã phiếu', value: (t) => t.code },
-    { header: 'Loại', value: (t) => TYPE_LABEL[t.transaction_type] },
+    { header: 'Loại', value: (t) => TRANSACTION_TYPE_STATUS[t.transaction_type].label },
     { header: 'Tài khoản', value: (t) => t.accounts?.name ?? '' },
     { header: 'Ngày', value: (t) => formatDate(t.transaction_date) },
     { header: 'Số tiền', value: (t) => t.amount },
@@ -82,7 +76,7 @@ export function TransactionTable({
             label="Loại"
             value={type}
             onChange={setType}
-            options={Object.entries(TYPE_LABEL).map(([value, label]) => ({ value, label }))}
+            options={Object.entries(TRANSACTION_TYPE_STATUS).map(([value, meta]) => ({ value, label: meta.label }))}
           />
           <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[150px]" />
           <span className="text-sm text-muted-foreground">đến</span>
@@ -108,9 +102,7 @@ export function TransactionTable({
               <TableRow key={t.id}>
                 <TableCell className="font-mono text-sm">{t.code}</TableCell>
                 <TableCell>
-                  <Badge variant={t.transaction_type === 'expense' ? 'destructive' : 'default'}>
-                    {TYPE_LABEL[t.transaction_type]}
-                  </Badge>
+                  <StatusBadge value={t.transaction_type} map={TRANSACTION_TYPE_STATUS} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">{t.accounts?.name ?? '—'}</TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(t.transaction_date)}</TableCell>

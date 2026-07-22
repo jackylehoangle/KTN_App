@@ -6,7 +6,7 @@ import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Table,
   TableBody,
@@ -15,19 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND } from '@/lib/constants';
+import { formatVND, CONTRACT_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ContractInput } from '@/lib/validations/kinh-doanh';
 import { createContract, updateContract, deleteContract } from '@/lib/actions/kinh-doanh';
 import type { Customer, ContractStatus } from '@/types/database';
 import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
-
-const STATUS_LABEL: Record<ContractStatus, string> = {
-  draft: 'Nháp',
-  active: 'Đang hiệu lực',
-  completed: 'Hoàn thành',
-  cancelled: 'Đã huỷ',
-};
 
 const defaultValues: ContractInput = {
   code: '',
@@ -52,7 +45,7 @@ export default async function HopDongPage() {
       label: 'Trạng thái',
       type: 'select',
       half: true,
-      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+      options: Object.entries(CONTRACT_STATUS).map(([value, meta]) => ({ value, label: meta.label })),
     },
     { name: 'title', label: 'Tên hợp đồng', placeholder: 'Hợp đồng cung cấp thiết bị điện' },
     {
@@ -77,7 +70,7 @@ export default async function HopDongPage() {
     { header: 'Mã', value: (c) => c.code },
     { header: 'Tên hợp đồng', value: (c) => c.title },
     { header: 'Khách hàng', value: (c) => c.customers?.name ?? '' },
-    { header: 'Trạng thái', value: (c) => STATUS_LABEL[c.status] },
+    { header: 'Trạng thái', value: (c) => CONTRACT_STATUS[c.status].label },
     { header: 'Giá trị', value: (c) => c.value },
   ];
 
@@ -127,9 +120,7 @@ export default async function HopDongPage() {
                 <TableCell>{c.title}</TableCell>
                 <TableCell className="text-muted-foreground">{c.customers?.name ?? '—'}</TableCell>
                 <TableCell>
-                  <Badge variant={c.status === 'active' ? 'default' : c.status === 'cancelled' ? 'destructive' : 'secondary'}>
-                    {STATUS_LABEL[c.status as ContractStatus]}
-                  </Badge>
+                  <StatusBadge value={c.status as ContractStatus} map={CONTRACT_STATUS} />
                 </TableCell>
                 <TableCell className="text-right">{formatVND(c.value)}</TableCell>
                 <TableCell className="print:hidden">

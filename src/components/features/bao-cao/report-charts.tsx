@@ -11,25 +11,15 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatVND } from '@/lib/constants';
+import { formatVND, OPPORTUNITY_STAGE_STATUS } from '@/lib/constants';
 import type { ReportData } from '@/lib/supabase/queries';
-import type { OpportunityStage } from '@/types/database';
-
-const STAGE_LABEL: Record<OpportunityStage, string> = {
-  new: 'Mới',
-  contacted: 'Đã liên hệ',
-  quoted: 'Đã báo giá',
-  negotiating: 'Đang đàm phán',
-  won: 'Thắng',
-  lost: 'Thua',
-};
 
 function EmptyState({ label }: { label: string }) {
   return <p className="py-10 text-center text-sm text-muted-foreground">{label}</p>;
 }
 
 export function ReportCharts({ data }: { data: ReportData }) {
-  const pipeline = data.pipeline.map((p) => ({ ...p, stageLabel: STAGE_LABEL[p.stage] }));
+  const pipeline = data.pipeline.map((p) => ({ ...p, stageLabel: OPPORTUNITY_STAGE_STATUS[p.stage].label }));
   const lowStock = data.lowStock.slice(0, 10);
 
   return (

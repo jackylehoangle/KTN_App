@@ -6,7 +6,11 @@ import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
+import {
+  OpportunityFunnelChart,
+  type FunnelStagePoint,
+} from '@/components/features/kinh-doanh/opportunity-funnel-chart';
 import {
   Table,
   TableBody,
@@ -15,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND } from '@/lib/constants';
+import { formatVND, OPPORTUNITY_STAGE_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { OpportunityInput } from '@/lib/validations/kinh-doanh';
 import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
@@ -24,21 +28,14 @@ import { createQuotation } from '@/lib/actions/bao-gia-sxkh';
 import type { Customer, OpportunityStage, QuotationStatus } from '@/types/database';
 import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
+const STAGE_ORDER: OpportunityStage[] = ['new', 'contacted', 'quoted', 'negotiating', 'won', 'lost'];
+
 const QUOTATION_STATUS_LABEL: Record<QuotationStatus, string> = {
   draft: 'Nháp',
   pending_approval: 'Chờ phê duyệt',
   sent: 'Đã gửi',
   accepted: 'Đã chấp nhận',
   rejected: 'Từ chối',
-};
-
-const STAGE_LABEL: Record<OpportunityStage, string> = {
-  new: 'Mới',
-  contacted: 'Đã liên hệ',
-  quoted: 'Đã báo giá',
-  negotiating: 'Đang đàm phán',
-  won: 'Thắng',
-  lost: 'Thua',
 };
 
 const defaultValues: OpportunityInput = {
@@ -64,7 +61,7 @@ export default async function CoHoiPage() {
       label: 'Giai đoạn',
       type: 'select',
       half: true,
-      options: Object.entries(STAGE_LABEL).map(([value, label]) => ({ value, label })),
+      options: Object.entries(OPPORTUNITY_STAGE_STATUS).map(([value, meta]) => ({ value, label: meta.label })),
     },
     { name: 'name', label: 'Tên cơ hội', placeholder: 'Dự án lắp điện nhà máy X' },
     {
@@ -112,9 +109,19 @@ export default async function CoHoiPage() {
     { header: 'Mã', value: (o) => o.code },
     { header: 'Tên cơ hội', value: (o) => o.name },
     { header: 'Khách hàng', value: (o) => o.customers?.name ?? '' },
-    { header: 'Giai đoạn', value: (o) => STAGE_LABEL[o.stage] },
+    { header: 'Giai đoạn', value: (o) => OPPORTUNITY_STAGE_STATUS[o.stage].label },
     { header: 'Giá trị', value: (o) => o.value },
   ];
+
+  const stageCounts = new Map<OpportunityStage, number>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ((opportunities as any[]) ?? []).forEach((o) => {
+    stageCounts.set(o.stage, (stageCounts.get(o.stage) ?? 0) + 1);
+  });
+  const funnelData: FunnelStagePoint[] = STAGE_ORDER.map((stage) => ({
+    stage,
+    count: stageCounts.get(stage) ?? 0,
+  }));
 
   return (
     <div className="space-y-4">
@@ -124,6 +131,7 @@ export default async function CoHoiPage() {
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
+      <OpportunityFunnelChart data={funnelData} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <TableActions rows={buildExcelRows((opportunities as any[]) ?? [], excelColumns)} filename="co-hoi" />
@@ -162,9 +170,7 @@ export default async function CoHoiPage() {
                 <TableCell>{o.name}</TableCell>
                 <TableCell className="text-muted-foreground">{o.customers?.name ?? '—'}</TableCell>
                 <TableCell>
-                  <Badge variant={o.stage === 'won' ? 'default' : o.stage === 'lost' ? 'destructive' : 'secondary'}>
-                    {STAGE_LABEL[o.stage as OpportunityStage]}
-                  </Badge>
+                  <StatusBadge value={o.stage as OpportunityStage} map={OPPORTUNITY_STAGE_STATUS} />
                 </TableCell>
                 <TableCell className="text-right">{formatVND(o.value)}</TableCell>
                 <TableCell className="print:hidden">

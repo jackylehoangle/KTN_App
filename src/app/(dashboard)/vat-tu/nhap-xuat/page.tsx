@@ -14,17 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
-import type { Material, Warehouse } from '@/types/database';
-import { VAT_TU_TABS as TABS } from '@/lib/constants';
-
-const TYPE_LABEL: Record<string, string> = {
-  in: 'Nhập',
-  out: 'Xuất',
-  adjust: 'Điều chỉnh',
-  transfer: 'Chuyển kho',
-};
+import type { Material, StockMovementType, Warehouse } from '@/types/database';
+import { VAT_TU_TABS as TABS, STOCK_MOVEMENT_TYPE_STATUS } from '@/lib/constants';
 
 export default async function NhapXuatPage() {
   const supabase = await createClient();
@@ -47,7 +40,7 @@ export default async function NhapXuatPage() {
     created_at: string;
   }>[] = [
     { header: 'Mã phiếu', value: (m) => m.code },
-    { header: 'Loại', value: (m) => TYPE_LABEL[m.movement_type] ?? m.movement_type },
+    { header: 'Loại', value: (m) => STOCK_MOVEMENT_TYPE_STATUS[m.movement_type as StockMovementType]?.label ?? m.movement_type },
     { header: 'Vật tư', value: (m) => `${m.materials?.code ?? ''} — ${m.materials?.name ?? ''}` },
     { header: 'Kho', value: (m) => m.warehouses?.name ?? '' },
     { header: 'Số lượng', value: (m) => m.quantity },
@@ -89,9 +82,7 @@ export default async function NhapXuatPage() {
               <TableRow key={m.id}>
                 <TableCell className="font-mono text-sm">{m.code}</TableCell>
                 <TableCell>
-                  <Badge variant={m.movement_type === 'out' ? 'destructive' : 'default'}>
-                    {TYPE_LABEL[m.movement_type] ?? m.movement_type}
-                  </Badge>
+                  <StatusBadge value={m.movement_type as StockMovementType} map={STOCK_MOVEMENT_TYPE_STATUS} />
                 </TableCell>
                 <TableCell>
                   {m.materials?.code} — {m.materials?.name}

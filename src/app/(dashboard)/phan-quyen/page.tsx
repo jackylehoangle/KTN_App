@@ -1,10 +1,11 @@
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, Users, KeyRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
+import { StatCard } from '@/components/shared/stat-card';
 import {
   Table,
   TableBody,
@@ -13,8 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ALL_ROLES, ROLE_LABELS, LEVEL_LABELS, MODULES } from '@/lib/constants';
+import { ALL_ROLES, ROLE_LABELS, ROLE_STATUS, LEVEL_LABELS, MODULES } from '@/lib/constants';
 import { updateUserRoleLevel, grantModulePermission, revokeModulePermission } from '@/lib/actions/permissions';
+import { getPhanQuyenStats } from '@/lib/supabase/queries';
 import type { UserRoleLevelInput, ModuleGrantInput } from '@/lib/validations/permissions';
 import type { Profile, UserPermission } from '@/types/database';
 
@@ -46,9 +48,10 @@ const grantDefaultValues: ModuleGrantInput = { user_id: '', module_href: '' };
 
 export default async function PhanQuyenPage() {
   const supabase = await createClient();
-  const [{ data: profiles, error }, { data: permissions }] = await Promise.all([
+  const [{ data: profiles, error }, { data: permissions }, stats] = await Promise.all([
     supabase.from('profiles').select('*').order('full_name'),
     supabase.from('user_permissions').select('*').order('created_at', { ascending: false }),
+    getPhanQuyenStats(),
   ]);
 
   const profileNameById = new Map<string, string>();
@@ -78,6 +81,10 @@ export default async function PhanQuyenPage() {
         <h1 className="text-2xl font-semibold text-navy">Phân quyền</h1>
         <p className="text-sm text-muted-foreground">Vai trò, cấp bậc và quyền xem riêng theo từng người dùng</p>
       </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard icon={Users} label={stats[0].label} value={stats[0].value} color="slate" />
+        <StatCard icon={KeyRound} label={stats[1].label} value={stats[1].value} color="blue" />
+      </div>
       <ErrorAlert error={error} />
       <div className="rounded-lg border">
         <Table>
@@ -96,7 +103,7 @@ export default async function PhanQuyenPage() {
                 <TableCell>{p.full_name}</TableCell>
                 <TableCell className="text-muted-foreground">{p.email}</TableCell>
                 <TableCell>
-                  <Badge variant={p.role === 'admin' ? 'default' : 'secondary'}>{ROLE_LABELS[p.role]}</Badge>
+                  <StatusBadge value={p.role} map={ROLE_STATUS} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">{LEVEL_LABELS[p.level]}</TableCell>
                 <TableCell>

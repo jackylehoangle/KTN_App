@@ -6,7 +6,7 @@ import { LeaveActionButtons } from '@/components/features/nhan-su/leave-action-b
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Table,
   TableBody,
@@ -20,19 +20,13 @@ import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { LeaveRequestInput } from '@/lib/validations/nhan-su';
 import { createLeaveRequest } from '@/lib/actions/nhan-su';
 import type { Employee, LeaveStatus, LeaveType } from '@/types/database';
-import { NHAN_SU_TABS as TABS } from '@/lib/constants';
+import { NHAN_SU_TABS as TABS, LEAVE_STATUS } from '@/lib/constants';
 
 const TYPE_LABEL: Record<LeaveType, string> = {
   annual: 'Phép năm',
   sick: 'Nghỉ ốm',
   unpaid: 'Không lương',
   other: 'Khác',
-};
-
-const STATUS_LABEL: Record<LeaveStatus, string> = {
-  pending: 'Chờ duyệt',
-  approved: 'Đã duyệt',
-  rejected: 'Từ chối',
 };
 
 const defaultValues: LeaveRequestInput = {
@@ -66,7 +60,7 @@ export default async function NghiPhepPage() {
     { header: 'Loại', value: (l) => TYPE_LABEL[l.leave_type] },
     { header: 'Từ ngày', value: (l) => formatDate(l.start_date) },
     { header: 'Đến ngày', value: (l) => formatDate(l.end_date) },
-    { header: 'Trạng thái', value: (l) => STATUS_LABEL[l.status] },
+    { header: 'Trạng thái', value: (l) => LEAVE_STATUS[l.status].label },
   ];
 
   return (
@@ -135,13 +129,7 @@ export default async function NghiPhepPage() {
                 <TableCell className="text-muted-foreground">{formatDate(l.start_date)}</TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(l.end_date)}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      l.status === 'approved' ? 'default' : l.status === 'rejected' ? 'destructive' : 'secondary'
-                    }
-                  >
-                    {STATUS_LABEL[l.status as LeaveStatus]}
-                  </Badge>
+                  <StatusBadge value={l.status as LeaveStatus} map={LEAVE_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   {l.status === 'pending' && <LeaveActionButtons id={l.id} />}

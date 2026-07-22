@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
+import { BAO_GIA_SXKH_TABS as TABS, BADGE_COLOR_CLASSES } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { SolarPackageInput } from '@/lib/validations/bao-gia-sxkh';
 import { createSolarPackage, updateSolarPackage, deleteSolarPackage } from '@/lib/actions/bao-gia-sxkh';
@@ -112,7 +112,9 @@ export default async function GoiHeThongPage() {
                   {p.monthly_output_kwh ? `${p.monthly_output_kwh} kWh` : '—'}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={p.active ? 'default' : 'secondary'}>{p.active ? 'Đang dùng' : 'Ngừng dùng'}</Badge>
+                  <Badge className={BADGE_COLOR_CLASSES[p.active ? 'emerald' : 'slate']}>
+                    {p.active ? 'Đang dùng' : 'Ngừng dùng'}
+                  </Badge>
                 </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">

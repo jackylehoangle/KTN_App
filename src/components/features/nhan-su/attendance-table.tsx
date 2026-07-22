@@ -8,7 +8,7 @@ import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -18,17 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDate } from '@/lib/constants';
+import { formatDate, ATTENDANCE_STATUS } from '@/lib/constants';
 import { updateAttendance, deleteAttendance } from '@/lib/actions/nhan-su';
 import type { AttendanceInput } from '@/lib/validations/nhan-su';
 import type { AttendanceStatus } from '@/types/database';
-
-const STATUS_LABEL: Record<AttendanceStatus, string> = {
-  present: 'Có mặt',
-  absent: 'Vắng',
-  leave: 'Nghỉ phép',
-  late: 'Đi muộn',
-};
 
 interface AttendanceRow {
   id: string;
@@ -70,7 +63,7 @@ export function AttendanceTable({
     { header: 'Ngày', value: (r) => formatDate(r.date) },
     { header: 'Giờ vào', value: (r) => r.check_in ?? '' },
     { header: 'Giờ ra', value: (r) => r.check_out ?? '' },
-    { header: 'Trạng thái', value: (r) => STATUS_LABEL[r.status] },
+    { header: 'Trạng thái', value: (r) => ATTENDANCE_STATUS[r.status].label },
   ];
 
   return (
@@ -82,7 +75,7 @@ export function AttendanceTable({
             label="Trạng thái"
             value={status}
             onChange={setStatus}
-            options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
+            options={Object.entries(ATTENDANCE_STATUS).map(([value, meta]) => ({ value, label: meta.label }))}
           />
           <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[150px]" />
           <span className="text-sm text-muted-foreground">đến</span>
@@ -110,9 +103,7 @@ export function AttendanceTable({
                 <TableCell className="text-muted-foreground">{r.check_in ?? '—'}</TableCell>
                 <TableCell className="text-muted-foreground">{r.check_out ?? '—'}</TableCell>
                 <TableCell>
-                  <Badge variant={r.status === 'present' ? 'default' : r.status === 'absent' ? 'destructive' : 'secondary'}>
-                    {STATUS_LABEL[r.status]}
-                  </Badge>
+                  <StatusBadge value={r.status} map={ATTENDANCE_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">

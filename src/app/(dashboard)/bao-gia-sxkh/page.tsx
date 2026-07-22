@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, Pencil, Printer } from 'lucide-react';
+import { Plus, Pencil, Printer, FileClock, Factory } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
@@ -9,7 +9,9 @@ import { TableActions } from '@/components/shared/table-actions';
 import { CreateQuotationFromPackageDialog } from '@/components/features/bao-gia-sxkh/create-quotation-from-package-dialog';
 import { SubmitApprovalButton } from '@/components/features/bao-gia-sxkh/submit-approval-button';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
+import { StatCard } from '@/components/shared/stat-card';
+import { getBaoGiaSxkhStats } from '@/lib/supabase/queries';
 import {
   Table,
   TableBody,
@@ -18,20 +20,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, formatDate, APPROVAL_STATUS_LABELS } from '@/lib/constants';
+import { formatVND, formatDate, QUOTATION_STATUS, APPROVAL_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
 import { createQuotation, updateQuotation, deleteQuotation, submitQuotationForApproval } from '@/lib/actions/bao-gia-sxkh';
-import type { Customer, Opportunity, QuotationStatus, SolarPackage } from '@/types/database';
+import type { ApprovalStatus, Customer, Opportunity, QuotationStatus, SolarPackage } from '@/types/database';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
-
-const STATUS_LABEL: Record<QuotationStatus, string> = {
-  draft: 'Nháp',
-  pending_approval: 'Chờ phê duyệt',
-  sent: 'Đã gửi',
-  accepted: 'Đã chấp nhận',
-  rejected: 'Từ chối',
-};
 
 const defaultValues: QuotationInput = {
   code: '',
@@ -48,7 +42,7 @@ const defaultValues: QuotationInput = {
 
 export default async function BaoGiaPage() {
   const supabase = await createClient();
-  const [{ data: quotations, error }, { data: customers }, { data: opportunities }, { data: packages }] =
+  const [{ data: quotations, error }, { data: customers }, { data: opportunities }, { data: packages }, stats] =
     await Promise.all([
       supabase
         .from('quotations')
@@ -57,6 +51,7 @@ export default async function BaoGiaPage() {
       supabase.from('customers').select('*').order('name'),
       supabase.from('opportunities').select('*').order('code'),
       supabase.from('solar_packages').select('*').eq('active', true).order('capacity_kwp'),
+      getBaoGiaSxkhStats(),
     ]);
 
   const fields: EntityField<QuotationInput>[] = [
@@ -66,7 +61,7 @@ export default async function BaoGiaPage() {
       label: 'Trạng thái',
       type: 'select',
       half: true,
-      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+      options: Object.entries(QUOTATION_STATUS).map(([value, meta]) => ({ value, label: meta.label })),
     },
     {
       name: 'customer_id',
@@ -102,7 +97,7 @@ export default async function BaoGiaPage() {
     { header: 'Khách hàng', value: (q) => q.customers?.name ?? '' },
     { header: 'Ngày', value: (q) => formatDate(q.quotation_date) },
     { header: 'Tổng giá trị', value: (q) => q.total_amount },
-    { header: 'Trạng thái', value: (q) => STATUS_LABEL[q.status] },
+    { header: 'Trạng thái', value: (q) => QUOTATION_STATUS[q.status].label },
   ];
 
   return (
@@ -110,6 +105,10 @@ export default async function BaoGiaPage() {
       <div>
         <h1 className="text-2xl font-semibold text-navy">Báo giá &amp; SXKH</h1>
         <p className="text-sm text-muted-foreground">Báo giá gửi khách hàng</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard icon={FileClock} label={stats[0].label} value={stats[0].value} color="amber" />
+        <StatCard icon={Factory} label={stats[1].label} value={stats[1].value} color="indigo" />
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
@@ -157,23 +156,11 @@ export default async function BaoGiaPage() {
                 <TableCell className="text-muted-foreground">{formatDate(q.quotation_date)}</TableCell>
                 <TableCell className="text-right">{formatVND(q.total_amount)}</TableCell>
                 <TableCell>
-                  <Badge variant={q.status === 'accepted' ? 'default' : q.status === 'rejected' ? 'destructive' : 'secondary'}>
-                    {STATUS_LABEL[q.status as QuotationStatus]}
-                  </Badge>
+                  <StatusBadge value={q.status as QuotationStatus} map={QUOTATION_STATUS} />
                 </TableCell>
                 <TableCell>
                   {q.approval_requests?.status ? (
-                    <Badge
-                      variant={
-                        q.approval_requests.status === 'approved'
-                          ? 'default'
-                          : q.approval_requests.status === 'rejected'
-                            ? 'destructive'
-                            : 'secondary'
-                      }
-                    >
-                      {APPROVAL_STATUS_LABELS[q.approval_requests.status as keyof typeof APPROVAL_STATUS_LABELS]}
-                    </Badge>
+                    <StatusBadge value={q.approval_requests.status as ApprovalStatus} map={APPROVAL_STATUS} />
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}

@@ -6,7 +6,7 @@ import { EntityFormDialog, type EntityField } from '@/components/shared/entity-f
 import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/shared/status-badge';
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, APPROVAL_TYPE_LABELS, APPROVAL_STATUS_LABELS, ROLE_LABELS } from '@/lib/constants';
+import { formatVND, APPROVAL_TYPE_LABELS, APPROVAL_STATUS, ROLE_LABELS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { approveRequest, rejectRequest } from '@/lib/actions/de-xuat';
 import type { ApprovalActionInput } from '@/lib/validations/de-xuat';
@@ -74,7 +74,7 @@ export function ApprovalRequestTable({
     { header: 'Người đề xuất', value: (r) => r.requested_by_name },
     { header: 'Phòng ban', value: (r) => ROLE_LABELS[r.department] },
     { header: 'Số tiền', value: (r) => r.amount ?? '' },
-    { header: 'Trạng thái', value: (r) => APPROVAL_STATUS_LABELS[r.status] },
+    { header: 'Trạng thái', value: (r) => APPROVAL_STATUS[r.status].label },
   ];
 
   return (
@@ -86,7 +86,7 @@ export function ApprovalRequestTable({
             label="Trạng thái"
             value={status}
             onChange={setStatus}
-            options={Object.entries(APPROVAL_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+            options={Object.entries(APPROVAL_STATUS).map(([value, meta]) => ({ value, label: meta.label }))}
           />
         </div>
         <TableActions rows={buildExcelRows(filtered, excelColumns)} filename="de-xuat" />
@@ -115,13 +115,7 @@ export function ApprovalRequestTable({
                 <TableCell className="text-muted-foreground">{ROLE_LABELS[r.department]}</TableCell>
                 <TableCell className="text-right">{r.amount ? formatVND(r.amount) : '—'}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      r.status === 'approved' ? 'default' : r.status === 'rejected' ? 'destructive' : 'secondary'
-                    }
-                  >
-                    {APPROVAL_STATUS_LABELS[r.status]}
-                  </Badge>
+                  <StatusBadge value={r.status} map={APPROVAL_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
                   {canAct(r) && (

@@ -1,13 +1,15 @@
-import { Plus } from 'lucide-react';
+import { Plus, UserCheck, CalendarClock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ErrorAlert } from '@/components/shared/error-alert';
+import { StatCard } from '@/components/shared/stat-card';
 import { Button } from '@/components/ui/button';
 import { EmployeeTable } from '@/components/features/nhan-su/employee-table';
 import { EmployeeImportDialog } from '@/components/features/nhan-su/employee-import-dialog';
 import type { EmployeeInput } from '@/lib/validations/nhan-su';
 import { createEmployee } from '@/lib/actions/nhan-su';
+import { getNhanSuStats } from '@/lib/supabase/queries';
 import type { Department, EmployeeStatus } from '@/types/database';
 import { NHAN_SU_TABS as TABS } from '@/lib/constants';
 
@@ -32,9 +34,10 @@ const defaultValues: EmployeeInput = {
 
 export default async function NhanSuPage() {
   const supabase = await createClient();
-  const [{ data: employees, error }, { data: departments }] = await Promise.all([
+  const [{ data: employees, error }, { data: departments }, stats] = await Promise.all([
     supabase.from('employees').select('*, departments(name)').order('code'),
     supabase.from('departments').select('*').order('name'),
+    getNhanSuStats(),
   ]);
 
   const fields: EntityField<EmployeeInput>[] = [
@@ -67,6 +70,10 @@ export default async function NhanSuPage() {
       <div>
         <h1 className="text-2xl font-semibold text-navy">Nhân sự</h1>
         <p className="text-sm text-muted-foreground">Danh sách nhân viên</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatCard icon={UserCheck} label={stats[0].label} value={stats[0].value} color="emerald" />
+        <StatCard icon={CalendarClock} label={stats[1].label} value={stats[1].value} color="amber" />
       </div>
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />

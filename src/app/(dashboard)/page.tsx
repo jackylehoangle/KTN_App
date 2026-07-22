@@ -11,7 +11,7 @@ import {
   History,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MODULES, ROLE_LABELS } from '@/lib/constants';
+import { MODULES, MODULE_COLORS, ROLE_LABELS, STAT_CARD_COLOR_CLASSES } from '@/lib/constants';
 import { getCurrentProfile, getDashboardStats } from '@/lib/supabase/queries';
 
 const MODULE_ICONS: Record<string, React.ElementType> = {
@@ -62,7 +62,9 @@ export default async function DashboardHome() {
             <Link key={mod.href} href={mod.href}>
               <Card className="h-full transition-shadow hover:shadow-md">
                 <CardHeader>
-                  <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-navy/10 text-navy">
+                  <div
+                    className={`mb-2 flex size-10 items-center justify-center rounded-lg ${STAT_CARD_COLOR_CLASSES[MODULE_COLORS[mod.href] ?? 'slate']}`}
+                  >
                     <Icon className="size-5" />
                   </div>
                   <CardTitle className="text-base">{mod.title}</CardTitle>
