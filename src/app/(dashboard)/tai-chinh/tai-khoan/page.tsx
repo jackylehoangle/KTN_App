@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { AccountInput } from '@/lib/validations/tai-chinh';
 import { createAccount, updateAccount, deleteAccount } from '@/lib/actions/tai-chinh';
 import type { Account } from '@/types/database';
@@ -68,7 +68,7 @@ export default async function TaiKhoanPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
-        <TableActions rows={(accounts as Account[]) ?? []} columns={excelColumns} filename="tai-khoan" />
+        <TableActions rows={buildExcelRows((accounts as Account[]) ?? [], excelColumns)} filename="tai-khoan" />
         <EntityFormDialog
           title="Thêm tài khoản"
           schemaKey="account"

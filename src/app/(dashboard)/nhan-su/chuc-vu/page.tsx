@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { NHAN_SU_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { PositionInput } from '@/lib/validations/nhan-su';
 import { createPosition, updatePosition, deletePosition } from '@/lib/actions/nhan-su';
 import type { Department } from '@/types/database';
@@ -55,7 +55,7 @@ export default async function ChucVuPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(positions as any[]) ?? []} columns={excelColumns} filename="chuc-vu" />
+        <TableActions rows={buildExcelRows((positions as any[]) ?? [], excelColumns)} filename="chuc-vu" />
         <EntityFormDialog
           title="Thêm chức vụ"
           schemaKey="position"

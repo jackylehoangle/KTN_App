@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { LeaveRequestInput } from '@/lib/validations/nhan-su';
 import { createLeaveRequest } from '@/lib/actions/nhan-su';
 import type { Employee, LeaveStatus, LeaveType } from '@/types/database';
@@ -79,7 +79,7 @@ export default async function NghiPhepPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(leaves as any[]) ?? []} columns={excelColumns} filename="nghi-phep" />
+        <TableActions rows={buildExcelRows((leaves as any[]) ?? [], excelColumns)} filename="nghi-phep" />
         <EntityFormDialog
           title="Tạo đơn nghỉ phép"
           schemaKey="leaveRequest"

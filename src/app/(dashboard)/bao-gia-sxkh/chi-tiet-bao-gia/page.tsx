@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { QuotationItemInput } from '@/lib/validations/bao-gia-sxkh';
 import { createQuotationItem, updateQuotationItem, deleteQuotationItem } from '@/lib/actions/bao-gia-sxkh';
 import { generateQuotationDescription } from '@/lib/actions/ai';
@@ -90,7 +90,7 @@ export default async function ChiTietBaoGiaPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dong-bao-gia" />
+        <TableActions rows={buildExcelRows((items as any[]) ?? [], excelColumns)} filename="dong-bao-gia" />
         <QuotationItemImportDialog quotations={((quotations as Quotation[]) ?? []).map((q) => ({ id: q.id, code: q.code }))} />
         <EntityFormDialog
           title="Thêm dòng báo giá"

@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { CustomerInput } from '@/lib/validations/kinh-doanh';
 import { createCustomer, updateCustomer, deleteCustomer } from '@/lib/actions/kinh-doanh';
 import type { Customer } from '@/types/database';
@@ -77,7 +77,7 @@ export default async function KinhDoanhPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
-        <TableActions rows={(customers as Customer[]) ?? []} columns={excelColumns} filename="khach-hang" />
+        <TableActions rows={buildExcelRows((customers as Customer[]) ?? [], excelColumns)} filename="khach-hang" />
         <CustomerImportDialog />
         <EntityFormDialog
           title="Thêm khách hàng"

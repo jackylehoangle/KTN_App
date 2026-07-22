@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, NHAN_SU_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { PayrollInput } from '@/lib/validations/nhan-su';
 import { createPayroll, updatePayroll, deletePayroll } from '@/lib/actions/nhan-su';
 import type { Employee } from '@/types/database';
@@ -99,8 +99,7 @@ export default async function LuongPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         <TableActions
-          rows={(payroll as PayrollRow[]) ?? []}
-          columns={excelColumns}
+          rows={buildExcelRows((payroll as PayrollRow[]) ?? [], excelColumns)}
           filename="bang-luong"
         />
         <EntityFormDialog

@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, APPROVAL_TYPE_LABELS, APPROVAL_STATUS_LABELS, ROLE_LABELS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { approveRequest, rejectRequest } from '@/lib/actions/de-xuat';
 import type { ApprovalActionInput } from '@/lib/validations/de-xuat';
 import type { ApprovalType, ApprovalStatus, UserRole, StaffLevel } from '@/types/database';
@@ -89,7 +89,7 @@ export function ApprovalRequestTable({
             options={Object.entries(APPROVAL_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
           />
         </div>
-        <TableActions rows={filtered} columns={excelColumns} filename="de-xuat" />
+        <TableActions rows={buildExcelRows(filtered, excelColumns)} filename="de-xuat" />
       </div>
       <div className="rounded-lg border">
         <Table>

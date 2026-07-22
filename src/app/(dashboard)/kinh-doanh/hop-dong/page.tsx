@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ContractInput } from '@/lib/validations/kinh-doanh';
 import { createContract, updateContract, deleteContract } from '@/lib/actions/kinh-doanh';
 import type { Customer, ContractStatus } from '@/types/database';
@@ -91,7 +91,7 @@ export default async function HopDongPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(contracts as any[]) ?? []} columns={excelColumns} filename="hop-dong" />
+        <TableActions rows={buildExcelRows((contracts as any[]) ?? [], excelColumns)} filename="hop-dong" />
         <EntityFormDialog
           title="Thêm hợp đồng"
           schemaKey="contract"

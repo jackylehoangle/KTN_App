@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { OpportunityInput } from '@/lib/validations/kinh-doanh';
 import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
 import { createOpportunity, updateOpportunity, deleteOpportunity } from '@/lib/actions/kinh-doanh';
@@ -125,7 +125,7 @@ export default async function CoHoiPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(opportunities as any[]) ?? []} columns={excelColumns} filename="co-hoi" />
+        <TableActions rows={buildExcelRows((opportunities as any[]) ?? [], excelColumns)} filename="co-hoi" />
         <EntityFormDialog
           title="Thêm cơ hội"
           schemaKey="opportunity"

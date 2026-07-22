@@ -6,7 +6,7 @@ import { EntityFormDialog, type EntityField } from '@/components/shared/entity-f
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -94,7 +94,7 @@ export function EmployeeTable({
           />
           <FilterSelect label="Phòng ban" value={department} onChange={setDepartment} options={departmentOptions} />
         </div>
-        <TableActions rows={filtered} columns={excelColumns} filename="nhan-vien" />
+        <TableActions rows={buildExcelRows(filtered, excelColumns)} filename="nhan-vien" />
       </div>
       <div className="rounded-lg border">
         <Table>

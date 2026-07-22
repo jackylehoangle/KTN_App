@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ProductionPlanInput } from '@/lib/validations/bao-gia-sxkh';
 import { createProductionPlan, updateProductionPlan, deleteProductionPlan } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlanStatus } from '@/types/database';
@@ -85,7 +85,7 @@ export default async function KeHoachPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(plans as any[]) ?? []} columns={excelColumns} filename="ke-hoach-san-xuat" />
+        <TableActions rows={buildExcelRows((plans as any[]) ?? [], excelColumns)} filename="ke-hoach-san-xuat" />
         <EntityFormDialog
           title="Tạo kế hoạch sản xuất"
           schemaKey="productionPlan"

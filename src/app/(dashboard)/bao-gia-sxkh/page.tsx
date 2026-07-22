@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, formatDate } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
 import { createQuotation, updateQuotation, deleteQuotation } from '@/lib/actions/bao-gia-sxkh';
 import type { Customer, Opportunity, QuotationStatus } from '@/types/database';
@@ -107,7 +107,7 @@ export default async function BaoGiaPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(quotations as any[]) ?? []} columns={excelColumns} filename="bao-gia" />
+        <TableActions rows={buildExcelRows((quotations as any[]) ?? [], excelColumns)} filename="bao-gia" />
         <EntityFormDialog
           title="Tạo báo giá"
           schemaKey="quotation"

@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, KINH_DOANH_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { SalesOrderItemInput } from '@/lib/validations/kinh-doanh';
 import { createSalesOrderItem, updateSalesOrderItem, deleteSalesOrderItem } from '@/lib/actions/kinh-doanh';
 import type { SalesOrder } from '@/types/database';
@@ -79,7 +79,7 @@ export default async function ChiTietDonHangPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dong-don-hang" />
+        <TableActions rows={buildExcelRows((items as any[]) ?? [], excelColumns)} filename="dong-don-hang" />
         <EntityFormDialog
           title="Thêm dòng đơn hàng"
           schemaKey="salesOrderItem"

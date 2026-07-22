@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { Warehouse } from '@/types/database';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
@@ -36,7 +36,7 @@ export default async function KhoPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
-        <TableActions rows={(warehouses as Warehouse[]) ?? []} columns={excelColumns} filename="kho" />
+        <TableActions rows={buildExcelRows((warehouses as Warehouse[]) ?? [], excelColumns)} filename="kho" />
         <WarehouseFormDialog />
       </div>
       <div className="rounded-lg border">

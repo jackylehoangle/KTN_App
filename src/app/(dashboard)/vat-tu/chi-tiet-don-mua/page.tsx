@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, VAT_TU_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { PurchaseOrderItemInput } from '@/lib/validations/vat-tu';
 import { createPurchaseOrderItem, updatePurchaseOrderItem, deletePurchaseOrderItem } from '@/lib/actions/vat-tu';
 import type { PurchaseOrder, Material } from '@/types/database';
@@ -84,7 +84,7 @@ export default async function ChiTietDonMuaPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dong-don-mua" />
+        <TableActions rows={buildExcelRows((items as any[]) ?? [], excelColumns)} filename="dong-don-mua" />
         <EntityFormDialog
           title="Thêm dòng đơn mua"
           schemaKey="purchaseOrderItem"

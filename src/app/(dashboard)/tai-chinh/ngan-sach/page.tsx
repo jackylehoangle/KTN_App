@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatVND, TAI_CHINH_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { BudgetInput } from '@/lib/validations/tai-chinh';
 import { createBudget, updateBudget, deleteBudget } from '@/lib/actions/tai-chinh';
 import type { Department } from '@/types/database';
@@ -77,7 +77,7 @@ export default async function NganSachPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
-        <TableActions rows={(budgets as BudgetRow[]) ?? []} columns={excelColumns} filename="ngan-sach" />
+        <TableActions rows={buildExcelRows((budgets as BudgetRow[]) ?? [], excelColumns)} filename="ngan-sach" />
         <EntityFormDialog
           title="Thêm ngân sách"
           schemaKey="budget"

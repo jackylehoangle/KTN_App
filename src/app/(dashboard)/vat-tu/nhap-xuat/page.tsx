@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { Material, Warehouse } from '@/types/database';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
@@ -64,7 +64,7 @@ export default async function NhapXuatPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(movements as any[]) ?? []} columns={excelColumns} filename="nhap-xuat-kho" />
+        <TableActions rows={buildExcelRows((movements as any[]) ?? [], excelColumns)} filename="nhap-xuat-kho" />
         <StockMovementFormDialog
           materials={(materials as Material[]) ?? []}
           warehouses={(warehouses as Warehouse[]) ?? []}

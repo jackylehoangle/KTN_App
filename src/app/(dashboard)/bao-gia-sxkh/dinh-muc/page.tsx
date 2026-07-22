@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { BomItemInput } from '@/lib/validations/bao-gia-sxkh';
 import { createBomItem, updateBomItem, deleteBomItem } from '@/lib/actions/bao-gia-sxkh';
 import type { Material } from '@/types/database';
@@ -76,7 +76,7 @@ export default async function DinhMucPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dinh-muc" />
+        <TableActions rows={buildExcelRows((items as any[]) ?? [], excelColumns)} filename="dinh-muc" />
         <EntityFormDialog
           title="Thêm định mức"
           schemaKey="bomItem"

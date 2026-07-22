@@ -6,7 +6,7 @@ import { EntityFormDialog, type EntityField } from '@/components/shared/entity-f
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { SearchInput } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -72,7 +72,7 @@ export function InvoicePaymentTable({
           <span className="text-sm text-muted-foreground">đến</span>
           <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[150px]" />
         </div>
-        <TableActions rows={filtered} columns={excelColumns} filename="thanh-toan-hoa-don" />
+        <TableActions rows={buildExcelRows(filtered, excelColumns)} filename="thanh-toan-hoa-don" />
       </div>
       <div className="rounded-lg border">
         <Table>

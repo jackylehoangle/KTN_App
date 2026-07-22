@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { Material, StockBalance } from '@/types/database';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
@@ -49,7 +49,7 @@ export default async function VatTuPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
-        <TableActions rows={(materials as Material[]) ?? []} columns={excelColumns} filename="vat-tu" />
+        <TableActions rows={buildExcelRows((materials as Material[]) ?? [], excelColumns)} filename="vat-tu" />
         <MaterialImportDialog />
         <MaterialFormDialog />
       </div>

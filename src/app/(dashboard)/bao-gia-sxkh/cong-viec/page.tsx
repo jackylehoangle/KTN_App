@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDate, BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ProductionTaskInput } from '@/lib/validations/bao-gia-sxkh';
 import { createProductionTask, updateProductionTask, deleteProductionTask } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlan, Profile, ProductionTaskStatus } from '@/types/database';
@@ -105,7 +105,7 @@ export default async function CongViecPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(tasks as any[]) ?? []} columns={excelColumns} filename="cong-viec-san-xuat" />
+        <TableActions rows={buildExcelRows((tasks as any[]) ?? [], excelColumns)} filename="cong-viec-san-xuat" />
         <EntityFormDialog
           title="Thêm công việc"
           schemaKey="productionTask"

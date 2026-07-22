@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { MaterialCategoryInput } from '@/lib/validations/vat-tu';
 import { createMaterialCategory, updateMaterialCategory, deleteMaterialCategory } from '@/lib/actions/vat-tu';
 import type { MaterialCategory } from '@/types/database';
@@ -57,7 +57,7 @@ export default async function DanhMucPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
-        <TableActions rows={list} columns={excelColumns} filename="danh-muc-vat-tu" />
+        <TableActions rows={buildExcelRows(list, excelColumns)} filename="danh-muc-vat-tu" />
         <EntityFormDialog
           title="Thêm danh mục"
           schemaKey="materialCategory"

@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ProductionPlanItemInput } from '@/lib/validations/bao-gia-sxkh';
 import { createProductionPlanItem, updateProductionPlanItem, deleteProductionPlanItem } from '@/lib/actions/bao-gia-sxkh';
 import type { ProductionPlan } from '@/types/database';
@@ -73,7 +73,7 @@ export default async function ChiTietKeHoachPage() {
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <TableActions rows={(items as any[]) ?? []} columns={excelColumns} filename="dong-ke-hoach" />
+        <TableActions rows={buildExcelRows((items as any[]) ?? [], excelColumns)} filename="dong-ke-hoach" />
         <EntityFormDialog
           title="Thêm dòng kế hoạch"
           schemaKey="productionPlanItem"

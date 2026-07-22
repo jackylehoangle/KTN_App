@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { ExcelColumn } from '@/lib/export-excel';
+import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { Supplier } from '@/types/database';
 import { VAT_TU_TABS as TABS } from '@/lib/constants';
 
@@ -37,7 +37,7 @@ export default async function NhaCungCapPage() {
       <ModuleTabs items={TABS} />
       <ErrorAlert error={error} />
       <div className="flex justify-end gap-2">
-        <TableActions rows={(suppliers as Supplier[]) ?? []} columns={excelColumns} filename="nha-cung-cap" />
+        <TableActions rows={buildExcelRows((suppliers as Supplier[]) ?? [], excelColumns)} filename="nha-cung-cap" />
         <SupplierFormDialog />
       </div>
       <div className="rounded-lg border">
