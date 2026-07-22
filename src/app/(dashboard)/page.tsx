@@ -8,6 +8,7 @@ import {
   BarChart3,
   ClipboardCheck,
   ShieldCheck,
+  History,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MODULES, ROLE_LABELS } from '@/lib/constants';
@@ -22,6 +23,7 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
   '/bao-cao': BarChart3,
   '/de-xuat': ClipboardCheck,
   '/phan-quyen': ShieldCheck,
+  '/nhat-ky': History,
 };
 
 const MODULE_DESCRIPTIONS: Record<string, string> = {
@@ -33,6 +35,7 @@ const MODULE_DESCRIPTIONS: Record<string, string> = {
   '/bao-cao': 'Biểu đồ doanh thu, bán hàng, tồn kho, nhân sự',
   '/de-xuat': 'Gửi và duyệt đề xuất mua hàng, tạm ứng...',
   '/phan-quyen': 'Quản lý vai trò, cấp bậc và quyền xem riêng',
+  '/nhat-ky': 'Lịch sử xoá dữ liệu, duyệt đề xuất, đổi quyền',
 };
 
 export default async function DashboardHome() {

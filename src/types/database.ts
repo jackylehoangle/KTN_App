@@ -23,6 +23,32 @@ export interface UserPermission {
   created_at: string;
 }
 
+export type AuditAction = 'create' | 'update' | 'delete' | 'approve' | 'reject';
+
+export interface AuditLog {
+  id: string;
+  user_id: string | null;
+  user_name: string | null;
+  action: AuditAction;
+  module: string;
+  table_name: string;
+  record_id: string | null;
+  record_label: string | null;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string | null;
+  link: string | null;
+  read: boolean;
+  created_at: string;
+}
+
 export type ApprovalType = 'purchase' | 'advance' | 'other' | 'quotation';
 export type ApprovalStatus = 'pending_manager' | 'pending_director' | 'approved' | 'rejected';
 

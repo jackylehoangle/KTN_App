@@ -12,6 +12,7 @@ import {
   BarChart3,
   ClipboardCheck,
   ShieldCheck,
+  History,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -37,6 +38,7 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
   '/bao-cao': BarChart3,
   '/de-xuat': ClipboardCheck,
   '/phan-quyen': ShieldCheck,
+  '/nhat-ky': History,
 };
 
 export function AppSidebar({ profile }: { profile: Profile }) {

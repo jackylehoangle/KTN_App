@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { generateNextCode, generateCodeSequence } from '@/lib/generate-code';
+import { logAudit } from '@/lib/audit-log';
 import {
   departmentSchema,
   employeeSchema,
@@ -36,8 +37,17 @@ export async function updateDepartment(id: string, input: DepartmentInput) {
 
 export async function deleteDepartment(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('departments').select('*').eq('id', id).single();
   const { error } = await supabase.from('departments').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/nhan-su',
+    tableName: 'departments',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/nhan-su/phong-ban');
 }
 
@@ -77,8 +87,17 @@ export async function updateEmployee(id: string, input: EmployeeInput) {
 
 export async function deleteEmployee(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('employees').select('*').eq('id', id).single();
   const { error } = await supabase.from('employees').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/nhan-su',
+    tableName: 'employees',
+    recordId: id,
+    recordLabel: existing?.full_name,
+    oldData: existing,
+  });
   revalidatePath('/nhan-su');
 }
 
@@ -100,6 +119,12 @@ export async function updateLeaveStatus(id: string, status: 'approved' | 'reject
     .update({ status, approved_by: user?.id ?? null })
     .eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: status === 'approved' ? 'approve' : 'reject',
+    module: '/nhan-su',
+    tableName: 'leave_requests',
+    recordId: id,
+  });
   revalidatePath('/nhan-su/nghi-phep');
 }
 
@@ -133,8 +158,17 @@ export async function updatePosition(id: string, input: PositionInput) {
 
 export async function deletePosition(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('positions').select('*').eq('id', id).single();
   const { error } = await supabase.from('positions').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/nhan-su',
+    tableName: 'positions',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/nhan-su/chuc-vu');
 }
 
@@ -179,7 +213,16 @@ export async function updatePayroll(id: string, input: PayrollInput) {
 
 export async function deletePayroll(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('payroll').select('*').eq('id', id).single();
   const { error } = await supabase.from('payroll').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/nhan-su',
+    tableName: 'payroll',
+    recordId: id,
+    recordLabel: existing?.period,
+    oldData: existing,
+  });
   revalidatePath('/nhan-su/luong');
 }

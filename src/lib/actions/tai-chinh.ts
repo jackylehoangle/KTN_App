@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { generateNextCode } from '@/lib/generate-code';
+import { logAudit } from '@/lib/audit-log';
 import {
   accountSchema,
   transactionSchema,
@@ -34,8 +35,17 @@ export async function updateAccount(id: string, input: AccountInput) {
 
 export async function deleteAccount(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('accounts').select('*').eq('id', id).single();
   const { error } = await supabase.from('accounts').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/tai-chinh',
+    tableName: 'accounts',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/tai-chinh/tai-khoan');
 }
 
@@ -63,8 +73,17 @@ export async function updateTransaction(id: string, input: TransactionInput) {
 
 export async function deleteTransaction(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('transactions').select('*').eq('id', id).single();
   const { error } = await supabase.from('transactions').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/tai-chinh',
+    tableName: 'transactions',
+    recordId: id,
+    recordLabel: existing?.code,
+    oldData: existing,
+  });
   revalidatePath('/tai-chinh');
 }
 
@@ -92,8 +111,17 @@ export async function updateInvoice(id: string, input: InvoiceInput) {
 
 export async function deleteInvoice(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('invoices').select('*').eq('id', id).single();
   const { error } = await supabase.from('invoices').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/tai-chinh',
+    tableName: 'invoices',
+    recordId: id,
+    recordLabel: existing?.code,
+    oldData: existing,
+  });
   revalidatePath('/tai-chinh/hoa-don');
 }
 
@@ -120,8 +148,16 @@ export async function updateInvoicePayment(id: string, input: InvoicePaymentInpu
 
 export async function deleteInvoicePayment(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('invoice_payments').select('*').eq('id', id).single();
   const { error } = await supabase.from('invoice_payments').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/tai-chinh',
+    tableName: 'invoice_payments',
+    recordId: id,
+    oldData: existing,
+  });
   revalidatePath('/tai-chinh/thanh-toan');
 }
 
@@ -148,7 +184,16 @@ export async function updateBudget(id: string, input: BudgetInput) {
 
 export async function deleteBudget(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('budgets').select('*').eq('id', id).single();
   const { error } = await supabase.from('budgets').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/tai-chinh',
+    tableName: 'budgets',
+    recordId: id,
+    recordLabel: existing?.category,
+    oldData: existing,
+  });
   revalidatePath('/tai-chinh/ngan-sach');
 }

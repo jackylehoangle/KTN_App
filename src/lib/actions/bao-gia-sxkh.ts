@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { generateNextCode } from '@/lib/generate-code';
+import { logAudit } from '@/lib/audit-log';
+import { notifyDepartmentManagers } from '@/lib/notifications';
 import {
   quotationSchema,
   productionPlanSchema,
@@ -46,8 +48,17 @@ export async function updateQuotation(id: string, input: QuotationInput) {
 
 export async function deleteQuotation(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('quotations').select('*').eq('id', id).single();
   const { error } = await supabase.from('quotations').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/bao-gia-sxkh',
+    tableName: 'quotations',
+    recordId: id,
+    recordLabel: existing?.code,
+    oldData: existing,
+  });
   revalidatePath('/bao-gia-sxkh');
 }
 
@@ -75,8 +86,17 @@ export async function updateProductionPlan(id: string, input: ProductionPlanInpu
 
 export async function deleteProductionPlan(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('production_plans').select('*').eq('id', id).single();
   const { error } = await supabase.from('production_plans').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/bao-gia-sxkh',
+    tableName: 'production_plans',
+    recordId: id,
+    recordLabel: existing?.code,
+    oldData: existing,
+  });
   revalidatePath('/bao-gia-sxkh/ke-hoach');
 }
 
@@ -205,8 +225,17 @@ export async function updateSolarPackage(id: string, input: SolarPackageInput) {
 
 export async function deleteSolarPackage(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('solar_packages').select('*').eq('id', id).single();
   const { error } = await supabase.from('solar_packages').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/bao-gia-sxkh',
+    tableName: 'solar_packages',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/bao-gia-sxkh/goi-he-thong');
 }
 
@@ -395,6 +424,14 @@ export async function submitQuotationForApproval(quotationId: string) {
     .update({ approval_request_id: request.id, status: 'pending_approval' })
     .eq('id', quotationId);
   if (updateError) throw new Error(updateError.message);
+
+  await notifyDepartmentManagers(
+    supabase,
+    profile.role,
+    `Báo giá ${quotation.code} cần duyệt`,
+    `${profile.full_name} vừa gửi báo giá ${quotation.code}${customerName ? ` - ${customerName}` : ''} đi duyệt.`,
+    '/de-xuat'
+  );
 
   revalidatePath('/bao-gia-sxkh');
   revalidatePath('/de-xuat');

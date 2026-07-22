@@ -4,6 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { generateNextCode } from '@/lib/generate-code';
 import { approvalRequestSchema, type ApprovalRequestInput } from '@/lib/validations/de-xuat';
+import { logAudit } from '@/lib/audit-log';
+import { notifyDepartmentManagers, notifyUsers, notifyAdmins } from '@/lib/notifications';
+import { APPROVAL_TYPE_LABELS } from '@/lib/constants';
 
 export async function createApprovalRequest(input: ApprovalRequestInput) {
   const data = approvalRequestSchema.parse(input);
@@ -30,6 +33,15 @@ export async function createApprovalRequest(input: ApprovalRequestInput) {
     status: 'pending_manager',
   });
   if (error) throw new Error(error.message);
+
+  await notifyDepartmentManagers(
+    supabase,
+    profile.role,
+    `Đề xuất ${code} cần duyệt`,
+    `${profile.full_name} vừa gửi đề xuất "${data.title}" (${APPROVAL_TYPE_LABELS[data.request_type]}).`,
+    '/de-xuat'
+  );
+
   revalidatePath('/de-xuat');
 }
 
@@ -42,7 +54,7 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
 
   const { data: request, error: fetchError } = await supabase
     .from('approval_requests')
-    .select('status, request_type')
+    .select('status, request_type, code, title, requested_by')
     .eq('id', id)
     .single();
   if (fetchError || !request) throw new Error('Không tìm thấy đề xuất');
@@ -61,6 +73,15 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
     .eq('id', id);
   if (updateError) throw new Error(updateError.message);
 
+  await logAudit({
+    action,
+    module: '/de-xuat',
+    tableName: 'approval_requests',
+    recordId: id,
+    recordLabel: request.code,
+    newData: { status: nextStatus, note: note || null },
+  });
+
   // Báo giá gửi duyệt: đồng bộ ngược trạng thái khi phê duyệt xong hẳn hoặc bị từ chối.
   if (request.request_type === 'quotation' && (nextStatus === 'approved' || nextStatus === 'rejected')) {
     await supabase
@@ -68,6 +89,25 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
       .update({ status: nextStatus === 'approved' ? 'sent' : 'draft' })
       .eq('approval_request_id', id);
     revalidatePath('/bao-gia-sxkh');
+  }
+
+  // Chuyển từ Trưởng phòng lên Giám đốc: báo cho admin/BGD biết có việc mới cần duyệt.
+  if (nextStatus === 'pending_director') {
+    await notifyAdmins(
+      supabase,
+      `Đề xuất ${request.code} cần Giám đốc duyệt`,
+      `"${request.title}" đã được Trưởng phòng duyệt, đang chờ Giám đốc.`,
+      '/de-xuat'
+    );
+  } else {
+    // Duyệt xong hẳn hoặc bị từ chối: báo lại cho người đã gửi đề xuất.
+    await notifyUsers(
+      [request.requested_by],
+      nextStatus === 'approved' ? `Đề xuất ${request.code} đã được duyệt` : `Đề xuất ${request.code} bị từ chối`,
+      `"${request.title}"${note ? ` — Ghi chú: ${note}` : ''}`,
+      '/de-xuat',
+      supabase
+    );
   }
 
   revalidatePath('/de-xuat');

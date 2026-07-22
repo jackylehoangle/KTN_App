@@ -1,4 +1,4 @@
-import type { ApprovalStatus, ApprovalType, StaffLevel, UserRole } from '@/types/database';
+import type { ApprovalStatus, ApprovalType, AuditAction, StaffLevel, UserRole } from '@/types/database';
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: 'Quản trị viên',
@@ -28,6 +28,14 @@ export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = {
   pending_director: 'Chờ Giám đốc duyệt',
   approved: 'Đã duyệt',
   rejected: 'Từ chối',
+};
+
+export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
+  create: 'Tạo mới',
+  update: 'Cập nhật',
+  delete: 'Xoá',
+  approve: 'Duyệt',
+  reject: 'Từ chối',
 };
 
 export interface ModuleNavItem {
@@ -75,6 +83,11 @@ export const MODULES: ModuleNavItem[] = [
   {
     title: 'Phân quyền',
     href: '/phan-quyen',
+    roles: ['admin'],
+  },
+  {
+    title: 'Nhật ký',
+    href: '/nhat-ky',
     roles: ['admin'],
   },
 ];

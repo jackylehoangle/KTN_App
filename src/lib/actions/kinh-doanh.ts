@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { generateNextCode, generateCodeSequence } from '@/lib/generate-code';
+import { logAudit } from '@/lib/audit-log';
 import {
   customerSchema,
   opportunitySchema,
@@ -53,8 +54,17 @@ export async function updateCustomer(id: string, input: CustomerInput) {
 
 export async function deleteCustomer(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('customers').select('*').eq('id', id).single();
   const { error } = await supabase.from('customers').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/kinh-doanh',
+    tableName: 'customers',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/kinh-doanh');
 }
 
@@ -82,8 +92,17 @@ export async function updateOpportunity(id: string, input: OpportunityInput) {
 
 export async function deleteOpportunity(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('opportunities').select('*').eq('id', id).single();
   const { error } = await supabase.from('opportunities').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/kinh-doanh',
+    tableName: 'opportunities',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/kinh-doanh/co-hoi');
 }
 
@@ -111,8 +130,17 @@ export async function updateContract(id: string, input: ContractInput) {
 
 export async function deleteContract(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('contracts').select('*').eq('id', id).single();
   const { error } = await supabase.from('contracts').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/kinh-doanh',
+    tableName: 'contracts',
+    recordId: id,
+    recordLabel: existing?.title,
+    oldData: existing,
+  });
   revalidatePath('/kinh-doanh/hop-dong');
 }
 
@@ -143,8 +171,17 @@ export async function updateSalesOrder(id: string, input: SalesOrderInput) {
 
 export async function deleteSalesOrder(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('sales_orders').select('*').eq('id', id).single();
   const { error } = await supabase.from('sales_orders').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/kinh-doanh',
+    tableName: 'sales_orders',
+    recordId: id,
+    recordLabel: existing?.code,
+    oldData: existing,
+  });
   revalidatePath('/kinh-doanh/don-hang');
 }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { generateNextCode, generateCodeSequence } from '@/lib/generate-code';
+import { logAudit } from '@/lib/audit-log';
 import {
   materialSchema,
   warehouseSchema,
@@ -51,8 +52,17 @@ export async function updateMaterial(id: string, input: MaterialInput) {
 
 export async function deleteMaterial(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('materials').select('*').eq('id', id).single();
   const { error } = await supabase.from('materials').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/vat-tu',
+    tableName: 'materials',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/vat-tu');
 }
 
@@ -75,8 +85,17 @@ export async function updateWarehouse(id: string, input: WarehouseInput) {
 
 export async function deleteWarehouse(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('warehouses').select('*').eq('id', id).single();
   const { error } = await supabase.from('warehouses').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/vat-tu',
+    tableName: 'warehouses',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/vat-tu/kho');
 }
 
@@ -99,8 +118,17 @@ export async function updateSupplier(id: string, input: SupplierInput) {
 
 export async function deleteSupplier(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('suppliers').select('*').eq('id', id).single();
   const { error } = await supabase.from('suppliers').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/vat-tu',
+    tableName: 'suppliers',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/vat-tu/nha-cung-cap');
 }
 
@@ -130,8 +158,17 @@ export async function updateStockMovement(id: string, input: StockMovementInput)
 
 export async function deleteStockMovement(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('stock_movements').select('*').eq('id', id).single();
   const { error } = await supabase.from('stock_movements').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/vat-tu',
+    tableName: 'stock_movements',
+    recordId: id,
+    recordLabel: existing?.code,
+    oldData: existing,
+  });
   revalidatePath('/vat-tu/nhap-xuat');
   revalidatePath('/vat-tu');
 }
@@ -159,8 +196,17 @@ export async function updateMaterialCategory(id: string, input: MaterialCategory
 
 export async function deleteMaterialCategory(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('material_categories').select('*').eq('id', id).single();
   const { error } = await supabase.from('material_categories').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/vat-tu',
+    tableName: 'material_categories',
+    recordId: id,
+    recordLabel: existing?.name,
+    oldData: existing,
+  });
   revalidatePath('/vat-tu/danh-muc');
 }
 
@@ -188,8 +234,17 @@ export async function updatePurchaseOrder(id: string, input: PurchaseOrderInput)
 
 export async function deletePurchaseOrder(id: string) {
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('purchase_orders').select('*').eq('id', id).single();
   const { error } = await supabase.from('purchase_orders').delete().eq('id', id);
   if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/vat-tu',
+    tableName: 'purchase_orders',
+    recordId: id,
+    recordLabel: existing?.code,
+    oldData: existing,
+  });
   revalidatePath('/vat-tu/don-mua');
 }
 
