@@ -75,7 +75,9 @@ alter table quotations add constraint quotations_status_check
 alter type approval_type add value if not exists 'quotation';
 
 -- ============================================================
--- 3. Mã tự sinh cho gói hệ thống (dùng lại seed_code_sequence/next_code đã có).
+-- 3. Mã tự sinh cho gói hệ thống. solar_packages là bảng mới tinh (chưa có
+--    dòng nào) nên không cần seed từ dữ liệu cũ như các bảng khác — sequence
+--    mặc định bắt đầu từ 1 là đúng. Việc sinh mã lúc chạy dùng hàm next_code
+--    (đã có sẵn từ permissions_setup.sql), không cần thêm gì ở đây.
 -- ============================================================
 create sequence if not exists solar_packages_code_seq;
-select seed_code_sequence('solar_packages', 'solar_packages_code_seq', 'GOI');

@@ -26,7 +26,7 @@ export const invoiceSchema = z.object({
   code: z.string().optional(),
   customer_id: z.string().uuid('Chọn khách hàng'),
   invoice_date: z.string().min(1, 'Bắt buộc'),
-  due_date: z.string().optional(),
+  due_date: z.string().optional().transform((v) => v || null),
   amount: z.number().min(0),
   tax_amount: z.number().min(0),
   status: z.enum(['unpaid', 'partial', 'paid', 'overdue']),
@@ -36,7 +36,7 @@ export type InvoiceInput = z.infer<typeof invoiceSchema>;
 
 export const invoicePaymentSchema = z.object({
   invoice_id: z.string().uuid('Chọn hoá đơn'),
-  account_id: z.string().uuid('Chọn tài khoản').optional().or(z.literal('')),
+  account_id: z.string().uuid('Chọn tài khoản').optional().or(z.literal('')).transform((v) => v || null),
   amount: z.number().positive('Số tiền phải > 0'),
   payment_date: z.string().min(1, 'Bắt buộc'),
   method: z.string().optional(),
@@ -46,7 +46,7 @@ export const invoicePaymentSchema = z.object({
 export type InvoicePaymentInput = z.infer<typeof invoicePaymentSchema>;
 
 export const budgetSchema = z.object({
-  department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')),
+  department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')).transform((v) => v || null),
   category: z.string().min(1, 'Bắt buộc'),
   period: z.string().min(1, 'Bắt buộc (VD: 2026 hoặc 2026-07)'),
   amount: z.number().min(0),

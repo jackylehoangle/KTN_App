@@ -45,7 +45,7 @@ export type StockMovementInput = z.infer<typeof stockMovementSchema>;
 
 export const materialCategorySchema = z.object({
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
-  parent_id: z.string().uuid('Chọn danh mục cha').optional().or(z.literal('')),
+  parent_id: z.string().uuid('Chọn danh mục cha').optional().or(z.literal('')).transform((v) => v || null),
   attachment_url: z.string().optional(),
 });
 export type MaterialCategoryInput = z.infer<typeof materialCategorySchema>;
@@ -54,7 +54,7 @@ export const purchaseOrderSchema = z.object({
   code: z.string().optional(),
   supplier_id: z.string().uuid('Chọn nhà cung cấp'),
   order_date: z.string().min(1, 'Bắt buộc'),
-  expected_date: z.string().optional(),
+  expected_date: z.string().optional().transform((v) => v || null),
   status: z.enum(['pending', 'confirmed', 'received', 'cancelled']),
   total_amount: z.number().min(0),
   attachment_url: z.string().optional(),

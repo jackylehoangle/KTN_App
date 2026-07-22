@@ -327,15 +327,27 @@ create sequence if not exists approval_requests_code_seq;
 -- Khởi tạo giá trị sequence bằng đúng số lớn nhất đang có trong bảng (chạy
 -- với quyền chủ sở hữu bảng nên đọc được toàn bộ, không bị RLS giới hạn),
 -- để không sinh lại mã đã tồn tại.
+-- Ghi chú sửa lỗi: bản trước dùng substring(code from %L) — khi %L chèn một
+-- con số, Postgres hiểu nhầm thành cú pháp regex substring(text from pattern)
+-- thay vì lấy theo vị trí ký tự, có thể ra sai kết quả. Bản này dùng
+-- substring(code, N) (cú pháp 2 tham số, không mập mờ) và lọc bỏ ký tự
+-- không phải số trước khi ép kiểu, để 1 dòng dữ liệu cũ có mã bất thường
+-- cũng không làm hỏng toàn bộ migration.
 create or replace function seed_code_sequence(tbl text, seq_name text, prefix text) returns void as $$
 declare
   cur_max bigint;
 begin
   execute format(
-    'select coalesce(max((substring(code from %L))::bigint), 0) from %I where code like %L',
+    $f$select coalesce(max(nullif(regexp_replace(substring(code, %s), '\D', '', 'g'), '')::bigint), 0) from %I where code like %L$f$,
     length(prefix) + 1, tbl, prefix || '%'
   ) into cur_max;
-  execute format('select setval(%L, %L)', seq_name, cur_max);
+  -- Sequence không cho phép setval về 0 (minvalue mặc định là 1) — bảng chưa
+  -- có dòng nào khớp prefix thì để lần sinh mã đầu tiên trả về đúng 1.
+  if cur_max > 0 then
+    execute format('select setval(%L, %L, true)', seq_name, cur_max);
+  else
+    execute format('select setval(%L, 1, false)', seq_name);
+  end if;
 end;
 $$ language plpgsql;
 
