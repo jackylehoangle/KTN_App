@@ -26,6 +26,7 @@ import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
 const QUOTATION_STATUS_LABEL: Record<QuotationStatus, string> = {
   draft: 'Nháp',
+  pending_approval: 'Chờ phê duyệt',
   sent: 'Đã gửi',
   accepted: 'Đã chấp nhận',
   rejected: 'Từ chối',

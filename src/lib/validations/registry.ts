@@ -32,6 +32,8 @@ import {
   bomItemSchema,
   productionPlanItemSchema,
   productionTaskSchema,
+  solarPackageSchema,
+  solarPackageItemSchema,
 } from '@/lib/validations/bao-gia-sxkh';
 import { userRoleLevelSchema, moduleGrantSchema } from '@/lib/validations/permissions';
 import { approvalRequestSchema, approvalActionSchema } from '@/lib/validations/de-xuat';
@@ -66,6 +68,8 @@ export const SCHEMA_REGISTRY = {
   bomItem: bomItemSchema,
   productionPlanItem: productionPlanItemSchema,
   productionTask: productionTaskSchema,
+  solarPackage: solarPackageSchema,
+  solarPackageItem: solarPackageItemSchema,
   userRoleLevel: userRoleLevelSchema,
   moduleGrant: moduleGrantSchema,
   approvalRequest: approvalRequestSchema,

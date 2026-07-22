@@ -1,10 +1,13 @@
-import { Plus, Pencil } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Pencil, Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
+import { CreateQuotationFromPackageDialog } from '@/components/features/bao-gia-sxkh/create-quotation-from-package-dialog';
+import { SubmitApprovalButton } from '@/components/features/bao-gia-sxkh/submit-approval-button';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,15 +18,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, formatDate } from '@/lib/constants';
+import { formatVND, formatDate, APPROVAL_STATUS_LABELS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
-import { createQuotation, updateQuotation, deleteQuotation } from '@/lib/actions/bao-gia-sxkh';
-import type { Customer, Opportunity, QuotationStatus } from '@/types/database';
+import { createQuotation, updateQuotation, deleteQuotation, submitQuotationForApproval } from '@/lib/actions/bao-gia-sxkh';
+import type { Customer, Opportunity, QuotationStatus, SolarPackage } from '@/types/database';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 
 const STATUS_LABEL: Record<QuotationStatus, string> = {
   draft: 'Nháp',
+  pending_approval: 'Chờ phê duyệt',
   sent: 'Đã gửi',
   accepted: 'Đã chấp nhận',
   rejected: 'Từ chối',
@@ -39,18 +43,21 @@ const defaultValues: QuotationInput = {
   notes: '',
   opportunity_id: '',
   attachment_url: '',
+  margin_pct: 30,
 };
 
 export default async function BaoGiaPage() {
   const supabase = await createClient();
-  const [{ data: quotations, error }, { data: customers }, { data: opportunities }] = await Promise.all([
-    supabase
-      .from('quotations')
-      .select('*, customers(name)')
-      .order('quotation_date', { ascending: false }),
-    supabase.from('customers').select('*').order('name'),
-    supabase.from('opportunities').select('*').order('code'),
-  ]);
+  const [{ data: quotations, error }, { data: customers }, { data: opportunities }, { data: packages }] =
+    await Promise.all([
+      supabase
+        .from('quotations')
+        .select('*, customers(name), approval_requests(status)')
+        .order('quotation_date', { ascending: false }),
+      supabase.from('customers').select('*').order('name'),
+      supabase.from('opportunities').select('*').order('code'),
+      supabase.from('solar_packages').select('*').eq('active', true).order('capacity_kwp'),
+    ]);
 
   const fields: EntityField<QuotationInput>[] = [
     { name: 'code', label: 'Số báo giá', placeholder: 'BG0001', half: true },
@@ -78,6 +85,7 @@ export default async function BaoGiaPage() {
     { name: 'quotation_date', label: 'Ngày báo giá', type: 'date', half: true },
     { name: 'valid_until', label: 'Có hiệu lực đến', type: 'date', half: true },
     { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number', half: true },
+    { name: 'margin_pct', label: 'Lợi nhuận (%, 25-40)', type: 'number', half: true },
     { name: 'notes', label: 'Ghi chú', type: 'textarea' },
     { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
@@ -108,6 +116,10 @@ export default async function BaoGiaPage() {
       <div className="flex justify-end gap-2">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <TableActions rows={buildExcelRows((quotations as any[]) ?? [], excelColumns)} filename="bao-gia" />
+        <CreateQuotationFromPackageDialog
+          customers={(customers as Customer[]) ?? []}
+          packages={(packages as SolarPackage[]) ?? []}
+        />
         <EntityFormDialog
           title="Tạo báo giá"
           schemaKey="quotation"
@@ -132,7 +144,8 @@ export default async function BaoGiaPage() {
               <TableHead>Ngày</TableHead>
               <TableHead className="text-right">Tổng giá trị</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-16 print:hidden" />
+              <TableHead>Duyệt</TableHead>
+              <TableHead className="w-24 print:hidden" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -148,8 +161,33 @@ export default async function BaoGiaPage() {
                     {STATUS_LABEL[q.status as QuotationStatus]}
                   </Badge>
                 </TableCell>
+                <TableCell>
+                  {q.approval_requests?.status ? (
+                    <Badge
+                      variant={
+                        q.approval_requests.status === 'approved'
+                          ? 'default'
+                          : q.approval_requests.status === 'rejected'
+                            ? 'destructive'
+                            : 'secondary'
+                      }
+                    >
+                      {APPROVAL_STATUS_LABELS[q.approval_requests.status as keyof typeof APPROVAL_STATUS_LABELS]}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" title="In báo giá" asChild>
+                      <Link href={`/bao-gia-sxkh/${q.id}/in`} target="_blank">
+                        <Printer className="size-4" />
+                      </Link>
+                    </Button>
+                    {q.status === 'draft' && (
+                      <SubmitApprovalButton onConfirm={submitQuotationForApproval.bind(null, q.id)} />
+                    )}
                     <EntityFormDialog
                       title="Sửa báo giá"
                       schemaKey="quotation"
@@ -165,6 +203,7 @@ export default async function BaoGiaPage() {
                         notes: q.notes ?? '',
                         opportunity_id: q.opportunity_id ?? '',
                         attachment_url: q.attachment_url ?? '',
+                        margin_pct: q.margin_pct ?? 30,
                       }}
                       onUpdate={updateQuotation}
                       successMessage="Đã cập nhật báo giá"
@@ -182,7 +221,7 @@ export default async function BaoGiaPage() {
             ))}
             {(!quotations || quotations.length === 0) && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Chưa có báo giá nào.
                 </TableCell>
               </TableRow>

@@ -23,7 +23,7 @@ export interface UserPermission {
   created_at: string;
 }
 
-export type ApprovalType = 'purchase' | 'advance' | 'other';
+export type ApprovalType = 'purchase' | 'advance' | 'other' | 'quotation';
 export type ApprovalStatus = 'pending_manager' | 'pending_director' | 'approved' | 'rejected';
 
 export interface ApprovalRequest {
@@ -386,7 +386,7 @@ export interface Budget {
 }
 
 // ---------- Module 5: Bao gia & SXKH ----------
-export type QuotationStatus = 'draft' | 'sent' | 'accepted' | 'rejected';
+export type QuotationStatus = 'draft' | 'pending_approval' | 'sent' | 'accepted' | 'rejected';
 
 export interface Quotation {
   id: string;
@@ -399,8 +399,41 @@ export interface Quotation {
   total_amount: number;
   notes: string | null;
   attachment_url: string | null;
+  package_id: string | null;
+  margin_pct: number | null;
+  cost_amount: number | null;
+  capacity_kwp: number | null;
+  phase: number | null;
+  daily_output_kwh: number | null;
+  monthly_output_kwh: number | null;
+  monthly_savings_vnd: number | null;
+  payment_terms: string | null;
+  ai_generated: boolean;
+  approval_request_id: string | null;
   created_by: string | null;
   created_at: string;
+}
+
+export interface SolarPackage {
+  id: string;
+  code: string;
+  name: string;
+  capacity_kwp: number;
+  phase: number;
+  daily_output_kwh: number | null;
+  monthly_output_kwh: number | null;
+  active: boolean;
+  created_at: string;
+}
+
+export interface SolarPackageItem {
+  id: string;
+  package_id: string;
+  material_id: string | null;
+  description: string | null;
+  quantity: number;
+  unit: string;
+  sort_order: number;
 }
 
 export interface QuotationItem {

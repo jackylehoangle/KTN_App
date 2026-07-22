@@ -20,6 +20,7 @@ export const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
   purchase: 'Mua hàng',
   advance: 'Tạm ứng',
   other: 'Khác',
+  quotation: 'Báo giá',
 };
 
 export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = {
@@ -117,7 +118,10 @@ export const TAI_CHINH_TABS: TabItem[] = [
 
 export const BAO_GIA_SXKH_TABS: TabItem[] = [
   { title: 'Báo giá', href: '/bao-gia-sxkh' },
+  { title: 'Báo giá AI', href: '/bao-gia-sxkh/ai-bao-gia' },
   { title: 'Dòng báo giá', href: '/bao-gia-sxkh/chi-tiet-bao-gia' },
+  { title: 'Gói hệ thống', href: '/bao-gia-sxkh/goi-he-thong' },
+  { title: 'Dòng gói hệ thống', href: '/bao-gia-sxkh/chi-tiet-goi-he-thong' },
   { title: 'Kế hoạch sản xuất', href: '/bao-gia-sxkh/ke-hoach' },
   { title: 'Dòng kế hoạch', href: '/bao-gia-sxkh/chi-tiet-ke-hoach' },
   { title: 'Định mức NVL', href: '/bao-gia-sxkh/dinh-muc' },

@@ -5,13 +5,36 @@ export const quotationSchema = z.object({
   customer_id: z.string().uuid('Chọn khách hàng'),
   quotation_date: z.string().min(1, 'Bắt buộc'),
   valid_until: z.string().optional(),
-  status: z.enum(['draft', 'sent', 'accepted', 'rejected']),
+  status: z.enum(['draft', 'pending_approval', 'sent', 'accepted', 'rejected']),
   total_amount: z.number().min(0),
   notes: z.string().optional(),
   opportunity_id: z.string().uuid('Chọn cơ hội').optional().or(z.literal('')),
   attachment_url: z.string().optional(),
+  margin_pct: z.number().min(0).max(100).optional(),
+  payment_terms: z.string().optional(),
 });
 export type QuotationInput = z.infer<typeof quotationSchema>;
+
+export const solarPackageSchema = z.object({
+  code: z.string().optional(),
+  name: z.string().min(2, 'Tối thiểu 2 ký tự'),
+  capacity_kwp: z.number().positive('Công suất phải > 0'),
+  phase: z.preprocess((v) => Number(v), z.union([z.literal(1), z.literal(3)])),
+  daily_output_kwh: z.number().min(0).optional(),
+  monthly_output_kwh: z.number().min(0).optional(),
+  active: z.preprocess((v) => (typeof v === 'string' ? v === 'true' : v), z.boolean()),
+});
+export type SolarPackageInput = z.infer<typeof solarPackageSchema>;
+
+export const solarPackageItemSchema = z.object({
+  package_id: z.string().uuid('Chọn gói hệ thống'),
+  material_id: z.string().uuid('Chọn vật tư').optional().or(z.literal('')),
+  description: z.string().optional(),
+  quantity: z.number().positive('Số lượng phải > 0'),
+  unit: z.string().min(1, 'Bắt buộc'),
+  sort_order: z.number().optional(),
+});
+export type SolarPackageItemInput = z.infer<typeof solarPackageItemSchema>;
 
 export const productionPlanSchema = z.object({
   code: z.string().optional(),

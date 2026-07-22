@@ -42,7 +42,7 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
 
   const { data: request, error: fetchError } = await supabase
     .from('approval_requests')
-    .select('status')
+    .select('status, request_type')
     .eq('id', id)
     .single();
   if (fetchError || !request) throw new Error('Không tìm thấy đề xuất');
@@ -60,6 +60,16 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
     .update({ status: nextStatus })
     .eq('id', id);
   if (updateError) throw new Error(updateError.message);
+
+  // Báo giá gửi duyệt: đồng bộ ngược trạng thái khi phê duyệt xong hẳn hoặc bị từ chối.
+  if (request.request_type === 'quotation' && (nextStatus === 'approved' || nextStatus === 'rejected')) {
+    await supabase
+      .from('quotations')
+      .update({ status: nextStatus === 'approved' ? 'sent' : 'draft' })
+      .eq('approval_request_id', id);
+    revalidatePath('/bao-gia-sxkh');
+  }
+
   revalidatePath('/de-xuat');
 }
 
