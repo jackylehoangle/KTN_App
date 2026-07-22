@@ -9,10 +9,10 @@ export type DepartmentInput = z.infer<typeof departmentSchema>;
 export const employeeSchema = z.object({
   code: z.string().optional(),
   full_name: z.string().min(2, 'Tối thiểu 2 ký tự'),
-  department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')).transform((v) => v || null),
+  department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')).nullable().transform((v) => v || null),
   phone: z.string().optional(),
   email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
-  hire_date: z.string().optional().transform((v) => v || null),
+  hire_date: z.string().optional().nullable().transform((v) => v || null),
   status: z.enum(['active', 'probation', 'inactive', 'terminated']),
   base_salary: z.number().min(0),
   avatar_url: z.string().optional(),
@@ -32,7 +32,7 @@ export type LeaveRequestInput = z.infer<typeof leaveRequestSchema>;
 
 export const positionSchema = z.object({
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),
-  department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')).transform((v) => v || null),
+  department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')).nullable().transform((v) => v || null),
   attachment_url: z.string().optional(),
 });
 export type PositionInput = z.infer<typeof positionSchema>;
