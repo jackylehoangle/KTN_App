@@ -277,11 +277,26 @@ export async function convertLeadToCustomer(leadId: string) {
     .single();
   if (customerError || !customer) throw new Error(customerError?.message ?? 'Không tạo được khách hàng');
 
-  const { error: updateError } = await supabase
+  // Cập nhật có điều kiện (chỉ áp dụng nếu stage chưa bị 1 lượt chuyển đổi khác đổi
+  // trước) — chặn trường hợp bấm đúp/2 người cùng chuyển 1 Lead cùng lúc tạo ra 2
+  // khách hàng trùng. Nếu thua cuộc đua, xoá khách hàng vừa tạo thừa để không để lại
+  // bản ghi mồ côi.
+  const { data: updatedLead, error: updateError } = await supabase
     .from('leads')
     .update({ stage: 'converted', converted_customer_id: customer.id })
-    .eq('id', leadId);
-  if (updateError) throw new Error(updateError.message);
+    .eq('id', leadId)
+    .neq('stage', 'converted')
+    .select('id')
+    .single();
+  if (updateError || !updatedLead) {
+    await supabase.from('customers').delete().eq('id', customer.id);
+    throw new Error('Lead này vừa được chuyển thành khách hàng bởi một thao tác khác.');
+  }
+
+  // Chuyển lịch sử tương tác đã ghi trước đó sang gắn với khách hàng mới — nếu không,
+  // xoá Lead này sau khi đã chuyển đổi sẽ xoá luôn (cascade) toàn bộ lịch sử tương tác
+  // dù khách hàng vẫn còn tồn tại.
+  await supabase.from('interactions').update({ customer_id: customer.id, lead_id: null }).eq('lead_id', leadId);
 
   await logAudit({
     action: 'update',
@@ -294,6 +309,7 @@ export async function convertLeadToCustomer(leadId: string) {
 
   revalidatePath('/kinh-doanh/leads');
   revalidatePath('/kinh-doanh');
+  revalidatePath('/kinh-doanh/lich-su');
 }
 
 export async function createContact(input: ContactInput) {

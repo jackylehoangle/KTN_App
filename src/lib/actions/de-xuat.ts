@@ -62,16 +62,25 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
   const step = request.status === 'pending_manager' ? 'manager' : 'director';
   const nextStatus = action === 'reject' ? 'rejected' : step === 'manager' ? 'pending_director' : 'approved';
 
+  // Cập nhật có điều kiện (chỉ áp dụng nếu status vẫn còn đúng như lúc đọc) — chặn
+  // trước khi ghi approval_actions, tránh trường hợp bấm đúp hoặc 2 người duyệt
+  // cùng lúc đều đọc cùng 1 status rồi cùng ghi đè, sinh ra 2 approval_actions/2
+  // hiệu ứng phụ (sinh 2 Dự án...) cho cùng 1 đề xuất.
+  const { data: updatedRequest, error: updateError } = await supabase
+    .from('approval_requests')
+    .update({ status: nextStatus })
+    .eq('id', id)
+    .eq('status', request.status)
+    .select('id')
+    .single();
+  if (updateError || !updatedRequest) {
+    throw new Error('Đề xuất này vừa được xử lý bởi một thao tác khác. Vui lòng tải lại trang.');
+  }
+
   const { error: actionError } = await supabase
     .from('approval_actions')
     .insert({ request_id: id, approver_id: user.id, step, action, note: note || null });
   if (actionError) throw new Error(actionError.message);
-
-  const { error: updateError } = await supabase
-    .from('approval_requests')
-    .update({ status: nextStatus })
-    .eq('id', id);
-  if (updateError) throw new Error(updateError.message);
 
   await logAudit({
     action,
@@ -84,12 +93,15 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
 
   // Báo giá gửi duyệt: đồng bộ ngược trạng thái khi phê duyệt xong hẳn hoặc bị từ chối.
   if (request.request_type === 'quotation' && (nextStatus === 'approved' || nextStatus === 'rejected')) {
-    const { data: quotation } = await supabase
+    const { data: quotation, error: quotationSyncError } = await supabase
       .from('quotations')
       .update({ status: nextStatus === 'approved' ? 'sent' : 'draft' })
       .eq('approval_request_id', id)
       .select('id, code, customer_id, project_id')
       .single();
+    if (quotationSyncError) {
+      console.error(`Không đồng bộ được trạng thái báo giá cho đề xuất ${request.code}:`, quotationSyncError);
+    }
     revalidatePath('/bao-gia-sxkh');
 
     // Báo giá vừa được duyệt hẳn và chưa gắn Dự án nào: tự sinh 1 Dự án mới, nối
@@ -122,7 +134,13 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
 
   // Hợp đồng lao động gửi duyệt: đồng bộ ngược trạng thái khi phê duyệt xong hẳn hoặc bị từ chối.
   if (request.request_type === 'employee_contract' && (nextStatus === 'approved' || nextStatus === 'rejected')) {
-    await supabase.from('employee_contracts').update({ status: nextStatus }).eq('approval_request_id', id);
+    const { error: contractSyncError } = await supabase
+      .from('employee_contracts')
+      .update({ status: nextStatus })
+      .eq('approval_request_id', id);
+    if (contractSyncError) {
+      console.error(`Không đồng bộ được trạng thái hợp đồng cho đề xuất ${request.code}:`, contractSyncError);
+    }
     revalidatePath('/nhan-su/hop-dong-lao-dong');
   }
 

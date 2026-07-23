@@ -116,8 +116,10 @@ create policy "ns_update_payroll" on payroll for update using (auth_role() in ('
 
 drop policy if exists "ns_write_contract" on employee_contracts;
 create policy "ns_write_contract" on employee_contracts for insert with check (auth_role() in ('admin', 'nhan_su') or has_edit_permission('/nhan-su'));
+-- + giam_doc: actOnRequest (de-xuat.ts) tự đồng bộ status khi Giám đốc duyệt bước cuối —
+-- thiếu vai trò này thì UPDATE bị RLS chặn âm thầm mỗi khi Giám đốc thật duyệt.
 drop policy if exists "ns_update_contract" on employee_contracts;
-create policy "ns_update_contract" on employee_contracts for update using (auth_role() in ('admin', 'nhan_su') or has_edit_permission('/nhan-su'));
+create policy "ns_update_contract" on employee_contracts for update using (auth_role() in ('admin', 'nhan_su') or auth_role() = 'giam_doc' or has_edit_permission('/nhan-su'));
 
 -- ============================================================
 -- Tài chính (/tai-chinh)
@@ -152,8 +154,10 @@ create policy "tc_update_budget" on budgets for update using (auth_role() in ('a
 -- ============================================================
 drop policy if exists "bg_write_quo" on quotations;
 create policy "bg_write_quo" on quotations for insert with check (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/bao-gia-sxkh'));
+-- + giam_doc: cùng lý do như ns_update_contract ở trên — actOnRequest đồng bộ
+-- quotations.status khi Giám đốc duyệt bước cuối.
 drop policy if exists "bg_update_quo" on quotations;
-create policy "bg_update_quo" on quotations for update using (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/bao-gia-sxkh'));
+create policy "bg_update_quo" on quotations for update using (auth_role() in ('admin','kinh_doanh') or auth_role() = 'giam_doc' or has_edit_permission('/bao-gia-sxkh'));
 
 drop policy if exists "bg_write_quoi" on quotation_items;
 create policy "bg_write_quoi" on quotation_items for insert with check (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/bao-gia-sxkh'));

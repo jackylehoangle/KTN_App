@@ -134,8 +134,11 @@ export async function deleteSupplier(id: string) {
   revalidatePath('/vat-tu/nha-cung-cap');
 }
 
-// Gắn 1 phiếu vào 1 lô cụ thể: 'out' phải đủ tồn của lô mới cho trừ, 'in' cộng
-// thêm vào lô đã có. 'adjust' không tự đụng vào lô (mơ hồ về hướng cộng/trừ).
+// Gắn 1 phiếu vào 1 lô cụ thể: 'out' trừ, 'in' cộng vào quantity_remaining của lô.
+// 'adjust' không tự đụng vào lô (mơ hồ về hướng cộng/trừ). Việc cộng/trừ dùng RPC
+// adjust_lot_quantity (1 câu UPDATE nguyên tử ở tầng DB) thay vì đọc-rồi-ghi ở tầng
+// ứng dụng, để tránh 2 phiếu tạo cùng lúc trên cùng 1 lô ghi đè lẫn nhau (mỗi bên đọc
+// số dư cũ trước khi bên kia kịp ghi, dẫn tới trừ 2 lần nhưng số dư chỉ giảm 1 lần).
 export async function createStockMovement(input: StockMovementInput) {
   const data = stockMovementSchema.parse(input);
   const supabase = await createClient();
@@ -143,32 +146,28 @@ export async function createStockMovement(input: StockMovementInput) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let lot: { quantity_remaining: number } | null = null;
-  if (data.lot_id && (data.movement_type === 'in' || data.movement_type === 'out')) {
-    const { data: lotRow, error: lotError } = await supabase
-      .from('inventory_lots')
-      .select('quantity_remaining')
-      .eq('id', data.lot_id)
-      .single();
-    if (lotError || !lotRow) throw new Error('Không tìm thấy lô hàng đã chọn');
-    if (data.movement_type === 'out' && data.quantity > lotRow.quantity_remaining) {
-      throw new Error(`Lô hàng chỉ còn ${lotRow.quantity_remaining} — không đủ để xuất ${data.quantity}.`);
-    }
-    lot = lotRow;
-  }
-
   const code = await generateNextCode(supabase, 'stock_movements', 'PN', 4);
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from('stock_movements')
-    .insert({ ...data, code, reference_type: 'manual', created_by: user?.id ?? null });
-  if (error) throw new Error(error.message);
+    .insert({ ...data, code, reference_type: 'manual', created_by: user?.id ?? null })
+    .select('id')
+    .single();
+  if (error || !inserted) throw new Error(error?.message ?? 'Không tạo được phiếu kho');
 
-  if (lot && data.lot_id) {
+  if (data.lot_id && (data.movement_type === 'in' || data.movement_type === 'out')) {
     const delta = data.movement_type === 'out' ? -data.quantity : data.quantity;
-    await supabase
-      .from('inventory_lots')
-      .update({ quantity_remaining: lot.quantity_remaining + delta })
-      .eq('id', data.lot_id);
+    const { data: newRemaining, error: lotError } = await supabase.rpc('adjust_lot_quantity', {
+      p_lot_id: data.lot_id,
+      p_delta: delta,
+    });
+    if (lotError || newRemaining === null) {
+      // Không cộng/trừ được lô (không đủ tồn hoặc lô không còn tồn tại) — huỷ phiếu
+      // vừa tạo để tránh phiếu kho tồn tại mà không có tác động thật lên tồn kho.
+      await supabase.from('stock_movements').delete().eq('id', inserted.id);
+      throw new Error(
+        lotError?.message ?? 'Lô hàng không đủ tồn hoặc không còn tồn tại — đã huỷ phiếu vừa tạo.'
+      );
+    }
   }
 
   revalidatePath('/vat-tu/nhap-xuat');
@@ -181,7 +180,7 @@ export async function updateStockMovement(id: string, input: StockMovementInput)
   const supabase = await createClient();
   const { data: existing } = await supabase.from('stock_movements').select('lot_id').eq('id', id).single();
   if (existing?.lot_id) {
-    throw new Error('Phiếu đã gắn lô hàng — không thể sửa để tránh sai lệch tồn kho. Vui lòng tạo phiếu mới để điều chỉnh.');
+    throw new Error('Phiếu đã gắn lô hàng — không thể sửa để tránh sai lệch tồn kho. Muốn điều chỉnh số dư lô, vào Lô/Serial để sửa trực tiếp.');
   }
   const { error } = await supabase.from('stock_movements').update(data).eq('id', id);
   if (error) throw new Error(error.message);
@@ -193,7 +192,7 @@ export async function deleteStockMovement(id: string) {
   const supabase = await createClient();
   const { data: existing } = await supabase.from('stock_movements').select('*').eq('id', id).single();
   if (existing?.lot_id) {
-    throw new Error('Phiếu đã gắn lô hàng — không thể xoá để tránh sai lệch tồn kho. Vui lòng tạo phiếu điều chỉnh mới.');
+    throw new Error('Phiếu đã gắn lô hàng — không thể xoá để tránh sai lệch tồn kho. Muốn điều chỉnh số dư lô, vào Lô/Serial để sửa trực tiếp.');
   }
   const { error } = await supabase.from('stock_movements').delete().eq('id', id);
   if (error) throw new Error(error.message);
@@ -222,8 +221,24 @@ export async function createInventoryLot(input: InventoryLotInput) {
 
 export async function updateInventoryLot(id: string, input: InventoryLotInput) {
   const data = inventoryLotSchema.parse(input);
+  // quantity_remaining chỉ được đổi qua createStockMovement (RPC adjust_lot_quantity,
+  // nguyên tử) — cố tình bỏ khỏi payload sửa tay, vì form Sửa mở sẵn giá trị cũ trên
+  // máy người dùng, nếu ai đó xuất/nhập thêm trong lúc đó thì lưu form sẽ ghi đè mất
+  // thay đổi vừa xảy ra (lost update). Sửa lô chỉ để chỉnh mã lô/đơn giá/NCC...
   const supabase = await createClient();
-  const { error } = await supabase.from('inventory_lots').update(data).eq('id', id);
+  const { error } = await supabase
+    .from('inventory_lots')
+    .update({
+      material_id: data.material_id,
+      warehouse_id: data.warehouse_id,
+      lot_number: data.lot_number,
+      quantity_received: data.quantity_received,
+      unit_cost: data.unit_cost,
+      received_date: data.received_date,
+      supplier_id: data.supplier_id,
+      attachment_url: data.attachment_url,
+    })
+    .eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/vat-tu/lo-hang');
 }

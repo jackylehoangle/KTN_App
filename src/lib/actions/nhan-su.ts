@@ -367,7 +367,7 @@ async function computeWorkDays(
       .in('status', ['present', 'late']),
     supabase
       .from('leave_requests')
-      .select('days')
+      .select('days, start_date, end_date')
       .eq('employee_id', employeeId)
       .eq('status', 'approved')
       .in('leave_type', ['annual', 'sick'])
@@ -375,7 +375,27 @@ async function computeWorkDays(
       .gte('end_date', periodStart),
   ]);
 
-  const paidLeaveDays = ((leaves as { days: number }[]) ?? []).reduce((sum, l) => sum + l.days, 0);
+  // Một đợt nghỉ phép vắt qua ranh giới tháng (vd 28/6 - 3/7) khớp điều kiện overlap ở
+  // CẢ 2 kỳ lương liền kề — nếu cộng nguyên `days` vào mỗi kỳ sẽ đếm trùng. Chia đều
+  // `days` theo tỷ lệ số ngày lịch nằm trong kỳ này / tổng số ngày lịch của cả đợt nghỉ,
+  // để tổng cộng dồn qua các kỳ luôn khớp đúng `days` ban đầu, không hơn không kém.
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const periodStartMs = new Date(periodStart).getTime();
+  const periodEndMs = new Date(nextMonth).getTime();
+  const paidLeaveDays = ((leaves as { days: number; start_date: string; end_date: string }[]) ?? []).reduce(
+    (sum, l) => {
+      const leaveStartMs = new Date(l.start_date).getTime();
+      const leaveEndMs = new Date(l.end_date).getTime();
+      const totalSpanDays = Math.round((leaveEndMs - leaveStartMs) / msPerDay) + 1;
+      if (totalSpanDays <= 0) return sum;
+      const overlapStartMs = Math.max(leaveStartMs, periodStartMs);
+      const overlapEndMs = Math.min(leaveEndMs, periodEndMs - msPerDay);
+      const overlapDays = Math.round((overlapEndMs - overlapStartMs) / msPerDay) + 1;
+      if (overlapDays <= 0) return sum;
+      return sum + l.days * (Math.min(overlapDays, totalSpanDays) / totalSpanDays);
+    },
+    0
+  );
   return (presentCount ?? 0) + paidLeaveDays;
 }
 

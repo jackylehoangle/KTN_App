@@ -50,10 +50,12 @@ create policy "duan_read" on projects for select using (
   or auth_role() in ('kinh_doanh', 'san_xuat')
   or created_by = auth.uid()
 );
+-- + giam_doc: actOnRequest (de-xuat.ts) tự sinh Dự án khi Giám đốc duyệt báo giá ở
+-- bước cuối — thiếu vai trò này thì insert/update projects bị RLS chặn âm thầm.
 drop policy if exists "duan_write" on projects;
-create policy "duan_write" on projects for insert with check (auth_role() in ('admin', 'kinh_doanh', 'san_xuat'));
+create policy "duan_write" on projects for insert with check (auth_role() in ('admin', 'kinh_doanh', 'san_xuat', 'giam_doc'));
 drop policy if exists "duan_update" on projects;
-create policy "duan_update" on projects for update using (auth_role() in ('admin', 'kinh_doanh', 'san_xuat'));
+create policy "duan_update" on projects for update using (auth_role() in ('admin', 'kinh_doanh', 'san_xuat', 'giam_doc'));
 drop policy if exists "duan_delete" on projects;
 create policy "duan_delete" on projects for delete using (auth_role() = 'admin');
 
