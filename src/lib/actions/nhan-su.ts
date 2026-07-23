@@ -4,15 +4,18 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { generateNextCode, generateCodeSequence } from '@/lib/generate-code';
 import { logAudit } from '@/lib/audit-log';
+import { notifyDepartmentManagers, notifyAdmins } from '@/lib/notifications';
 import {
   departmentSchema,
   employeeSchema,
+  employeeContractSchema,
   leaveRequestSchema,
   positionSchema,
   attendanceSchema,
   payrollSchema,
   type DepartmentInput,
   type EmployeeInput,
+  type EmployeeContractInput,
   type LeaveRequestInput,
   type PositionInput,
   type AttendanceInput,
@@ -99,6 +102,120 @@ export async function deleteEmployee(id: string) {
     oldData: existing,
   });
   revalidatePath('/nhan-su');
+}
+
+export async function createEmployeeContract(input: EmployeeContractInput) {
+  const data = employeeContractSchema.parse(input);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const code = await generateNextCode(supabase, 'employee_contracts', 'HDLD', 4);
+  const { error } = await supabase
+    .from('employee_contracts')
+    .insert({ ...data, code, created_by: user?.id ?? null });
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su/hop-dong-lao-dong');
+}
+
+export async function updateEmployeeContract(id: string, input: EmployeeContractInput) {
+  const data = employeeContractSchema.parse(input);
+  const supabase = await createClient();
+  const { error } = await supabase.from('employee_contracts').update(data).eq('id', id);
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su/hop-dong-lao-dong');
+}
+
+export async function deleteEmployeeContract(id: string) {
+  const supabase = await createClient();
+  const { data: existing } = await supabase.from('employee_contracts').select('*').eq('id', id).single();
+  const { error } = await supabase.from('employee_contracts').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+  await logAudit({
+    action: 'delete',
+    module: '/nhan-su',
+    tableName: 'employee_contracts',
+    recordId: id,
+    recordLabel: existing?.code,
+    oldData: existing,
+  });
+  revalidatePath('/nhan-su/hop-dong-lao-dong');
+}
+
+// Gửi hợp đồng lao động qua cấp phê duyệt gần nhất (Trưởng phòng -> Giám đốc), tái dùng
+// nguyên hạ tầng approval_requests/approval_actions của Đề xuất & Phê duyệt.
+export async function submitEmployeeContractForApproval(contractId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Chưa đăng nhập');
+
+  const { data: contract, error: contractError } = await supabase
+    .from('employee_contracts')
+    .select('code, employees(full_name)')
+    .eq('id', contractId)
+    .single();
+  if (contractError || !contract) throw new Error('Không tìm thấy hợp đồng');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, full_name')
+    .eq('id', user.id)
+    .single();
+  if (!profile) throw new Error('Không tìm thấy thông tin người dùng');
+
+  const employeeName = (contract as unknown as { employees: { full_name: string } | null }).employees?.full_name ?? '';
+  const code = await generateNextCode(supabase, 'approval_requests', 'DX', 4);
+  const { data: request, error: requestError } = await supabase
+    .from('approval_requests')
+    .insert({
+      code,
+      request_type: 'employee_contract',
+      title: `Hợp đồng ${contract.code}${employeeName ? ` - ${employeeName}` : ''}`,
+      department: profile.role,
+      requested_by: user.id,
+      requested_by_name: profile.full_name,
+      status: 'pending_manager',
+    })
+    .select('id')
+    .single();
+  if (requestError || !request) throw new Error(requestError?.message ?? 'Không tạo được đề xuất duyệt');
+
+  const { error: updateError } = await supabase
+    .from('employee_contracts')
+    .update({ approval_request_id: request.id, status: 'pending_approval' })
+    .eq('id', contractId);
+  if (updateError) throw new Error(updateError.message);
+
+  await notifyDepartmentManagers(
+    supabase,
+    profile.role,
+    `Hợp đồng ${contract.code} cần duyệt`,
+    `${profile.full_name} vừa gửi hợp đồng ${contract.code}${employeeName ? ` - ${employeeName}` : ''} đi duyệt.`,
+    '/de-xuat'
+  );
+
+  revalidatePath('/nhan-su/hop-dong-lao-dong');
+  revalidatePath('/de-xuat');
+}
+
+// Sau khi hợp đồng đã ký, HR bấm nút này để báo cho toàn bộ admin cấp email/quyền
+// truy cập ứng dụng — chỉ tạo thông báo, không tự tạo tài khoản đăng nhập thật.
+export async function requestAccountProvisioning(employeeId: string) {
+  const supabase = await createClient();
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('full_name')
+    .eq('id', employeeId)
+    .single();
+  const name = employee?.full_name ?? 'nhân viên';
+  await notifyAdmins(
+    supabase,
+    `Yêu cầu cấp tài khoản: ${name}`,
+    `Nhân viên đã ký hợp đồng lao động, cần cấp email và quyền truy cập ứng dụng.`,
+    '/nhan-su'
+  );
 }
 
 export async function createLeaveRequest(input: LeaveRequestInput) {
@@ -195,10 +312,44 @@ export async function deleteAttendance(id: string) {
   revalidatePath('/nhan-su/cham-cong');
 }
 
+// Tự động tính số công của kỳ lương (YYYY-MM) từ bảng Chấm công (present/late)
+// cộng số ngày nghỉ phép có lương (annual/sick) đã được duyệt trong kỳ đó.
+async function computeWorkDays(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  employeeId: string,
+  period: string
+): Promise<number> {
+  const periodStart = `${period}-01`;
+  const [year, month] = period.split('-').map(Number);
+  const nextMonth = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+
+  const [{ count: presentCount }, { data: leaves }] = await Promise.all([
+    supabase
+      .from('attendance')
+      .select('*', { count: 'exact', head: true })
+      .eq('employee_id', employeeId)
+      .gte('date', periodStart)
+      .lt('date', nextMonth)
+      .in('status', ['present', 'late']),
+    supabase
+      .from('leave_requests')
+      .select('days')
+      .eq('employee_id', employeeId)
+      .eq('status', 'approved')
+      .in('leave_type', ['annual', 'sick'])
+      .lte('start_date', nextMonth)
+      .gte('end_date', periodStart),
+  ]);
+
+  const paidLeaveDays = ((leaves as { days: number }[]) ?? []).reduce((sum, l) => sum + l.days, 0);
+  return (presentCount ?? 0) + paidLeaveDays;
+}
+
 export async function createPayroll(input: PayrollInput) {
   const data = payrollSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('payroll').insert(data);
+  const work_days = await computeWorkDays(supabase, data.employee_id, data.period);
+  const { error } = await supabase.from('payroll').insert({ ...data, work_days });
   if (error) throw new Error(error.message);
   revalidatePath('/nhan-su/luong');
 }
@@ -206,7 +357,8 @@ export async function createPayroll(input: PayrollInput) {
 export async function updatePayroll(id: string, input: PayrollInput) {
   const data = payrollSchema.parse(input);
   const supabase = await createClient();
-  const { error } = await supabase.from('payroll').update(data).eq('id', id);
+  const work_days = await computeWorkDays(supabase, data.employee_id, data.period);
+  const { error } = await supabase.from('payroll').update({ ...data, work_days }).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/nhan-su/luong');
 }

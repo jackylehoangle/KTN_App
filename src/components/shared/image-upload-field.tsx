@@ -5,7 +5,7 @@ import { FileText, Paperclip, Loader2, Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { extractReceiptData } from '@/lib/actions/ai';
+import { extractReceiptData, extractCccdData } from '@/lib/actions/ai';
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 365 * 10;
 const ACCEPT = 'image/*,.pdf,.doc,.docx,.xls,.xlsx';
@@ -16,6 +16,9 @@ export interface ReceiptExtraction {
   description?: string;
 }
 
+// Generic shape covering every OCR extraction kind (receipt fields, CCCD fields, ...).
+export type OcrExtraction = Record<string, string | number | undefined>;
+
 function isImageUrl(url: string): boolean {
   const path = url.split('?')[0];
   return /\.(png|jpe?g|gif|webp|svg|bmp)$/i.test(path);
@@ -25,12 +28,15 @@ export function ImageUploadField({
   value,
   onChange,
   onExtracted,
+  ocrKind = 'receipt',
 }: {
   value?: string;
   onChange: (url: string) => void;
-  // When set, the uploaded image is sent to AI (Gemini) to read a receipt/invoice
-  // photo and auto-fill sibling form fields (amount, date, description).
-  onExtracted?: (data: ReceiptExtraction) => void;
+  // When set, the uploaded image is sent to AI (Gemini) to read the photo and
+  // auto-fill sibling form fields.
+  onExtracted?: (data: OcrExtraction) => void;
+  // Which OCR action to call: 'receipt' (hoá đơn/biên lai) or 'cccd' (CCCD/căn cước).
+  ocrKind?: 'receipt' | 'cccd';
 }) {
   const [uploading, setUploading] = useState(false);
   const [reading, setReading] = useState(false);
@@ -54,8 +60,9 @@ export function ImageUploadField({
       if (onExtracted && file.type.startsWith('image/')) {
         setReading(true);
         try {
-          const extracted = await extractReceiptData(data.signedUrl);
-          onExtracted(extracted);
+          const extracted =
+            ocrKind === 'cccd' ? await extractCccdData(data.signedUrl) : await extractReceiptData(data.signedUrl);
+          onExtracted(extracted as OcrExtraction);
           toast.success('Đã đọc và điền dữ liệu từ ảnh');
         } catch (e) {
           toast.error(e instanceof Error ? e.message : 'Không đọc được dữ liệu từ ảnh, vui lòng nhập tay');

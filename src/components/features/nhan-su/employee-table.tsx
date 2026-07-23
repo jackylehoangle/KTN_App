@@ -27,6 +27,10 @@ interface EmployeeRow {
   id: string;
   code: string;
   full_name: string;
+  gender: 'male' | 'female' | 'other' | null;
+  date_of_birth: string | null;
+  id_number: string | null;
+  address: string | null;
   department_id: string | null;
   departments?: { name: string } | null;
   status: EmployeeStatus;
@@ -69,6 +73,7 @@ export function EmployeeTable({
   const excelColumns: ExcelColumn<EmployeeRow>[] = [
     { header: 'Mã NV', value: (e) => e.code },
     { header: 'Họ và tên', value: (e) => e.full_name },
+    { header: 'Số CCCD', value: (e) => e.id_number ?? '' },
     { header: 'Phòng ban', value: (e) => e.departments?.name ?? '' },
     { header: 'Trạng thái', value: (e) => EMPLOYEE_STATUS[e.status].label },
     { header: 'Lương cơ bản', value: (e) => e.base_salary },
@@ -96,6 +101,7 @@ export function EmployeeTable({
               <TableHead className="w-12 print:hidden" />
               <TableHead>Mã NV</TableHead>
               <TableHead>Họ và tên</TableHead>
+              <TableHead>Số CCCD</TableHead>
               <TableHead>Phòng ban</TableHead>
               <TableHead>Trạng thái</TableHead>
               <TableHead className="text-right">Lương cơ bản</TableHead>
@@ -113,6 +119,7 @@ export function EmployeeTable({
                 </TableCell>
                 <TableCell className="font-mono text-sm">{e.code}</TableCell>
                 <TableCell>{e.full_name}</TableCell>
+                <TableCell className="text-muted-foreground">{e.id_number ?? '—'}</TableCell>
                 <TableCell className="text-muted-foreground">{e.departments?.name ?? '—'}</TableCell>
                 <TableCell>
                   <StatusBadge value={e.status} map={EMPLOYEE_STATUS} />
@@ -128,6 +135,10 @@ export function EmployeeTable({
                       defaultValues={{
                         code: e.code,
                         full_name: e.full_name,
+                        gender: e.gender,
+                        date_of_birth: e.date_of_birth ?? '',
+                        id_number: e.id_number ?? '',
+                        address: e.address ?? '',
                         department_id: e.department_id ?? '',
                         phone: e.phone ?? '',
                         email: e.email ?? '',
@@ -152,7 +163,7 @@ export function EmployeeTable({
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                   {employees.length === 0 ? 'Chưa có nhân viên nào.' : 'Không tìm thấy nhân viên phù hợp.'}
                 </TableCell>
               </TableRow>

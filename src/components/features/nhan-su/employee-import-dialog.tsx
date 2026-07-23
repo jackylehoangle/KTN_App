@@ -20,6 +20,8 @@ export function EmployeeImportDialog({ departments }: { departments: { id: strin
     return {
       data: {
         full_name: fullName,
+        gender: null,
+        date_of_birth: '',
         department_id: department?.id ?? '',
         phone: excelCellToText(row['Điện thoại']),
         email: excelCellToText(row['Email']),

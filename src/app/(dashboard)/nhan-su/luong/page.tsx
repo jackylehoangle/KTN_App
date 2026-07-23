@@ -28,6 +28,7 @@ interface PayrollRow {
   period: string;
   base_salary: number;
   net_salary: number;
+  work_days: number | null;
   status: string;
 }
 
@@ -84,6 +85,7 @@ export default async function LuongPage() {
   const excelColumns: ExcelColumn<PayrollRow>[] = [
     { header: 'Nhân viên', value: (p) => p.employees?.full_name ?? '' },
     { header: 'Kỳ lương', value: (p) => p.period },
+    { header: 'Số công', value: (p) => p.work_days ?? '' },
     { header: 'Lương cơ bản', value: (p) => p.base_salary },
     { header: 'Thực lãnh', value: (p) => p.net_salary },
     { header: 'Trạng thái', value: (p) => PAYROLL_STATUS[p.status as 'draft' | 'paid'].label },
@@ -123,6 +125,7 @@ export default async function LuongPage() {
             <TableRow>
               <TableHead>Nhân viên</TableHead>
               <TableHead>Kỳ lương</TableHead>
+              <TableHead className="text-right">Số công</TableHead>
               <TableHead className="text-right">Lương cơ bản</TableHead>
               <TableHead className="text-right">Thực lãnh</TableHead>
               <TableHead>Trạng thái</TableHead>
@@ -135,6 +138,7 @@ export default async function LuongPage() {
               <TableRow key={p.id}>
                 <TableCell>{p.employees?.full_name ?? '—'}</TableCell>
                 <TableCell className="font-mono text-sm">{p.period}</TableCell>
+                <TableCell className="text-right">{p.work_days ?? '—'}</TableCell>
                 <TableCell className="text-right">{formatVND(p.base_salary)}</TableCell>
                 <TableCell className="text-right font-medium">{formatVND(p.net_salary)}</TableCell>
                 <TableCell>
@@ -175,7 +179,7 @@ export default async function LuongPage() {
             ))}
             {(!payroll || payroll.length === 0) && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Chưa có bảng lương nào.
                 </TableCell>
               </TableRow>

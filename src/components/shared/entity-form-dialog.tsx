@@ -47,8 +47,12 @@ export type EntityField<T extends FieldValues> = {
   type?: 'text' | 'number' | 'email' | 'textarea' | 'select' | 'date' | 'image';
   options?: { label: string; value: string }[];
   half?: boolean; // render in a 2-col grid alongside the next `half` field
-  // For type "image": after AI reads the uploaded receipt photo, auto-fill these sibling fields.
-  ocrMap?: { amount?: Path<T>; date?: Path<T>; description?: Path<T> };
+  // For type "image": after AI reads the uploaded photo, auto-fill these sibling fields.
+  // Keys are the field names returned by the OCR action (e.g. "amount", "full_name"),
+  // values are the destination form field to write into.
+  ocrMap?: Partial<Record<string, Path<T>>>;
+  // Which OCR action ImageUploadField should call for this image field. Defaults to 'receipt'.
+  ocrKind?: 'receipt' | 'cccd';
   // For type "textarea": shows a "Gợi ý AI" button that generates this field's content
   // from another field's current value (e.g. write a product description from its name).
   aiAssist?: { sourceField: Path<T>; generate: (sourceValue: string) => Promise<string> };
@@ -189,17 +193,15 @@ export function EntityFormDialog<T extends FieldValues>({
                             <ImageUploadField
                               value={field.value}
                               onChange={field.onChange}
+                              ocrKind={f.ocrKind}
                               onExtracted={
                                 f.ocrMap
                                   ? (extracted) => {
-                                      if (f.ocrMap?.amount && extracted.amount != null) {
-                                        form.setValue(f.ocrMap.amount, extracted.amount as never);
-                                      }
-                                      if (f.ocrMap?.date && extracted.date) {
-                                        form.setValue(f.ocrMap.date, extracted.date as never);
-                                      }
-                                      if (f.ocrMap?.description && extracted.description) {
-                                        form.setValue(f.ocrMap.description, extracted.description as never);
+                                      for (const [key, target] of Object.entries(f.ocrMap!)) {
+                                        const value = extracted[key];
+                                        if (target && value != null && value !== '') {
+                                          form.setValue(target, value as never);
+                                        }
                                       }
                                     }
                                   : undefined

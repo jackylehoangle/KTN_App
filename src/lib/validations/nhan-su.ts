@@ -9,6 +9,10 @@ export type DepartmentInput = z.infer<typeof departmentSchema>;
 export const employeeSchema = z.object({
   code: z.string().optional(),
   full_name: z.string().min(2, 'Tối thiểu 2 ký tự'),
+  gender: z.enum(['male', 'female', 'other']).optional().or(z.literal('')).nullable().transform((v) => v || null),
+  date_of_birth: z.string().optional().nullable().transform((v) => v || null),
+  id_number: z.string().optional(),
+  address: z.string().optional(),
   department_id: z.string().uuid('Chọn phòng ban').optional().or(z.literal('')).nullable().transform((v) => v || null),
   phone: z.string().optional(),
   email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
@@ -18,6 +22,17 @@ export const employeeSchema = z.object({
   avatar_url: z.string().optional(),
 });
 export type EmployeeInput = z.infer<typeof employeeSchema>;
+
+export const employeeContractSchema = z.object({
+  employee_id: z.string().uuid('Chọn nhân viên'),
+  contract_type: z.enum(['labor', 'probation', 'other']),
+  start_date: z.string().min(1, 'Bắt buộc'),
+  end_date: z.string().optional().nullable().transform((v) => v || null),
+  position_title: z.string().optional(),
+  base_salary: z.number().min(0),
+  signed_file_url: z.string().optional(),
+});
+export type EmployeeContractInput = z.infer<typeof employeeContractSchema>;
 
 export const leaveRequestSchema = z.object({
   employee_id: z.string().uuid('Chọn nhân viên'),

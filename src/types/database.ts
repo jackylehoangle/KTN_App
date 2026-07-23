@@ -49,7 +49,7 @@ export interface Notification {
   created_at: string;
 }
 
-export type ApprovalType = 'purchase' | 'advance' | 'other' | 'quotation';
+export type ApprovalType = 'purchase' | 'advance' | 'other' | 'quotation' | 'employee_contract';
 export type ApprovalStatus = 'pending_manager' | 'pending_director' | 'approved' | 'rejected';
 
 export interface ApprovalRequest {
@@ -339,7 +339,27 @@ export interface Payroll {
   net_salary: number;
   status: 'draft' | 'paid';
   paid_at: string | null;
+  work_days: number | null;
   attachment_url: string | null;
+}
+
+export type EmployeeContractType = 'labor' | 'probation' | 'other';
+export type EmployeeContractStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected';
+
+export interface EmployeeContract {
+  id: string;
+  code: string;
+  employee_id: string;
+  contract_type: EmployeeContractType;
+  start_date: string;
+  end_date: string | null;
+  position_title: string | null;
+  base_salary: number;
+  status: EmployeeContractStatus;
+  signed_file_url: string | null;
+  approval_request_id: string | null;
+  created_by: string | null;
+  created_at: string;
 }
 
 // ---------- Module 4: Tai chinh ----------

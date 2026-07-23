@@ -4,6 +4,8 @@ import type {
   AttendanceStatus,
   AuditAction,
   ContractStatus,
+  EmployeeContractStatus,
+  EmployeeContractType,
   EmployeeStatus,
   InvoiceStatus,
   LeaveStatus,
@@ -87,6 +89,7 @@ export const APPROVAL_TYPE_STATUS: Record<ApprovalType, StatusMeta> = {
   advance: { label: 'Tạm ứng', color: 'amber' },
   other: { label: 'Khác', color: 'slate' },
   quotation: { label: 'Báo giá', color: 'violet' },
+  employee_contract: { label: 'Hợp đồng lao động', color: 'indigo' },
 };
 
 export const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = Object.fromEntries(
@@ -212,6 +215,25 @@ export const PRODUCTION_TASK_STATUS: Record<ProductionTaskStatus, StatusMeta> = 
   done: { label: 'Hoàn tất', color: 'emerald' },
 };
 
+export const EMPLOYEE_CONTRACT_STATUS: Record<EmployeeContractStatus, StatusMeta> = {
+  draft: { label: 'Nháp', color: 'slate' },
+  pending_approval: { label: 'Chờ phê duyệt', color: 'amber' },
+  approved: { label: 'Đã duyệt', color: 'emerald' },
+  rejected: { label: 'Từ chối', color: 'red' },
+};
+
+export const EMPLOYEE_CONTRACT_TYPE_LABELS: Record<EmployeeContractType, string> = {
+  labor: 'Hợp đồng lao động',
+  probation: 'Hợp đồng thử việc',
+  other: 'Khác',
+};
+
+export const GENDER_LABELS: Record<'male' | 'female' | 'other', string> = {
+  male: 'Nam',
+  female: 'Nữ',
+  other: 'Khác',
+};
+
 export interface ModuleNavItem {
   title: string;
   href: string;
@@ -305,6 +327,7 @@ export const NHAN_SU_TABS: TabItem[] = [
   { title: 'Chấm công', href: '/nhan-su/cham-cong' },
   { title: 'Nghỉ phép', href: '/nhan-su/nghi-phep' },
   { title: 'Lương', href: '/nhan-su/luong' },
+  { title: 'Hợp đồng lao động', href: '/nhan-su/hop-dong-lao-dong' },
 ];
 
 export const TAI_CHINH_TABS: TabItem[] = [

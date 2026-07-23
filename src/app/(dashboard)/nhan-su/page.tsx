@@ -10,19 +10,16 @@ import { EmployeeImportDialog } from '@/components/features/nhan-su/employee-imp
 import type { EmployeeInput } from '@/lib/validations/nhan-su';
 import { createEmployee } from '@/lib/actions/nhan-su';
 import { getNhanSuStats } from '@/lib/supabase/queries';
-import type { Department, EmployeeStatus } from '@/types/database';
-import { NHAN_SU_TABS as TABS } from '@/lib/constants';
-
-const STATUS_LABEL: Record<EmployeeStatus, string> = {
-  active: 'Đang làm việc',
-  probation: 'Thử việc',
-  inactive: 'Tạm nghỉ',
-  terminated: 'Đã nghỉ việc',
-};
+import type { Department } from '@/types/database';
+import { NHAN_SU_TABS as TABS, EMPLOYEE_STATUS, GENDER_LABELS } from '@/lib/constants';
 
 const defaultValues: EmployeeInput = {
   code: '',
   full_name: '',
+  gender: null,
+  date_of_birth: '',
+  id_number: '',
+  address: '',
   department_id: '',
   phone: '',
   email: '',
@@ -47,9 +44,31 @@ export default async function NhanSuPage() {
       label: 'Trạng thái',
       type: 'select',
       half: true,
-      options: Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label })),
+      options: Object.entries(EMPLOYEE_STATUS).map(([value, meta]) => ({ value, label: meta.label })),
     },
     { name: 'full_name', label: 'Họ và tên', placeholder: 'Nguyễn Văn A' },
+    {
+      name: 'avatar_url',
+      label: 'Ảnh CCCD (tự động điền thông tin)',
+      type: 'image',
+      ocrKind: 'cccd',
+      ocrMap: {
+        full_name: 'full_name',
+        date_of_birth: 'date_of_birth',
+        id_number: 'id_number',
+        address: 'address',
+        gender: 'gender',
+      },
+    },
+    {
+      name: 'gender',
+      label: 'Giới tính',
+      type: 'select',
+      half: true,
+      options: Object.entries(GENDER_LABELS).map(([value, label]) => ({ value, label })),
+    },
+    { name: 'date_of_birth', label: 'Ngày sinh', type: 'date', half: true },
+    { name: 'id_number', label: 'Số CCCD', half: true },
     {
       name: 'department_id',
       label: 'Phòng ban',
@@ -57,11 +76,11 @@ export default async function NhanSuPage() {
       half: true,
       options: ((departments as Department[]) ?? []).map((d) => ({ value: d.id, label: d.name })),
     },
+    { name: 'address', label: 'Địa chỉ', type: 'textarea' },
     { name: 'hire_date', label: 'Ngày vào làm', type: 'date', half: true },
     { name: 'phone', label: 'Điện thoại', half: true },
     { name: 'email', label: 'Email', type: 'email', half: true },
     { name: 'base_salary', label: 'Lương cơ bản (VND)', type: 'number' },
-    { name: 'avatar_url', label: 'Ảnh đại diện / CMND', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
 

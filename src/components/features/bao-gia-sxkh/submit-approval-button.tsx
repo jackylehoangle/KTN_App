@@ -14,7 +14,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-export function SubmitApprovalButton({ onConfirm }: { onConfirm: () => Promise<void> }) {
+export function SubmitApprovalButton({
+  onConfirm,
+  title = 'Gửi báo giá đi phê duyệt?',
+  description = 'Báo giá sẽ chuyển đến Trưởng phòng rồi Giám đốc duyệt. Bạn vẫn có thể xem báo giá trong lúc chờ duyệt.',
+  successMessage = 'Đã gửi báo giá đi phê duyệt',
+}: {
+  onConfirm: () => Promise<void>;
+  title?: string;
+  description?: string;
+  successMessage?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -22,7 +32,7 @@ export function SubmitApprovalButton({ onConfirm }: { onConfirm: () => Promise<v
     startTransition(async () => {
       try {
         await onConfirm();
-        toast.success('Đã gửi báo giá đi phê duyệt');
+        toast.success(successMessage);
         setOpen(false);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
@@ -39,10 +49,8 @@ export function SubmitApprovalButton({ onConfirm }: { onConfirm: () => Promise<v
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Gửi báo giá đi phê duyệt?</DialogTitle>
-          <DialogDescription>
-            Báo giá sẽ chuyển đến Trưởng phòng rồi Giám đốc duyệt. Bạn vẫn có thể xem báo giá trong lúc chờ duyệt.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>

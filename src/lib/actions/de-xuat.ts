@@ -91,6 +91,12 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
     revalidatePath('/bao-gia-sxkh');
   }
 
+  // Hợp đồng lao động gửi duyệt: đồng bộ ngược trạng thái khi phê duyệt xong hẳn hoặc bị từ chối.
+  if (request.request_type === 'employee_contract' && (nextStatus === 'approved' || nextStatus === 'rejected')) {
+    await supabase.from('employee_contracts').update({ status: nextStatus }).eq('approval_request_id', id);
+    revalidatePath('/nhan-su/hop-dong-lao-dong');
+  }
+
   // Chuyển từ Trưởng phòng lên Giám đốc: báo cho admin/BGD biết có việc mới cần duyệt.
   if (nextStatus === 'pending_director') {
     await notifyAdmins(

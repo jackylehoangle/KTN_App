@@ -13,6 +13,7 @@ import {
 import {
   departmentSchema,
   employeeSchema,
+  employeeContractSchema,
   leaveRequestSchema,
   positionSchema,
   attendanceSchema,
@@ -53,6 +54,7 @@ export const SCHEMA_REGISTRY = {
   purchaseOrderItem: purchaseOrderItemSchema,
   department: departmentSchema,
   employee: employeeSchema,
+  employeeContract: employeeContractSchema,
   leaveRequest: leaveRequestSchema,
   position: positionSchema,
   attendance: attendanceSchema,

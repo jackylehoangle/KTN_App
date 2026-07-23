@@ -39,6 +39,31 @@ Chỉ trả về JSON, không giải thích thêm.`;
   return generateVisionJSON<ReceiptExtraction>(base64, mimeType, prompt);
 }
 
+export interface CccdExtraction {
+  full_name?: string;
+  date_of_birth?: string;
+  id_number?: string;
+  address?: string;
+  gender?: 'male' | 'female';
+}
+
+export async function extractCccdData(imageUrl: string): Promise<CccdExtraction> {
+  if (!isGeminiConfigured()) {
+    throw new Error('Chưa cấu hình GEMINI_API_KEY');
+  }
+  const res = await fetch(imageUrl);
+  if (!res.ok) throw new Error('Không tải được ảnh để đọc dữ liệu');
+  const mimeType = res.headers.get('content-type') ?? 'image/jpeg';
+  const buffer = Buffer.from(await res.arrayBuffer());
+  const base64 = buffer.toString('base64');
+
+  const prompt = `Đây là ảnh Căn cước công dân (CCCD) Việt Nam. Đọc và trả về JSON đúng định dạng:
+{"full_name": string họ tên đầy đủ (in hoa theo đúng như trên thẻ) hoặc null, "date_of_birth": "YYYY-MM-DD" hoặc null, "id_number": string số CCCD (chỉ chữ số) hoặc null, "address": string địa chỉ thường trú/nơi cư trú đầy đủ hoặc null, "gender": "male" nếu giới tính Nam, "female" nếu giới tính Nữ, hoặc null}
+Chỉ trả về JSON, không giải thích thêm.`;
+
+  return generateVisionJSON<CccdExtraction>(base64, mimeType, prompt);
+}
+
 export interface SolarSizingInput {
   monthlyBillVnd?: number;
   monthlyKwh?: number;
