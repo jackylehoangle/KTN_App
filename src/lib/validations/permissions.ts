@@ -9,5 +9,6 @@ export type UserRoleLevelInput = z.infer<typeof userRoleLevelSchema>;
 export const moduleGrantSchema = z.object({
   user_id: z.string().uuid('Chọn người dùng'),
   module_href: z.string().min(1, 'Chọn module'),
+  can_edit: z.preprocess((v) => (typeof v === 'string' ? v === 'true' : v), z.boolean()),
 });
 export type ModuleGrantInput = z.infer<typeof moduleGrantSchema>;

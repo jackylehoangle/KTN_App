@@ -10,6 +10,7 @@ export const customerSchema = z.object({
   email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
   contact_person: z.string().optional(),
   attachment_url: z.string().optional(),
+  business_unit: z.enum(['tech', 'solar', 'build']),
 });
 export type CustomerInput = z.infer<typeof customerSchema>;
 

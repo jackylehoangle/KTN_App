@@ -17,11 +17,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDate, PROJECT_STATUS, DU_AN_TABS as TABS } from '@/lib/constants';
+import { formatDate, PROJECT_STATUS, BUSINESS_UNIT_LABELS, DU_AN_TABS as TABS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ProjectInput } from '@/lib/validations/du-an';
 import { createProject, updateProject, deleteProject } from '@/lib/actions/du-an';
-import type { Customer, Opportunity, ProjectStatus } from '@/types/database';
+import type { BusinessUnit, Customer, Opportunity, ProjectStatus } from '@/types/database';
 
 const defaultValues: ProjectInput = {
   code: '',
@@ -33,6 +33,7 @@ const defaultValues: ProjectInput = {
   planned_end: '',
   description: '',
   attachment_url: '',
+  business_unit: 'solar',
 };
 
 export default async function DuAnPage() {
@@ -55,6 +56,13 @@ export default async function DuAnPage() {
       type: 'select',
       half: true,
       options: Object.entries(PROJECT_STATUS).map(([value, meta]) => ({ value, label: meta.label })),
+    },
+    {
+      name: 'business_unit',
+      label: 'Đơn vị kinh doanh',
+      type: 'select',
+      half: true,
+      options: Object.entries(BUSINESS_UNIT_LABELS).map(([value, label]) => ({ value, label })),
     },
     { name: 'name', label: 'Tên dự án', placeholder: 'Lắp đặt điện mặt trời áp mái' },
     {
@@ -85,10 +93,12 @@ export default async function DuAnPage() {
     planned_start: string | null;
     planned_end: string | null;
     status: ProjectStatus;
+    business_unit: BusinessUnit;
   }>[] = [
     { header: 'Mã', value: (p) => p.code },
     { header: 'Tên dự án', value: (p) => p.name },
     { header: 'Khách hàng', value: (p) => p.customers?.name ?? '' },
+    { header: 'Đơn vị KD', value: (p) => BUSINESS_UNIT_LABELS[p.business_unit] },
     { header: 'Bắt đầu', value: (p) => formatDate(p.planned_start) },
     { header: 'Kết thúc', value: (p) => formatDate(p.planned_end) },
     { header: 'Trạng thái', value: (p) => PROJECT_STATUS[p.status].label },
@@ -131,6 +141,7 @@ export default async function DuAnPage() {
               <TableHead>Mã</TableHead>
               <TableHead>Tên dự án</TableHead>
               <TableHead>Khách hàng</TableHead>
+              <TableHead>Đơn vị KD</TableHead>
               <TableHead>Bắt đầu</TableHead>
               <TableHead>Kết thúc</TableHead>
               <TableHead>Trạng thái</TableHead>
@@ -144,6 +155,7 @@ export default async function DuAnPage() {
                 <TableCell className="font-mono text-sm">{p.code}</TableCell>
                 <TableCell>{p.name}</TableCell>
                 <TableCell className="text-muted-foreground">{p.customers?.name ?? '—'}</TableCell>
+                <TableCell className="text-muted-foreground">{BUSINESS_UNIT_LABELS[p.business_unit as BusinessUnit]}</TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(p.planned_start)}</TableCell>
                 <TableCell className="text-muted-foreground">{formatDate(p.planned_end)}</TableCell>
                 <TableCell>
@@ -166,6 +178,7 @@ export default async function DuAnPage() {
                         planned_end: p.planned_end ?? '',
                         description: p.description ?? '',
                         attachment_url: p.attachment_url ?? '',
+                        business_unit: p.business_unit,
                       }}
                       onUpdate={updateProject}
                       successMessage="Đã cập nhật dự án"
@@ -183,7 +196,7 @@ export default async function DuAnPage() {
             ))}
             {(!projects || projects.length === 0) && (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                   Chưa có dự án nào.
                 </TableCell>
               </TableRow>

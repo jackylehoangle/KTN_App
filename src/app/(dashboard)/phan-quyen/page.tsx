@@ -44,7 +44,7 @@ const GRANTABLE_MODULES = MODULES.filter((m) =>
   ['/kinh-doanh', '/vat-tu', '/nhan-su', '/tai-chinh', '/bao-gia-sxkh'].includes(m.href)
 );
 
-const grantDefaultValues: ModuleGrantInput = { user_id: '', module_href: '' };
+const grantDefaultValues: ModuleGrantInput = { user_id: '', module_href: '', can_edit: false };
 
 export default async function PhanQuyenPage() {
   const supabase = await createClient();
@@ -71,7 +71,18 @@ export default async function PhanQuyenPage() {
       name: 'module_href',
       label: 'Module được xem thêm',
       type: 'select',
+      half: true,
       options: GRANTABLE_MODULES.map((m) => ({ value: m.href, label: m.title })),
+    },
+    {
+      name: 'can_edit',
+      label: 'Mức quyền',
+      type: 'select',
+      half: true,
+      options: [
+        { value: 'false', label: 'Chỉ xem' },
+        { value: 'true', label: 'Xem + Sửa' },
+      ],
     },
   ];
 
@@ -162,6 +173,7 @@ export default async function PhanQuyenPage() {
             <TableRow>
               <TableHead>Người dùng</TableHead>
               <TableHead>Module</TableHead>
+              <TableHead>Quyền</TableHead>
               <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
@@ -171,6 +183,9 @@ export default async function PhanQuyenPage() {
                 <TableCell>{profileNameById.get(perm.user_id) ?? '—'}</TableCell>
                 <TableCell className="text-muted-foreground">
                   {MODULES.find((m) => m.href === perm.module_href)?.title ?? perm.module_href}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {perm.can_edit ? 'Xem + Sửa' : 'Chỉ xem'}
                 </TableCell>
                 <TableCell>
                   <ConfirmDeleteButton
@@ -182,7 +197,7 @@ export default async function PhanQuyenPage() {
             ))}
             {(!permissions || permissions.length === 0) && (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                   Chưa cấp quyền xem thêm nào.
                 </TableCell>
               </TableRow>

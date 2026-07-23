@@ -19,9 +19,12 @@ export interface UserPermission {
   id: string;
   user_id: string;
   module_href: string;
+  can_edit: boolean;
   granted_by: string | null;
   created_at: string;
 }
+
+export type BusinessUnit = 'tech' | 'solar' | 'build';
 
 export type AuditAction = 'create' | 'update' | 'delete' | 'approve' | 'reject';
 
@@ -93,6 +96,7 @@ export interface Customer {
   contact_person: string | null;
   notes: string | null;
   attachment_url: string | null;
+  business_unit: BusinessUnit;
   created_by: string | null;
   created_at: string;
 }
@@ -565,6 +569,7 @@ export interface Project {
   planned_end: string | null;
   description: string | null;
   attachment_url: string | null;
+  business_unit: BusinessUnit;
   created_by: string | null;
   created_at: string;
 }

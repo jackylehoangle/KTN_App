@@ -20,8 +20,8 @@ import {
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { CustomerInput } from '@/lib/validations/kinh-doanh';
 import { createCustomer, updateCustomer, deleteCustomer } from '@/lib/actions/kinh-doanh';
-import type { Customer } from '@/types/database';
-import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
+import type { BusinessUnit, Customer } from '@/types/database';
+import { BUSINESS_UNIT_LABELS, KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
 const defaultValues: CustomerInput = {
   code: '',
@@ -33,6 +33,7 @@ const defaultValues: CustomerInput = {
   email: '',
   contact_person: '',
   attachment_url: '',
+  business_unit: 'solar',
 };
 
 const fields: EntityField<CustomerInput>[] = [
@@ -46,6 +47,13 @@ const fields: EntityField<CustomerInput>[] = [
       { label: 'Doanh nghiệp', value: 'company' },
       { label: 'Cá nhân', value: 'individual' },
     ],
+  },
+  {
+    name: 'business_unit',
+    label: 'Đơn vị kinh doanh',
+    type: 'select',
+    half: true,
+    options: Object.entries(BUSINESS_UNIT_LABELS).map(([value, label]) => ({ value, label })),
   },
   { name: 'name', label: 'Tên khách hàng', placeholder: 'Công ty TNHH ABC' },
   { name: 'tax_code', label: 'Mã số thuế', half: true },
@@ -62,6 +70,7 @@ const excelColumns: ExcelColumn<Customer>[] = [
   { header: 'Mã KH', value: (c) => c.code },
   { header: 'Tên khách hàng', value: (c) => c.name },
   { header: 'Loại', value: (c) => (c.customer_type === 'company' ? 'Doanh nghiệp' : 'Cá nhân') },
+  { header: 'Đơn vị KD', value: (c) => BUSINESS_UNIT_LABELS[c.business_unit] },
   { header: 'Điện thoại', value: (c) => c.phone ?? '' },
   { header: 'Email', value: (c) => c.email ?? '' },
 ];
@@ -110,6 +119,7 @@ export default async function KinhDoanhPage() {
               <TableHead>Mã KH</TableHead>
               <TableHead>Tên khách hàng</TableHead>
               <TableHead>Loại</TableHead>
+              <TableHead>Đơn vị KD</TableHead>
               <TableHead>Điện thoại</TableHead>
               <TableHead>Email</TableHead>
               <TableHead className="w-16 print:hidden" />
@@ -121,6 +131,7 @@ export default async function KinhDoanhPage() {
                 <TableCell className="font-mono text-sm">{c.code}</TableCell>
                 <TableCell>{c.name}</TableCell>
                 <TableCell>{c.customer_type === 'company' ? 'Doanh nghiệp' : 'Cá nhân'}</TableCell>
+                <TableCell className="text-muted-foreground">{BUSINESS_UNIT_LABELS[c.business_unit as BusinessUnit]}</TableCell>
                 <TableCell className="text-muted-foreground">{c.phone ?? '—'}</TableCell>
                 <TableCell className="text-muted-foreground">{c.email ?? '—'}</TableCell>
                 <TableCell className="print:hidden">
@@ -140,6 +151,7 @@ export default async function KinhDoanhPage() {
                         email: c.email ?? '',
                         contact_person: c.contact_person ?? '',
                         attachment_url: c.attachment_url ?? '',
+                        business_unit: c.business_unit,
                       }}
                       onUpdate={updateCustomer}
                       successMessage="Đã cập nhật khách hàng"
@@ -157,7 +169,7 @@ export default async function KinhDoanhPage() {
             ))}
             {(!customers || customers.length === 0) && (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Chưa có khách hàng nào.
                 </TableCell>
               </TableRow>

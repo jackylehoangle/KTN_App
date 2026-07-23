@@ -10,6 +10,7 @@ export const projectSchema = z.object({
   planned_end: z.string().optional().nullable().transform((v) => v || null),
   description: z.string().optional(),
   attachment_url: z.string().optional(),
+  business_unit: z.enum(['tech', 'solar', 'build']),
 });
 export type ProjectInput = z.infer<typeof projectSchema>;
 

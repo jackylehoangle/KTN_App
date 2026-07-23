@@ -12,6 +12,7 @@ function parseRow(row: Record<string, unknown>): ParseRowResult<CustomerInput> {
     data: {
       name,
       customer_type: typeText.includes('cá nhân') ? 'individual' : 'company',
+      business_unit: 'solar',
       tax_code: excelCellToText(row['Mã số thuế']),
       address: excelCellToText(row['Địa chỉ']),
       phone: excelCellToText(row['Điện thoại']),

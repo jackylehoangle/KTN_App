@@ -4,6 +4,7 @@ import type {
   ApprovalType,
   AttendanceStatus,
   AuditAction,
+  BusinessUnit,
   ContractStatus,
   EmployeeContractStatus,
   EmployeeContractType,
@@ -249,6 +250,12 @@ export const GENDER_LABELS: Record<'male' | 'female' | 'other', string> = {
   male: 'Nam',
   female: 'Nữ',
   other: 'Khác',
+};
+
+export const BUSINESS_UNIT_LABELS: Record<BusinessUnit, string> = {
+  tech: 'Công nghệ',
+  solar: 'Điện mặt trời',
+  build: 'Xây dựng',
 };
 
 export const ACCOUNT_STATUS: Record<AccountStatus, StatusMeta> = {
