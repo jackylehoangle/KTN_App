@@ -11,6 +11,7 @@ import type {
   EmployeeStatus,
   InteractionType,
   InvoiceStatus,
+  LeadPriority,
   LeadSource,
   LeadStage,
   LeaveStatus,
@@ -142,6 +143,12 @@ export const LEAD_STAGE: Record<LeadStage, StatusMeta> = {
   qualified: { label: 'Đủ điều kiện', color: 'violet' },
   converted: { label: 'Đã chuyển thành KH', color: 'emerald' },
   lost: { label: 'Đã mất', color: 'red' },
+};
+
+export const LEAD_PRIORITY_STATUS: Record<LeadPriority, StatusMeta> = {
+  high: { label: 'Ưu tiên cao', color: 'red' },
+  medium: { label: 'Ưu tiên vừa', color: 'amber' },
+  low: { label: 'Ưu tiên thấp', color: 'slate' },
 };
 
 export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {

@@ -6,6 +6,7 @@ import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
 import { SubmitApprovalButton } from '@/components/features/bao-gia-sxkh/submit-approval-button';
+import { LeadClassifyButton } from '@/components/features/kinh-doanh/lead-classify-button';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/status-badge';
 import {
@@ -154,12 +155,15 @@ export default async function LeadsPage() {
                         → {l.customers?.name ?? 'Đã chuyển'}
                       </span>
                     ) : (
-                      <SubmitApprovalButton
-                        onConfirm={convertLeadToCustomer.bind(null, l.id)}
-                        title="Chuyển Lead thành khách hàng?"
-                        description="Tạo bản ghi Khách hàng mới từ thông tin Lead này. Không thể hoàn tác."
-                        successMessage="Đã chuyển thành khách hàng"
-                      />
+                      <>
+                        <LeadClassifyButton leadId={l.id} />
+                        <SubmitApprovalButton
+                          onConfirm={convertLeadToCustomer.bind(null, l.id)}
+                          title="Chuyển Lead thành khách hàng?"
+                          description="Tạo bản ghi Khách hàng mới từ thông tin Lead này. Không thể hoàn tác."
+                          successMessage="Đã chuyển thành khách hàng"
+                        />
+                      </>
                     )}
                     <EntityFormDialog
                       title="Sửa Lead"

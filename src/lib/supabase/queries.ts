@@ -315,7 +315,12 @@ export async function getReportData(): Promise<ReportData> {
 // Compact text summary of business data, used as grounding context for the AI
 // chat assistant so it answers from real numbers instead of guessing.
 export async function getAssistantContext(): Promise<string> {
-  const [stats, report] = await Promise.all([getDashboardStats(), getReportData()]);
+  const supabase = await createClient();
+  const [stats, report, { data: leads }] = await Promise.all([
+    getDashboardStats(),
+    getReportData(),
+    supabase.from('leads').select('stage'),
+  ]);
 
   const lines: string[] = [];
   for (const [href, moduleStats] of Object.entries(stats)) {
@@ -350,6 +355,21 @@ export async function getAssistantContext(): Promise<string> {
     lines.push(
       'Nhân sự theo phòng ban: ' +
         report.headcount.map((h) => `${h.department}: ${h.active} đang làm việc`).join('; ')
+    );
+  }
+  if (report.projectsByStatus.length > 0) {
+    lines.push(
+      'Dự án theo trạng thái: ' + report.projectsByStatus.map((p) => `${p.status}: ${p.count}`).join('; ')
+    );
+  }
+  if (leads && leads.length > 0) {
+    const leadStageMap = new Map<string, number>();
+    (leads as { stage: string }[]).forEach((l) => leadStageMap.set(l.stage, (leadStageMap.get(l.stage) ?? 0) + 1));
+    lines.push(
+      'Lead theo giai đoạn: ' +
+        Array.from(leadStageMap.entries())
+          .map(([stage, count]) => `${stage}: ${count}`)
+          .join('; ')
     );
   }
 

@@ -120,6 +120,7 @@ export interface Opportunity {
 
 export type LeadStage = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
 export type LeadSource = 'website' | 'referral' | 'cold_call' | 'other';
+export type LeadPriority = 'high' | 'medium' | 'low';
 
 export interface Lead {
   id: string;

@@ -2,8 +2,10 @@
 
 import { generateText, generateJSON, generateVisionJSON, isGeminiConfigured } from '@/lib/gemini';
 import { getAssistantContext } from '@/lib/supabase/queries';
+import { createClient } from '@/lib/supabase/server';
+import { LEAD_SOURCE_LABELS } from '@/lib/constants';
 
-const ASSISTANT_SYSTEM_PROMPT = `Bạn là trợ lý dữ liệu kinh doanh cho KTN APP, một ứng dụng quản lý doanh nghiệp tiếng Việt (5 module: Kinh doanh, Vật tư, Nhân sự, Tài chính, Báo giá & SXKH).
+const ASSISTANT_SYSTEM_PROMPT = `Bạn là trợ lý dữ liệu kinh doanh cho KTN APP, một ứng dụng quản lý doanh nghiệp tiếng Việt (Dự án, Kinh doanh (gồm Lead/Liên hệ/Lịch sử tương tác), Vật tư, Nhân sự, Tài chính, Báo giá & SXKH).
 Trả lời ngắn gọn, rõ ràng bằng tiếng Việt, dựa CHỈ vào dữ liệu được cung cấp trong phần "Dữ liệu hiện tại".
 Nếu câu hỏi cần dữ liệu không có trong phần đó, hãy nói rõ là chưa có đủ dữ liệu để trả lời, tuyệt đối không bịa số liệu.`;
 
@@ -111,6 +113,39 @@ export async function analyzeSolarSizing(input: SolarSizingInput): Promise<Solar
 
 Hãy tính toán và đề xuất công suất hệ điện mặt trời phù hợp theo đúng công thức đã cho.`;
   return generateJSON<SolarSizingResult>(prompt, SOLAR_SIZING_SYSTEM_PROMPT);
+}
+
+export interface LeadClassification {
+  priority: 'high' | 'medium' | 'low';
+  suggestedStage: 'contacted' | 'qualified' | 'lost';
+  reasoning: string;
+}
+
+const LEAD_CLASSIFY_SYSTEM_PROMPT = `Bạn là trợ lý phân loại Lead bán hàng cho công ty KTN Solar (điện mặt trời/xây dựng/công nghệ) tại Việt Nam.
+Dựa vào thông tin Lead được cung cấp, đánh giá độ ưu tiên chăm sóc và gợi ý giai đoạn tiếp theo phù hợp nhất.
+Chỉ trả về JSON đúng định dạng: {"priority": "high" hoặc "medium" hoặc "low", "suggestedStage": "contacted" hoặc "qualified" hoặc "lost", "reasoning": string (1-3 câu tiếng Việt giải thích ngắn gọn)}`;
+
+// Gợi ý (không tự áp dụng) độ ưu tiên + bước tiếp theo cho 1 Lead — đúng tinh
+// thần "AI gợi ý, người dùng tự quyết" đã dùng cho OCR/Báo giá AI: kết quả chỉ
+// hiển thị để sales tự đọc và tự bấm Sửa nếu đồng ý, không tự ghi đè stage.
+export async function classifyLead(leadId: string): Promise<LeadClassification> {
+  if (!isGeminiConfigured()) {
+    throw new Error('Trợ lý AI chưa được cấu hình. Vui lòng thêm GEMINI_API_KEY.');
+  }
+  const supabase = await createClient();
+  const { data: lead, error } = await supabase.from('leads').select('*').eq('id', leadId).single();
+  if (error || !lead) throw new Error('Không tìm thấy Lead');
+
+  const prompt = `Thông tin Lead:
+- Tên/Công ty: ${lead.full_name}
+- Nguồn: ${LEAD_SOURCE_LABELS[lead.source as keyof typeof LEAD_SOURCE_LABELS] ?? lead.source}
+- Giai đoạn hiện tại: ${lead.stage}
+- Đơn vị kinh doanh: ${lead.business_unit}
+- Ghi chú: ${lead.notes || 'không có'}
+- Ngày tạo: ${new Date(lead.created_at).toLocaleDateString('vi-VN')}
+
+Hãy đánh giá độ ưu tiên chăm sóc và gợi ý giai đoạn tiếp theo phù hợp.`;
+  return generateJSON<LeadClassification>(prompt, LEAD_CLASSIFY_SYSTEM_PROMPT);
 }
 
 export async function generateQuotationDescription(productName: string): Promise<string> {
