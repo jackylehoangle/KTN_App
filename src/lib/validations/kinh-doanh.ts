@@ -57,3 +57,43 @@ export const salesOrderItemSchema = z.object({
   attachment_url: z.string().optional(),
 });
 export type SalesOrderItemInput = z.infer<typeof salesOrderItemSchema>;
+
+export const leadSchema = z.object({
+  code: z.string().optional(),
+  full_name: z.string().min(2, 'Tối thiểu 2 ký tự'),
+  phone: z.string().optional(),
+  email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
+  source: z.enum(['website', 'referral', 'cold_call', 'other']),
+  stage: z.enum(['new', 'contacted', 'qualified', 'converted', 'lost']),
+  business_unit: z.enum(['tech', 'solar', 'build']),
+  notes: z.string().optional(),
+  assigned_to: z.string().uuid('Chọn người phụ trách').optional().or(z.literal('')).nullable().transform((v) => v || null),
+  attachment_url: z.string().optional(),
+});
+export type LeadInput = z.infer<typeof leadSchema>;
+
+export const contactSchema = z.object({
+  customer_id: z.string().uuid('Chọn khách hàng'),
+  full_name: z.string().min(2, 'Tối thiểu 2 ký tự'),
+  title: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
+  is_primary: z.preprocess((v) => (typeof v === 'string' ? v === 'true' : v), z.boolean()),
+  notes: z.string().optional(),
+  attachment_url: z.string().optional(),
+});
+export type ContactInput = z.infer<typeof contactSchema>;
+
+export const interactionSchema = z
+  .object({
+    lead_id: z.string().uuid('Chọn Lead').optional().or(z.literal('')).nullable().transform((v) => v || null),
+    customer_id: z.string().uuid('Chọn khách hàng').optional().or(z.literal('')).nullable().transform((v) => v || null),
+    interaction_type: z.enum(['call', 'meeting', 'email', 'zalo', 'note', 'other']),
+    content: z.string().min(1, 'Bắt buộc'),
+    interaction_date: z.string().min(1, 'Bắt buộc'),
+  })
+  .refine((d) => Boolean(d.lead_id) !== Boolean(d.customer_id), {
+    message: 'Chọn đúng 1: Lead hoặc Khách hàng',
+    path: ['lead_id'],
+  });
+export type InteractionInput = z.infer<typeof interactionSchema>;

@@ -118,6 +118,53 @@ export interface Opportunity {
   created_at: string;
 }
 
+export type LeadStage = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
+export type LeadSource = 'website' | 'referral' | 'cold_call' | 'other';
+
+export interface Lead {
+  id: string;
+  code: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  source: LeadSource;
+  stage: LeadStage;
+  business_unit: BusinessUnit;
+  notes: string | null;
+  assigned_to: string | null;
+  converted_customer_id: string | null;
+  attachment_url: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface Contact {
+  id: string;
+  customer_id: string;
+  full_name: string;
+  title: string | null;
+  phone: string | null;
+  email: string | null;
+  is_primary: boolean;
+  notes: string | null;
+  attachment_url: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export type InteractionType = 'call' | 'meeting' | 'email' | 'zalo' | 'note' | 'other';
+
+export interface Interaction {
+  id: string;
+  lead_id: string | null;
+  customer_id: string | null;
+  interaction_type: InteractionType;
+  content: string;
+  interaction_date: string;
+  created_by: string | null;
+  created_at: string;
+}
+
 export type ContractStatus = 'draft' | 'active' | 'completed' | 'cancelled';
 
 export interface Contract {

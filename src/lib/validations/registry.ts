@@ -4,6 +4,9 @@ import {
   contractSchema,
   salesOrderSchema,
   salesOrderItemSchema,
+  leadSchema,
+  contactSchema,
+  interactionSchema,
 } from '@/lib/validations/kinh-doanh';
 import {
   materialCategorySchema,
@@ -52,6 +55,9 @@ export const SCHEMA_REGISTRY = {
   contract: contractSchema,
   salesOrder: salesOrderSchema,
   salesOrderItem: salesOrderItemSchema,
+  lead: leadSchema,
+  contact: contactSchema,
+  interaction: interactionSchema,
   materialCategory: materialCategorySchema,
   purchaseOrder: purchaseOrderSchema,
   purchaseOrderItem: purchaseOrderItemSchema,

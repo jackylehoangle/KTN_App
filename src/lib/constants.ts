@@ -9,7 +9,10 @@ import type {
   EmployeeContractStatus,
   EmployeeContractType,
   EmployeeStatus,
+  InteractionType,
   InvoiceStatus,
+  LeadSource,
+  LeadStage,
   LeaveStatus,
   OpportunityStage,
   ProductionPlanStatus,
@@ -131,6 +134,30 @@ export const OPPORTUNITY_STAGE_STATUS: Record<OpportunityStage, StatusMeta> = {
   negotiating: { label: 'Đang đàm phán', color: 'violet' },
   won: { label: 'Thắng', color: 'emerald' },
   lost: { label: 'Thua', color: 'red' },
+};
+
+export const LEAD_STAGE: Record<LeadStage, StatusMeta> = {
+  new: { label: 'Mới', color: 'slate' },
+  contacted: { label: 'Đã liên hệ', color: 'blue' },
+  qualified: { label: 'Đủ điều kiện', color: 'violet' },
+  converted: { label: 'Đã chuyển thành KH', color: 'emerald' },
+  lost: { label: 'Đã mất', color: 'red' },
+};
+
+export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
+  website: 'Website',
+  referral: 'Giới thiệu',
+  cold_call: 'Gọi lạnh',
+  other: 'Khác',
+};
+
+export const INTERACTION_TYPE_LABELS: Record<InteractionType, string> = {
+  call: 'Gọi điện',
+  meeting: 'Gặp mặt',
+  email: 'Email',
+  zalo: 'Zalo',
+  note: 'Ghi chú',
+  other: 'Khác',
 };
 
 export const CONTRACT_STATUS: Record<ContractStatus, StatusMeta> = {
@@ -344,11 +371,14 @@ export const DU_AN_TABS: TabItem[] = [
 ];
 
 export const KINH_DOANH_TABS: TabItem[] = [
+  { title: 'Lead', href: '/kinh-doanh/leads' },
   { title: 'Khách hàng', href: '/kinh-doanh' },
+  { title: 'Liên hệ', href: '/kinh-doanh/lien-he' },
   { title: 'Cơ hội', href: '/kinh-doanh/co-hoi' },
   { title: 'Hợp đồng', href: '/kinh-doanh/hop-dong' },
   { title: 'Đơn hàng', href: '/kinh-doanh/don-hang' },
   { title: 'Dòng đơn hàng', href: '/kinh-doanh/chi-tiet-don-hang' },
+  { title: 'Lịch sử tương tác', href: '/kinh-doanh/lich-su' },
 ];
 
 export const VAT_TU_TABS: TabItem[] = [
