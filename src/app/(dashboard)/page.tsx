@@ -9,12 +9,15 @@ import {
   ClipboardCheck,
   ShieldCheck,
   History,
+  FolderKanban,
+  LayoutDashboard,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MODULES, MODULE_COLORS, ROLE_LABELS, STAT_CARD_COLOR_CLASSES } from '@/lib/constants';
 import { getCurrentProfile, getDashboardStats } from '@/lib/supabase/queries';
 
 const MODULE_ICONS: Record<string, React.ElementType> = {
+  '/du-an': FolderKanban,
   '/kinh-doanh': Briefcase,
   '/vat-tu': Package,
   '/nhan-su': Users,
@@ -27,8 +30,9 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
 };
 
 const MODULE_DESCRIPTIONS: Record<string, string> = {
-  '/kinh-doanh': 'Khách hàng, cơ hội, hợp đồng, đơn hàng',
-  '/vat-tu': 'Vật tư, kho, nhập/xuất, nhà cung cấp',
+  '/du-an': 'Dự án, tiến độ và công việc theo Dự án',
+  '/kinh-doanh': 'Khách hàng, Lead, cơ hội, hợp đồng, đơn hàng',
+  '/vat-tu': 'Vật tư, kho, lô/serial, nhập/xuất, nhà cung cấp',
   '/nhan-su': 'Nhân viên, chấm công, nghỉ phép, lương',
   '/tai-chinh': 'Thu chi, hoá đơn, công nợ, ngân sách',
   '/bao-gia-sxkh': 'Báo giá và kế hoạch sản xuất',
@@ -56,7 +60,7 @@ export default async function DashboardHome() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {visibleModules.map((mod) => {
-          const Icon = MODULE_ICONS[mod.href];
+          const Icon = MODULE_ICONS[mod.href] ?? LayoutDashboard;
           const moduleStats = stats[mod.href] ?? [];
           return (
             <Link key={mod.href} href={mod.href}>

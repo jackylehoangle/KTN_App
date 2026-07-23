@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/form';
 import { SCHEMA_REGISTRY, type SchemaKey } from '@/lib/validations/registry';
 import { ImageUploadField } from '@/components/shared/image-upload-field';
+import type { ActionResult } from '@/lib/action-result';
 
 export type EntityField<T extends FieldValues> = {
   name: Path<T>;
@@ -100,14 +101,14 @@ interface EntityFormDialogProps<T extends FieldValues> {
   schemaKey: SchemaKey;
   defaultValues: DefaultValues<T>;
   fields: EntityField<T>[];
-  onSubmit?: (values: T) => Promise<void>;
+  onSubmit?: (values: T) => Promise<ActionResult<unknown>>;
   trigger: ReactNode;
   title: string;
   successMessage?: string;
   // Edit mode: when set, submit calls onUpdate(recordId, values) instead of onSubmit(values).
   mode?: 'create' | 'edit';
   recordId?: string;
-  onUpdate?: (id: string, values: T) => Promise<void>;
+  onUpdate?: (id: string, values: T) => Promise<ActionResult<unknown>>;
 }
 
 export function EntityFormDialog<T extends FieldValues>({
@@ -129,18 +130,19 @@ export function EntityFormDialog<T extends FieldValues>({
   });
 
   async function handleSubmit(values: T) {
-    try {
-      if (mode === 'edit' && recordId && onUpdate) {
-        await onUpdate(recordId, values);
-      } else if (onSubmit) {
-        await onSubmit(values);
-      }
-      toast.success(successMessage);
-      setOpen(false);
-      form.reset(defaultValues);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+    let result: ActionResult<unknown> | undefined;
+    if (mode === 'edit' && recordId && onUpdate) {
+      result = await onUpdate(recordId, values);
+    } else if (onSubmit) {
+      result = await onSubmit(values);
     }
+    if (result && !result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success(successMessage);
+    setOpen(false);
+    form.reset(defaultValues);
   }
 
   const rows: EntityField<T>[][] = [];

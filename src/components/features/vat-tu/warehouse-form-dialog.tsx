@@ -43,18 +43,14 @@ export function WarehouseFormDialog({ warehouse }: { warehouse?: Warehouse }) {
   });
 
   async function onSubmit(values: WarehouseInput) {
-    try {
-      if (isEdit && warehouse) {
-        await updateWarehouse(warehouse.id, values);
-      } else {
-        await createWarehouse(values);
-      }
-      toast.success(isEdit ? 'Đã cập nhật kho' : 'Đã thêm kho');
-      setOpen(false);
-      form.reset();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+    const result = isEdit && warehouse ? await updateWarehouse(warehouse.id, values) : await createWarehouse(values);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
     }
+    toast.success(isEdit ? 'Đã cập nhật kho' : 'Đã thêm kho');
+    setOpen(false);
+    form.reset();
   }
 
   return (

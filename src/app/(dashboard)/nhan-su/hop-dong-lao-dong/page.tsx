@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, Pencil, Printer, UserCog, CheckCircle } from 'lucide-react';
+import { Plus, Pencil, Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentProfile } from '@/lib/supabase/queries';
 import { ModuleTabs } from '@/components/layout/module-tabs';
@@ -8,6 +8,10 @@ import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { TableActions } from '@/components/shared/table-actions';
 import { SubmitApprovalButton } from '@/components/features/bao-gia-sxkh/submit-approval-button';
+import {
+  RequestAccountProvisioningButton,
+  MarkAccountProvisionedButton,
+} from '@/components/features/nhan-su/account-provision-buttons';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/status-badge';
 import {
@@ -21,14 +25,7 @@ import {
 import { formatVND, formatDate, EMPLOYEE_CONTRACT_STATUS, EMPLOYEE_CONTRACT_TYPE_LABELS, APPROVAL_STATUS, ACCOUNT_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { EmployeeContractInput } from '@/lib/validations/nhan-su';
-import {
-  createEmployeeContract,
-  updateEmployeeContract,
-  deleteEmployeeContract,
-  submitEmployeeContractForApproval,
-  requestAccountProvisioning,
-  markAccountProvisioned,
-} from '@/lib/actions/nhan-su';
+import { createEmployeeContract, updateEmployeeContract, deleteEmployeeContract, submitEmployeeContractForApproval } from '@/lib/actions/nhan-su';
 import type { AccountStatus, ApprovalStatus, Employee, EmployeeContractStatus, EmployeeContractType } from '@/types/database';
 import { NHAN_SU_TABS as TABS } from '@/lib/constants';
 
@@ -166,21 +163,13 @@ export default async function HopDongLaoDongPage() {
                     )}
                     {c.status === 'approved' &&
                       (c.employees?.account_status ?? 'chua_yeu_cau') === 'chua_yeu_cau' && (
-                        <form action={requestAccountProvisioning.bind(null, c.employee_id)}>
-                          <Button variant="ghost" size="icon" type="submit" title="Gửi yêu cầu cấp tài khoản">
-                            <UserCog className="size-4" />
-                          </Button>
-                        </form>
+                        <RequestAccountProvisioningButton employeeId={c.employee_id} />
                       )}
                     {c.status === 'approved' && c.employees?.account_status === 'da_yeu_cau' && (
                       <>
                         <StatusBadge value={'da_yeu_cau' as AccountStatus} map={ACCOUNT_STATUS} />
                         {profile?.role === 'admin' && (
-                          <form action={markAccountProvisioned.bind(null, c.employee_id)}>
-                            <Button variant="ghost" size="icon" type="submit" title="Đánh dấu đã cấp tài khoản">
-                              <CheckCircle className="size-4" />
-                            </Button>
-                          </form>
+                          <MarkAccountProvisionedButton employeeId={c.employee_id} />
                         )}
                       </>
                     )}

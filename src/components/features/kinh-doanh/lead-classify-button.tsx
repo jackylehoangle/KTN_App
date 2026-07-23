@@ -18,13 +18,13 @@ export function LeadClassifyButton({ leadId }: { leadId: string }) {
     setOpen(true);
     setResult(null);
     startTransition(async () => {
-      try {
-        const r = await classifyLead(leadId);
-        setResult(r);
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+      const r = await classifyLead(leadId);
+      if (!r.ok) {
+        toast.error(r.error);
         setOpen(false);
+        return;
       }
+      setResult(r.data);
     });
   };
 

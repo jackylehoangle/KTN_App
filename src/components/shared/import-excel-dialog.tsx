@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import type { ActionResult } from '@/lib/action-result';
 
 export type ParseRowResult<T> = { data: T; error?: undefined } | { data?: undefined; error: string };
 
@@ -43,7 +44,7 @@ export function ImportExcelDialog<T>({
   title: string;
   columnsHint: string[];
   parseRow: (row: Record<string, unknown>) => ParseRowResult<T>;
-  onImport: (rows: T[]) => Promise<void>;
+  onImport: (rows: T[]) => Promise<ActionResult<unknown>>;
   triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -79,7 +80,11 @@ export function ImportExcelDialog<T>({
       });
 
       if (valid.length > 0) {
-        await onImport(valid);
+        const result = await onImport(valid);
+        if (!result.ok) {
+          toast.error(result.error);
+          return;
+        }
         setImportedCount(valid.length);
         toast.success(`Đã import ${valid.length} dòng`);
       }

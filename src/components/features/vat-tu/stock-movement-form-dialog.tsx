@@ -71,18 +71,15 @@ export function StockMovementFormDialog({
   });
 
   async function onSubmit(values: StockMovementInput) {
-    try {
-      if (isEdit && movement) {
-        await updateStockMovement(movement.id, values);
-      } else {
-        await createStockMovement(values);
-      }
-      toast.success(isEdit ? 'Đã cập nhật phiếu kho' : 'Đã ghi nhận phiếu kho');
-      setOpen(false);
-      form.reset();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+    const result =
+      isEdit && movement ? await updateStockMovement(movement.id, values) : await createStockMovement(values);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
     }
+    toast.success(isEdit ? 'Đã cập nhật phiếu kho' : 'Đã ghi nhận phiếu kho');
+    setOpen(false);
+    form.reset();
   }
 
   return (

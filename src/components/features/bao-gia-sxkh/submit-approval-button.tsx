@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import type { ActionResult } from '@/lib/action-result';
 
 export function SubmitApprovalButton({
   onConfirm,
@@ -20,7 +21,7 @@ export function SubmitApprovalButton({
   description = 'Báo giá sẽ chuyển đến Trưởng phòng rồi Giám đốc duyệt. Bạn vẫn có thể xem báo giá trong lúc chờ duyệt.',
   successMessage = 'Đã gửi báo giá đi phê duyệt',
 }: {
-  onConfirm: () => Promise<void>;
+  onConfirm: () => Promise<ActionResult<unknown>>;
   title?: string;
   description?: string;
   successMessage?: string;
@@ -30,13 +31,13 @@ export function SubmitApprovalButton({
 
   const handleConfirm = () => {
     startTransition(async () => {
-      try {
-        await onConfirm();
-        toast.success(successMessage);
-        setOpen(false);
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+      const result = await onConfirm();
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
       }
+      toast.success(successMessage);
+      setOpen(false);
     });
   };
 

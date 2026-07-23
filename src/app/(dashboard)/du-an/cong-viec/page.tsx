@@ -38,7 +38,7 @@ export default async function CongViecPage() {
   const [{ data: tasks, error }, { data: projects }, { data: profiles }] = await Promise.all([
     supabase
       .from('tasks')
-      .select('*, projects(code), profiles(full_name)')
+      .select('*, projects(code), profiles!tasks_assigned_to_fkey(full_name)')
       .order('start_date', { ascending: false }),
     supabase.from('projects').select('*').order('code'),
     supabase.from('profiles').select('*').order('full_name'),

@@ -32,16 +32,14 @@ export function ChatWidget() {
     setInput('');
     setMessages((prev) => [...prev, { role: 'user', text: question }]);
     setLoading(true);
-    try {
-      const answer = await askBusinessAssistant(question);
-      setMessages((prev) => [...prev, { role: 'assistant', text: answer }]);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Có lỗi xảy ra';
-      toast.error(message);
-      setMessages((prev) => [...prev, { role: 'assistant', text: `⚠️ ${message}` }]);
-    } finally {
-      setLoading(false);
+    const result = await askBusinessAssistant(question);
+    if (!result.ok) {
+      toast.error(result.error);
+      setMessages((prev) => [...prev, { role: 'assistant', text: `⚠️ ${result.error}` }]);
+    } else {
+      setMessages((prev) => [...prev, { role: 'assistant', text: result.data }]);
     }
+    setLoading(false);
   }
 
   return (

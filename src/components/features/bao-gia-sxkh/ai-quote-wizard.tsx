@@ -72,15 +72,14 @@ export function AiQuoteWizard({ customers, packages }: { customers: Customer[]; 
       dayUsagePct,
     };
     setAnalyzing(true);
-    try {
-      const r = await analyzeSolarSizing(payload);
-      setResult(r);
+    const r = await analyzeSolarSizing(payload);
+    if (!r.ok) {
+      toast.error(r.error);
+    } else {
+      setResult(r.data);
       setConfirm((c) => ({ ...c, package_id: '' }));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
-    } finally {
-      setAnalyzing(false);
     }
+    setAnalyzing(false);
   }
 
   async function handleConfirm() {
@@ -96,26 +95,25 @@ export function AiQuoteWizard({ customers, packages }: { customers: Customer[]; 
     }
     const marginPct = Number(confirm.margin_pct) || 30;
     setCreating(true);
-    try {
-      const quotation = await createQuotationFromPackage({
-        customer_id: confirm.customer_id,
-        package_id: packageId,
-        margin_pct: marginPct,
-        quotation_date: new Date().toISOString().slice(0, 10),
-        ai_generated: true,
-        capacity_kwp: result.recommendedKwp,
-        phase: result.recommendedPhase,
-        daily_output_kwh: result.estimatedDailyKwh,
-        monthly_output_kwh: result.estimatedMonthlyKwh,
-        monthly_savings_vnd: result.estimatedMonthlySavingsVnd,
-      });
-      toast.success(`Đã tạo báo giá ${quotation.code} từ đề xuất AI`);
+    const createResult = await createQuotationFromPackage({
+      customer_id: confirm.customer_id,
+      package_id: packageId,
+      margin_pct: marginPct,
+      quotation_date: new Date().toISOString().slice(0, 10),
+      ai_generated: true,
+      capacity_kwp: result.recommendedKwp,
+      phase: result.recommendedPhase,
+      daily_output_kwh: result.estimatedDailyKwh,
+      monthly_output_kwh: result.estimatedMonthlyKwh,
+      monthly_savings_vnd: result.estimatedMonthlySavingsVnd,
+    });
+    if (!createResult.ok) {
+      toast.error(createResult.error);
+    } else {
+      toast.success(`Đã tạo báo giá ${createResult.data.code} từ đề xuất AI`);
       router.push('/bao-gia-sxkh');
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
-    } finally {
-      setCreating(false);
     }
+    setCreating(false);
   }
 
   if (result) {

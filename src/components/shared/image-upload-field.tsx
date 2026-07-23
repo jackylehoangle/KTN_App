@@ -59,16 +59,15 @@ export function ImageUploadField({
 
       if (onExtracted && file.type.startsWith('image/')) {
         setReading(true);
-        try {
-          const extracted =
-            ocrKind === 'cccd' ? await extractCccdData(data.signedUrl) : await extractReceiptData(data.signedUrl);
-          onExtracted(extracted as OcrExtraction);
+        const result =
+          ocrKind === 'cccd' ? await extractCccdData(data.signedUrl) : await extractReceiptData(data.signedUrl);
+        if (!result.ok) {
+          toast.error(result.error);
+        } else {
+          onExtracted(result.data as OcrExtraction);
           toast.success('Đã đọc và điền dữ liệu từ ảnh');
-        } catch (e) {
-          toast.error(e instanceof Error ? e.message : 'Không đọc được dữ liệu từ ảnh, vui lòng nhập tay');
-        } finally {
-          setReading(false);
         }
+        setReading(false);
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Tải file lên thất bại');

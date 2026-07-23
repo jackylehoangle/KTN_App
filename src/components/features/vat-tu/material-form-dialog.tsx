@@ -46,18 +46,14 @@ export function MaterialFormDialog({ material }: { material?: Material }) {
   });
 
   async function onSubmit(values: MaterialInput) {
-    try {
-      if (isEdit && material) {
-        await updateMaterial(material.id, values);
-      } else {
-        await createMaterial(values);
-      }
-      toast.success(isEdit ? 'Đã cập nhật vật tư' : 'Đã thêm vật tư');
-      setOpen(false);
-      form.reset();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+    const result = isEdit && material ? await updateMaterial(material.id, values) : await createMaterial(values);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
     }
+    toast.success(isEdit ? 'Đã cập nhật vật tư' : 'Đã thêm vật tư');
+    setOpen(false);
+    form.reset();
   }
 
   return (

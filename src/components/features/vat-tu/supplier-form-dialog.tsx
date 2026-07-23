@@ -47,18 +47,14 @@ export function SupplierFormDialog({ supplier }: { supplier?: Supplier }) {
   });
 
   async function onSubmit(values: SupplierInput) {
-    try {
-      if (isEdit && supplier) {
-        await updateSupplier(supplier.id, values);
-      } else {
-        await createSupplier(values);
-      }
-      toast.success(isEdit ? 'Đã cập nhật nhà cung cấp' : 'Đã thêm nhà cung cấp');
-      setOpen(false);
-      form.reset();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+    const result = isEdit && supplier ? await updateSupplier(supplier.id, values) : await createSupplier(values);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
     }
+    toast.success(isEdit ? 'Đã cập nhật nhà cung cấp' : 'Đã thêm nhà cung cấp');
+    setOpen(false);
+    form.reset();
   }
 
   return (

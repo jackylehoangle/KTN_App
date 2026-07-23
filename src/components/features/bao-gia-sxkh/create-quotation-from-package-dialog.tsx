@@ -50,14 +50,14 @@ export function CreateQuotationFromPackageDialog({
   });
 
   async function onSubmit(values: FormValues) {
-    try {
-      const quotation = await createQuotationFromPackage(values);
-      toast.success(`Đã tạo báo giá ${quotation.code}. Vào tab "Dòng báo giá" để chỉnh sửa từng dòng.`);
-      setOpen(false);
-      form.reset({ customer_id: '', package_id: '', quotation_date: today, margin_pct: 30 });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+    const result = await createQuotationFromPackage(values);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
     }
+    toast.success(`Đã tạo báo giá ${result.data.code}. Vào tab "Dòng báo giá" để chỉnh sửa từng dòng.`);
+    setOpen(false);
+    form.reset({ customer_id: '', package_id: '', quotation_date: today, margin_pct: 30 });
   }
 
   return (

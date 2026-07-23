@@ -11,12 +11,12 @@ export function LeaveActionButtons({ id }: { id: string }) {
 
   const handle = (status: 'approved' | 'rejected') => {
     startTransition(async () => {
-      try {
-        await updateLeaveStatus(id, status);
-        toast.success(status === 'approved' ? 'Đã duyệt' : 'Đã từ chối');
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+      const result = await updateLeaveStatus(id, status);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
       }
+      toast.success(status === 'approved' ? 'Đã duyệt' : 'Đã từ chối');
     });
   };
 

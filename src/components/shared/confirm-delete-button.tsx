@@ -13,12 +13,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import type { ActionResult } from '@/lib/action-result';
 
 export function ConfirmDeleteButton({
   onConfirm,
   description = 'Hành động này không thể hoàn tác.',
 }: {
-  onConfirm: () => Promise<void>;
+  onConfirm: () => Promise<ActionResult<unknown>>;
   description?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -26,13 +27,13 @@ export function ConfirmDeleteButton({
 
   const handleConfirm = () => {
     startTransition(async () => {
-      try {
-        await onConfirm();
-        toast.success('Đã xoá');
-        setOpen(false);
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra');
+      const result = await onConfirm();
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
       }
+      toast.success('Đã xoá');
+      setOpen(false);
     });
   };
 

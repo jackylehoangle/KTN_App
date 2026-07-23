@@ -55,7 +55,14 @@ export default async function ChiTietBaoGiaPage() {
       name: 'description',
       label: 'Mô tả',
       type: 'textarea',
-      aiAssist: { sourceField: 'product_name', generate: generateQuotationDescription },
+      aiAssist: {
+        sourceField: 'product_name',
+        generate: async (v) => {
+          const result = await generateQuotationDescription(v);
+          if (!result.ok) throw new Error(result.error);
+          return result.data;
+        },
+      },
     },
     { name: 'quantity', label: 'Số lượng', type: 'number', half: true },
     { name: 'unit', label: 'Đơn vị tính', placeholder: 'cai', half: true },

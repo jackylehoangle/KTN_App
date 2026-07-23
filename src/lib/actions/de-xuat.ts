@@ -7,42 +7,45 @@ import { approvalRequestSchema, type ApprovalRequestInput } from '@/lib/validati
 import { logAudit } from '@/lib/audit-log';
 import { notifyDepartmentManagers, notifyUsers, notifyDirectors } from '@/lib/notifications';
 import { APPROVAL_TYPE_LABELS } from '@/lib/constants';
+import { runAction } from '@/lib/action-result';
 
 export async function createApprovalRequest(input: ApprovalRequestInput) {
-  const data = approvalRequestSchema.parse(input);
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('Chưa đăng nhập');
+  return runAction(async () => {
+    const data = approvalRequestSchema.parse(input);
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) throw new Error('Chưa đăng nhập');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name')
-    .eq('id', user.id)
-    .single();
-  if (!profile) throw new Error('Không tìm thấy thông tin người dùng');
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', user.id)
+      .single();
+    if (!profile) throw new Error('Không tìm thấy thông tin người dùng');
 
-  const code = await generateNextCode(supabase, 'approval_requests', 'DX', 4);
-  const { error } = await supabase.from('approval_requests').insert({
-    ...data,
-    code,
-    department: profile.role,
-    requested_by: user.id,
-    requested_by_name: profile.full_name,
-    status: 'pending_manager',
+    const code = await generateNextCode(supabase, 'approval_requests', 'DX', 4);
+    const { error } = await supabase.from('approval_requests').insert({
+      ...data,
+      code,
+      department: profile.role,
+      requested_by: user.id,
+      requested_by_name: profile.full_name,
+      status: 'pending_manager',
+    });
+    if (error) throw new Error(error.message);
+
+    await notifyDepartmentManagers(
+      supabase,
+      profile.role,
+      `Đề xuất ${code} cần duyệt`,
+      `${profile.full_name} vừa gửi đề xuất "${data.title}" (${APPROVAL_TYPE_LABELS[data.request_type]}).`,
+      '/de-xuat'
+    );
+
+    revalidatePath('/de-xuat');
   });
-  if (error) throw new Error(error.message);
-
-  await notifyDepartmentManagers(
-    supabase,
-    profile.role,
-    `Đề xuất ${code} cần duyệt`,
-    `${profile.full_name} vừa gửi đề xuất "${data.title}" (${APPROVAL_TYPE_LABELS[data.request_type]}).`,
-    '/de-xuat'
-  );
-
-  revalidatePath('/de-xuat');
 }
 
 async function actOnRequest(id: string, action: 'approve' | 'reject', note?: string) {
@@ -123,7 +126,15 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
           .select('id')
           .single();
         if (project) {
-          await supabase.from('quotations').update({ project_id: project.id }).eq('id', quotation.id);
+          const { data: linked, error: linkError } = await supabase
+            .from('quotations')
+            .update({ project_id: project.id })
+            .eq('id', quotation.id)
+            .select('id')
+            .single();
+          if (linkError || !linked) {
+            console.error(`Không gắn được Dự án ${project.id} vào báo giá ${quotation.code}:`, linkError);
+          }
           revalidatePath('/du-an');
         }
       } catch (e) {
@@ -134,11 +145,13 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
 
   // Hợp đồng lao động gửi duyệt: đồng bộ ngược trạng thái khi phê duyệt xong hẳn hoặc bị từ chối.
   if (request.request_type === 'employee_contract' && (nextStatus === 'approved' || nextStatus === 'rejected')) {
-    const { error: contractSyncError } = await supabase
+    const { data: syncedContract, error: contractSyncError } = await supabase
       .from('employee_contracts')
       .update({ status: nextStatus })
-      .eq('approval_request_id', id);
-    if (contractSyncError) {
+      .eq('approval_request_id', id)
+      .select('id')
+      .single();
+    if (contractSyncError || !syncedContract) {
       console.error(`Không đồng bộ được trạng thái hợp đồng cho đề xuất ${request.code}:`, contractSyncError);
     }
     revalidatePath('/nhan-su/hop-dong-lao-dong');
@@ -167,9 +180,9 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
 }
 
 export async function approveRequest(id: string, note?: string) {
-  await actOnRequest(id, 'approve', note);
+  return runAction(() => actOnRequest(id, 'approve', note));
 }
 
 export async function rejectRequest(id: string, note?: string) {
-  await actOnRequest(id, 'reject', note);
+  return runAction(() => actOnRequest(id, 'reject', note));
 }
