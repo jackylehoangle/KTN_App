@@ -11,7 +11,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatVND, OPPORTUNITY_STAGE_STATUS } from '@/lib/constants';
+import { formatVND, OPPORTUNITY_STAGE_STATUS, PROJECT_STATUS } from '@/lib/constants';
 import type { ReportData } from '@/lib/supabase/queries';
 
 function EmptyState({ label }: { label: string }) {
@@ -21,6 +21,7 @@ function EmptyState({ label }: { label: string }) {
 export function ReportCharts({ data }: { data: ReportData }) {
   const pipeline = data.pipeline.map((p) => ({ ...p, stageLabel: OPPORTUNITY_STAGE_STATUS[p.stage].label }));
   const lowStock = data.lowStock.slice(0, 10);
+  const projectsByStatus = data.projectsByStatus.map((p) => ({ ...p, statusLabel: PROJECT_STATUS[p.status].label }));
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -63,6 +64,28 @@ export function ReportCharts({ data }: { data: ReportData }) {
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="count" name="Số lượng" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Dự án theo trạng thái</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80">
+          {projectsByStatus.length === 0 ? (
+            <EmptyState label="Chưa có dự án nào." />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={projectsByStatus}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="statusLabel" fontSize={12} />
+                <YAxis fontSize={12} allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="count" name="Số dự án" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

@@ -9,6 +9,7 @@ import type {
   OpportunityStage,
   Department,
   EmployeeStatus,
+  ProjectStatus,
   TransactionType,
 } from '@/types/database';
 
@@ -205,14 +206,21 @@ export interface HeadcountPoint {
   terminated: number;
 }
 
+export interface ProjectStatusPoint {
+  status: ProjectStatus;
+  count: number;
+}
+
 export interface ReportData {
   revenueExpense: RevenueExpensePoint[];
   pipeline: PipelineStagePoint[];
   lowStock: LowStockItem[];
   headcount: HeadcountPoint[];
+  projectsByStatus: ProjectStatusPoint[];
 }
 
 const STAGE_ORDER: OpportunityStage[] = ['new', 'contacted', 'quoted', 'negotiating', 'won', 'lost'];
+const PROJECT_STATUS_ORDER: ProjectStatus[] = ['planning', 'in_progress', 'completed', 'cancelled'];
 
 // Raw numeric data for the /bao-cao charts — unlike getDashboardStats, values are
 // left unformatted so the client chart components can plot them directly.
@@ -226,6 +234,7 @@ export async function getReportData(): Promise<ReportData> {
     { data: balances },
     { data: employees },
     { data: departments },
+    { data: projects },
   ] = await Promise.all([
     supabase.from('transactions').select('transaction_type, amount, transaction_date'),
     supabase.from('opportunities').select('stage, value'),
@@ -233,6 +242,7 @@ export async function getReportData(): Promise<ReportData> {
     supabase.from('stock_balances').select('*'),
     supabase.from('employees').select('department_id, status'),
     supabase.from('departments').select('*'),
+    supabase.from('projects').select('status'),
   ]);
 
   const monthMap = new Map<string, { income: number; expense: number }>();
@@ -290,7 +300,16 @@ export async function getReportData(): Promise<ReportData> {
   });
   const headcount = Array.from(headcountMap.entries()).map(([department, v]) => ({ department, ...v }));
 
-  return { revenueExpense, pipeline, lowStock, headcount };
+  const projectStatusMap = new Map<ProjectStatus, number>();
+  ((projects as { status: ProjectStatus }[]) ?? []).forEach((p) => {
+    projectStatusMap.set(p.status, (projectStatusMap.get(p.status) ?? 0) + 1);
+  });
+  const projectsByStatus = PROJECT_STATUS_ORDER.filter((s) => projectStatusMap.has(s)).map((status) => ({
+    status,
+    count: projectStatusMap.get(status)!,
+  }));
+
+  return { revenueExpense, pipeline, lowStock, headcount, projectsByStatus };
 }
 
 // Compact text summary of business data, used as grounding context for the AI

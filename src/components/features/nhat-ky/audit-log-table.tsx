@@ -38,6 +38,55 @@ function formatDateTime(date: string) {
   }).format(new Date(date));
 }
 
+function formatFieldValue(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '—';
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
+}
+
+// So sánh trước/sau theo từng trường thay vì in nguyên JSON — dễ đọc hơn cho người
+// không phải kỹ thuật, và làm nổi bật đúng trường nào đã thay đổi.
+function AuditDiffTable({
+  oldData,
+  newData,
+}: {
+  oldData: Record<string, unknown> | null;
+  newData: Record<string, unknown> | null;
+}) {
+  if (!oldData && !newData) {
+    return <p className="py-4 text-center text-xs text-muted-foreground">Không có dữ liệu chi tiết.</p>;
+  }
+  const keys = Array.from(
+    new Set([...(oldData ? Object.keys(oldData) : []), ...(newData ? Object.keys(newData) : [])])
+  ).sort();
+
+  return (
+    <table className="w-full text-xs">
+      <thead>
+        <tr className="text-left text-muted-foreground">
+          <th className="py-1 pr-3 font-medium">Trường</th>
+          {oldData && <th className="py-1 pr-3 font-medium">Trước</th>}
+          {newData && <th className="py-1 font-medium">Sau</th>}
+        </tr>
+      </thead>
+      <tbody>
+        {keys.map((key) => {
+          const oldValue = oldData?.[key];
+          const newValue = newData?.[key];
+          const changed = !!oldData && !!newData && JSON.stringify(oldValue) !== JSON.stringify(newValue);
+          return (
+            <tr key={key} className={changed ? 'bg-amber-50' : undefined}>
+              <td className="py-1 pr-3 font-mono text-muted-foreground">{key}</td>
+              {oldData && <td className="py-1 pr-3">{formatFieldValue(oldValue)}</td>}
+              {newData && <td className="py-1">{formatFieldValue(newValue)}</td>}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
 export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
   const [search, setSearch] = useState('');
   const [action, setAction] = useState('all');
@@ -140,23 +189,8 @@ export function AuditLogTable({ logs }: { logs: AuditLog[] }) {
           <DialogHeader>
             <DialogTitle>Chi tiết: {detail?.record_label ?? detail?.table_name}</DialogTitle>
           </DialogHeader>
-          <div className="max-h-96 space-y-3 overflow-y-auto text-xs">
-            {detail?.old_data && (
-              <div>
-                <p className="mb-1 font-medium text-navy">Dữ liệu trước</p>
-                <pre className="whitespace-pre-wrap rounded bg-muted p-2">
-                  {JSON.stringify(detail.old_data, null, 2)}
-                </pre>
-              </div>
-            )}
-            {detail?.new_data && (
-              <div>
-                <p className="mb-1 font-medium text-navy">Dữ liệu sau</p>
-                <pre className="whitespace-pre-wrap rounded bg-muted p-2">
-                  {JSON.stringify(detail.new_data, null, 2)}
-                </pre>
-              </div>
-            )}
+          <div className="max-h-96 overflow-y-auto">
+            {detail && <AuditDiffTable oldData={detail.old_data} newData={detail.new_data} />}
           </div>
         </DialogContent>
       </Dialog>
