@@ -84,11 +84,40 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
 
   // Báo giá gửi duyệt: đồng bộ ngược trạng thái khi phê duyệt xong hẳn hoặc bị từ chối.
   if (request.request_type === 'quotation' && (nextStatus === 'approved' || nextStatus === 'rejected')) {
-    await supabase
+    const { data: quotation } = await supabase
       .from('quotations')
       .update({ status: nextStatus === 'approved' ? 'sent' : 'draft' })
-      .eq('approval_request_id', id);
+      .eq('approval_request_id', id)
+      .select('id, code, customer_id, project_id')
+      .single();
     revalidatePath('/bao-gia-sxkh');
+
+    // Báo giá vừa được duyệt hẳn và chưa gắn Dự án nào: tự sinh 1 Dự án mới, nối
+    // ngược vào báo giá — đúng luồng "duyệt xong -> sinh Dự án" mà báo cáo đánh
+    // giá KTN BOS mô tả. Lỗi ở bước này không được làm hỏng việc duyệt đã xong
+    // (đúng tinh thần logAudit — chỉ log lỗi, không throw).
+    if (nextStatus === 'approved' && quotation && !quotation.project_id) {
+      try {
+        const projectCode = await generateNextCode(supabase, 'projects', 'DA', 4);
+        const { data: project } = await supabase
+          .from('projects')
+          .insert({
+            code: projectCode,
+            name: `Dự án từ báo giá ${quotation.code}`,
+            customer_id: quotation.customer_id,
+            status: 'planning',
+            created_by: user.id,
+          })
+          .select('id')
+          .single();
+        if (project) {
+          await supabase.from('quotations').update({ project_id: project.id }).eq('id', quotation.id);
+          revalidatePath('/du-an');
+        }
+      } catch (e) {
+        console.error('Không tự sinh được Dự án từ báo giá đã duyệt:', e);
+      }
+    }
   }
 
   // Hợp đồng lao động gửi duyệt: đồng bộ ngược trạng thái khi phê duyệt xong hẳn hoặc bị từ chối.
