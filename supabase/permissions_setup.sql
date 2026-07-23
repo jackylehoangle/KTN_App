@@ -97,10 +97,18 @@ create policy "ar_select" on approval_requests for select using (
 -- Ai đăng nhập cũng tạo được đơn cho chính mình.
 create policy "ar_insert" on approval_requests for insert with check (requested_by = auth.uid());
 -- Chỉ đúng người duyệt ở đúng bước mới update được (Quản lý ở bước 1, Admin/BGD ở bước 2).
-create policy "ar_update" on approval_requests for update using (
-  auth_role() = 'admin'
-  or (status = 'pending_manager' and auth_level() = 'manager' and department = auth_role())
-);
+-- WITH CHECK tách riêng khỏi USING: hành động duyệt tự đổi status từ 'pending_manager'
+-- sang 'pending_director', nên WITH CHECK không được đòi lại status cũ (nếu không sẽ tự
+-- chặn chính thao tác duyệt hợp lệ — Postgres áp USING cho cả dòng mới nếu thiếu WITH CHECK).
+create policy "ar_update" on approval_requests for update
+  using (
+    auth_role() = 'admin'
+    or (status = 'pending_manager' and auth_level() = 'manager' and department = auth_role())
+  )
+  with check (
+    auth_role() = 'admin'
+    or (auth_level() = 'manager' and department = auth_role())
+  );
 
 create policy "aa_select" on approval_actions for select using (
   request_id in (select id from approval_requests)
