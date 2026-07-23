@@ -293,6 +293,7 @@ export interface Employee {
   bank_account: string | null;
   avatar_url: string | null;
   user_id: string | null;
+  created_by: string | null;
   created_at: string;
 }
 

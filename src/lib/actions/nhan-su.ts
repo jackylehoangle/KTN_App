@@ -57,10 +57,13 @@ export async function deleteDepartment(id: string) {
 export async function createEmployee(input: EmployeeInput) {
   const data = employeeSchema.parse(input);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const code = await generateNextCode(supabase, 'employees', 'NV', 3);
   const { error } = await supabase
     .from('employees')
-    .insert({ ...data, code, department_id: data.department_id || null });
+    .insert({ ...data, code, department_id: data.department_id || null, created_by: user?.id ?? null });
   if (error) throw new Error(error.message);
   revalidatePath('/nhan-su');
 }
@@ -69,9 +72,17 @@ export async function bulkCreateEmployees(inputs: EmployeeInput[]) {
   if (inputs.length === 0) return;
   const parsed = inputs.map((input) => employeeSchema.parse(input));
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const codes = await generateCodeSequence(supabase, 'employees', 'NV', 3, parsed.length);
   const { error } = await supabase.from('employees').insert(
-    parsed.map((data, i) => ({ ...data, code: codes[i], department_id: data.department_id || null }))
+    parsed.map((data, i) => ({
+      ...data,
+      code: codes[i],
+      department_id: data.department_id || null,
+      created_by: user?.id ?? null,
+    }))
   );
   if (error) throw new Error(error.message);
   revalidatePath('/nhan-su');
