@@ -1,12 +1,19 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, X } from 'lucide-react';
+import Link from 'next/link';
+import { Check, X, Eye, FileText, ExternalLink } from 'lucide-react';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { SearchInput, FilterSelect } from '@/components/shared/table-toolbar';
 import { TableActions } from '@/components/shared/table-actions';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/shared/status-badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -31,6 +38,8 @@ export interface ApprovalRequestRow {
   department: UserRole;
   requested_by_name: string;
   status: ApprovalStatus;
+  attachment_url?: string | null;
+  detail_link?: string | null;
 }
 
 const noteFields: EntityField<ApprovalActionInput>[] = [
@@ -50,6 +59,7 @@ export function ApprovalRequestTable({
 }) {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
+  const [detail, setDetail] = useState<ApprovalRequestRow | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -118,8 +128,12 @@ export function ApprovalRequestTable({
                   <StatusBadge value={r.status} map={APPROVAL_STATUS} />
                 </TableCell>
                 <TableCell className="print:hidden">
-                  {canAct(r) && (
-                    <div className="flex justify-end gap-1">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" title="Xem chi tiết" onClick={() => setDetail(r)}>
+                      <Eye className="size-4" />
+                    </Button>
+                    {canAct(r) && (
+                      <>
                       <EntityFormDialog
                         title="Duyệt đề xuất"
                         schemaKey="approvalAction"
@@ -146,8 +160,9 @@ export function ApprovalRequestTable({
                         }
                         fields={noteFields}
                       />
-                    </div>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -161,6 +176,68 @@ export function ApprovalRequestTable({
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!detail} onOpenChange={(open) => !open && setDetail(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {detail?.code} — {detail && APPROVAL_TYPE_LABELS[detail.request_type]}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">Tiêu đề</p>
+              <p className="font-medium">{detail?.title}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Người đề xuất</p>
+                <p>{detail?.requested_by_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Phòng ban</p>
+                <p>{detail && ROLE_LABELS[detail.department]}</p>
+              </div>
+            </div>
+            {detail?.amount != null && (
+              <div>
+                <p className="text-xs text-muted-foreground">Số tiền</p>
+                <p className="font-medium">{formatVND(detail.amount)}</p>
+              </div>
+            )}
+            {detail?.description && (
+              <div>
+                <p className="text-xs text-muted-foreground">Mô tả</p>
+                <p className="whitespace-pre-line">{detail.description}</p>
+              </div>
+            )}
+            {detail?.attachment_url && (
+              <a
+                href={detail.attachment_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-navy underline underline-offset-2"
+              >
+                <FileText className="size-4" />
+                Xem chứng từ đính kèm
+              </a>
+            )}
+            {detail?.detail_link && (
+              <Link
+                href={detail.detail_link}
+                target="_blank"
+                className="flex items-center gap-1 text-navy underline underline-offset-2"
+              >
+                <ExternalLink className="size-4" />
+                Xem toàn bộ nội dung ({detail.request_type === 'quotation' ? 'báo giá' : 'hợp đồng'})
+              </Link>
+            )}
+            {!detail?.description && !detail?.attachment_url && !detail?.detail_link && (
+              <p className="text-muted-foreground">Không có nội dung/chứng từ đính kèm.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

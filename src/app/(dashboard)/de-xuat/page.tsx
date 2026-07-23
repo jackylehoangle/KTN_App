@@ -37,11 +37,25 @@ const fields: EntityField<ApprovalRequestInput>[] = [
 
 export default async function DeXuatPage() {
   const supabase = await createClient();
-  const [profile, { data: requests, error }, stats] = await Promise.all([
+  const [profile, { data: requests, error }, stats, { data: quotations }, { data: contracts }] = await Promise.all([
     getCurrentProfile(),
     supabase.from('approval_requests').select('*').order('created_at', { ascending: false }),
     getDeXuatStats(),
+    supabase.from('quotations').select('id, approval_request_id').not('approval_request_id', 'is', null),
+    supabase.from('employee_contracts').select('id, approval_request_id').not('approval_request_id', 'is', null),
   ]);
+
+  const detailLinkByRequestId = new Map<string, string>();
+  ((quotations as { id: string; approval_request_id: string }[]) ?? []).forEach((q) => {
+    detailLinkByRequestId.set(q.approval_request_id, `/bao-gia-sxkh/${q.id}/in`);
+  });
+  ((contracts as { id: string; approval_request_id: string }[]) ?? []).forEach((c) => {
+    detailLinkByRequestId.set(c.approval_request_id, `/nhan-su/hop-dong-lao-dong/${c.id}/in`);
+  });
+  const requestRows: ApprovalRequestRow[] = ((requests as ApprovalRequestRow[]) ?? []).map((r) => ({
+    ...r,
+    detail_link: detailLinkByRequestId.get(r.id) ?? null,
+  }));
 
   return (
     <div className="space-y-4">
@@ -71,7 +85,7 @@ export default async function DeXuatPage() {
         />
       </div>
       <ApprovalRequestTable
-        requests={(requests as ApprovalRequestRow[]) ?? []}
+        requests={requestRows}
         currentUserRole={profile?.role ?? 'kinh_doanh'}
         currentUserLevel={profile?.level ?? 'staff'}
         isAdmin={profile?.role === 'admin'}
