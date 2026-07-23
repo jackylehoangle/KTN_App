@@ -1,21 +1,9 @@
--- Tách vai trò "Giám đốc" khỏi "Quản trị viên" (admin).
--- Trước đây UI đã ghi rõ bước 2 của Đề xuất & Phê duyệt là "Chờ Giám đốc duyệt", nhưng
--- quyền thật sự lại gắn cứng vào auth_role() = 'admin' — nghĩa là Quản trị viên (IT/hệ
--- thống) và Giám đốc (người duyệt cuối cùng) là MỘT. File này tách hẳn: vai trò mới
--- 'giam_doc' được xem toàn bộ dữ liệu nghiệp vụ (để có đủ thông tin duyệt) và là người
--- DUY NHẤT duyệt được bước 2 — admin không còn duyệt bước 2 nữa. Admin chỉ còn giữ Phân
--- quyền (không đụng tới) — Giám đốc không có quyền đó, đúng yêu cầu "tách biệt hoàn toàn".
+-- BƯỚC 2/2 — chỉ chạy SAU KHI giam_doc_role_setup_1_enum.sql đã chạy thành công.
 -- Idempotent, an toàn chạy lại nhiều lần.
 
 -- ============================================================
--- 1. Thêm vai trò 'giam_doc' vào enum user_role
--- ============================================================
-alter type user_role add value if not exists 'giam_doc';
-
--- ============================================================
--- 2. Mở rộng quyền đọc (SELECT) cho giam_doc trên mọi bảng nghiệp vụ
---    (copy nguyên điều kiện hiện có trong permissions_setup.sql/solar_quotation_ai.sql/
---    employee_contracts_read_fix.sql/audit_notifications_setup.sql, chỉ thêm 1 mệnh đề)
+-- Mở rộng quyền đọc (SELECT) cho giam_doc trên mọi bảng nghiệp vụ
+-- (copy nguyên điều kiện hiện có, chỉ thêm 1 mệnh đề)
 -- ============================================================
 
 -- Kinh doanh
@@ -218,7 +206,7 @@ create policy "audit_select_admin" on audit_logs for select using (
 );
 
 -- ============================================================
--- 3. Chuyển quyền duyệt bước 2 ("Giám đốc duyệt") từ admin sang giam_doc
+-- Chuyển quyền duyệt bước 2 ("Giám đốc duyệt") từ admin sang giam_doc
 -- ============================================================
 
 drop policy if exists "ar_select" on approval_requests;
