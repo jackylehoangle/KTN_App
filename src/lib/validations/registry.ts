@@ -38,12 +38,15 @@ import {
 } from '@/lib/validations/bao-gia-sxkh';
 import { userRoleLevelSchema, moduleGrantSchema } from '@/lib/validations/permissions';
 import { approvalRequestSchema, approvalActionSchema } from '@/lib/validations/de-xuat';
+import { projectSchema, taskSchema } from '@/lib/validations/du-an';
 
 // Central registry so EntityFormDialog (a Client Component) can look up a zod
 // schema by key instead of receiving the schema object itself as a prop —
 // Next.js cannot serialize class instances like ZodType across the
 // Server -> Client Component boundary.
 export const SCHEMA_REGISTRY = {
+  project: projectSchema,
+  task: taskSchema,
   customer: customerSchema,
   opportunity: opportunitySchema,
   contract: contractSchema,

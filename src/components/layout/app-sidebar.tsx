@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   ShieldCheck,
   History,
+  FolderKanban,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -30,6 +31,7 @@ import { MODULES, ROLE_LABELS } from '@/lib/constants';
 import type { Profile } from '@/types/database';
 
 const MODULE_ICONS: Record<string, React.ElementType> = {
+  '/du-an': FolderKanban,
   '/kinh-doanh': Briefcase,
   '/vat-tu': Package,
   '/nhan-su': Users,

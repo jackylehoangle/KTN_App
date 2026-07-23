@@ -12,6 +12,7 @@ export const quotationSchema = z.object({
   attachment_url: z.string().optional(),
   margin_pct: z.number().min(0).max(100).optional(),
   payment_terms: z.string().optional(),
+  project_id: z.string().uuid('Chọn dự án').optional().or(z.literal('')).nullable().transform((v) => v || null),
 });
 export type QuotationInput = z.infer<typeof quotationSchema>;
 
@@ -43,6 +44,7 @@ export const productionPlanSchema = z.object({
   planned_end: z.string().optional().nullable().transform((v) => v || null),
   status: z.enum(['planning', 'in_progress', 'completed', 'cancelled']),
   attachment_url: z.string().optional(),
+  project_id: z.string().uuid('Chọn dự án').optional().or(z.literal('')).nullable().transform((v) => v || null),
 });
 export type ProductionPlanInput = z.infer<typeof productionPlanSchema>;
 

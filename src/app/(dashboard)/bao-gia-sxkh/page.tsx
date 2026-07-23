@@ -24,7 +24,7 @@ import { formatVND, formatDate, QUOTATION_STATUS, APPROVAL_STATUS } from '@/lib/
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { QuotationInput } from '@/lib/validations/bao-gia-sxkh';
 import { createQuotation, updateQuotation, deleteQuotation, submitQuotationForApproval } from '@/lib/actions/bao-gia-sxkh';
-import type { ApprovalStatus, Customer, Opportunity, QuotationStatus, SolarPackage } from '@/types/database';
+import type { ApprovalStatus, Customer, Opportunity, Project, QuotationStatus, SolarPackage } from '@/types/database';
 import { BAO_GIA_SXKH_TABS as TABS } from '@/lib/constants';
 
 const defaultValues: QuotationInput = {
@@ -38,11 +38,12 @@ const defaultValues: QuotationInput = {
   opportunity_id: '',
   attachment_url: '',
   margin_pct: 30,
+  project_id: '',
 };
 
 export default async function BaoGiaPage() {
   const supabase = await createClient();
-  const [{ data: quotations, error }, { data: customers }, { data: opportunities }, { data: packages }, stats] =
+  const [{ data: quotations, error }, { data: customers }, { data: opportunities }, { data: packages }, { data: projects }, stats] =
     await Promise.all([
       supabase
         .from('quotations')
@@ -51,6 +52,7 @@ export default async function BaoGiaPage() {
       supabase.from('customers').select('*').order('name'),
       supabase.from('opportunities').select('*').order('code'),
       supabase.from('solar_packages').select('*').eq('active', true).order('capacity_kwp'),
+      supabase.from('projects').select('*').order('code'),
       getBaoGiaSxkhStats(),
     ]);
 
@@ -76,6 +78,13 @@ export default async function BaoGiaPage() {
       type: 'select',
       half: true,
       options: ((opportunities as Opportunity[]) ?? []).map((o) => ({ value: o.id, label: `${o.code} — ${o.name}` })),
+    },
+    {
+      name: 'project_id',
+      label: 'Dự án (tuỳ chọn)',
+      type: 'select',
+      half: true,
+      options: ((projects as Project[]) ?? []).map((p) => ({ value: p.id, label: `${p.code} — ${p.name}` })),
     },
     { name: 'quotation_date', label: 'Ngày báo giá', type: 'date', half: true },
     { name: 'valid_until', label: 'Có hiệu lực đến', type: 'date', half: true },
@@ -191,6 +200,7 @@ export default async function BaoGiaPage() {
                         opportunity_id: q.opportunity_id ?? '',
                         attachment_url: q.attachment_url ?? '',
                         margin_pct: q.margin_pct ?? 30,
+                        project_id: q.project_id ?? '',
                       }}
                       onUpdate={updateQuotation}
                       successMessage="Đã cập nhật báo giá"

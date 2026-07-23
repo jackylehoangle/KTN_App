@@ -114,6 +114,18 @@ export async function getBaoGiaSxkhStats(): Promise<ModuleStat[]> {
   ];
 }
 
+export async function getDuAnStats(): Promise<ModuleStat[]> {
+  const supabase = await createClient();
+  const [{ count: activeProjectCount }, { count: openTaskCount }] = await Promise.all([
+    supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'in_progress'),
+    supabase.from('tasks').select('*', { count: 'exact', head: true }).neq('status', 'done'),
+  ]);
+  return [
+    { label: 'Dự án đang triển khai', value: String(activeProjectCount ?? 0) },
+    { label: 'Công việc chưa hoàn tất', value: String(openTaskCount ?? 0) },
+  ];
+}
+
 export async function getDeXuatStats(): Promise<ModuleStat[]> {
   const supabase = await createClient();
   const [{ count: pendingCount }, { count: approvedCount }] = await Promise.all([
@@ -143,7 +155,8 @@ export async function getPhanQuyenStats(): Promise<ModuleStat[]> {
 
 // Lightweight KPI counts for the dashboard home cards, keyed by module href.
 export async function getDashboardStats(): Promise<Record<string, ModuleStat[]>> {
-  const [kinhDoanh, vatTu, nhanSu, taiChinh, baoGiaSxkh, deXuat, phanQuyen] = await Promise.all([
+  const [duAn, kinhDoanh, vatTu, nhanSu, taiChinh, baoGiaSxkh, deXuat, phanQuyen] = await Promise.all([
+    getDuAnStats(),
     getKinhDoanhStats(),
     getVatTuStats(),
     getNhanSuStats(),
@@ -154,6 +167,7 @@ export async function getDashboardStats(): Promise<Record<string, ModuleStat[]>>
   ]);
 
   return {
+    '/du-an': duAn,
     '/kinh-doanh': kinhDoanh,
     '/vat-tu': vatTu,
     '/nhan-su': nhanSu,

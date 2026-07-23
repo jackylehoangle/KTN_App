@@ -13,11 +13,13 @@ import type {
   OpportunityStage,
   ProductionPlanStatus,
   ProductionTaskStatus,
+  ProjectStatus,
   PurchaseOrderStatus,
   QuotationStatus,
   SalesOrderStatus,
   StaffLevel,
   StockMovementType,
+  TaskStatus,
   TransactionType,
   UserRole,
 } from '@/types/database';
@@ -211,6 +213,19 @@ export const PRODUCTION_PLAN_STATUS: Record<ProductionPlanStatus, StatusMeta> = 
   cancelled: { label: 'Đã huỷ', color: 'red' },
 };
 
+export const PROJECT_STATUS: Record<ProjectStatus, StatusMeta> = {
+  planning: { label: 'Lên kế hoạch', color: 'slate' },
+  in_progress: { label: 'Đang triển khai', color: 'blue' },
+  completed: { label: 'Hoàn tất', color: 'emerald' },
+  cancelled: { label: 'Đã huỷ', color: 'red' },
+};
+
+export const TASK_STATUS: Record<TaskStatus, StatusMeta> = {
+  pending: { label: 'Chờ thực hiện', color: 'slate' },
+  in_progress: { label: 'Đang thực hiện', color: 'blue' },
+  done: { label: 'Hoàn tất', color: 'emerald' },
+};
+
 export const PRODUCTION_TASK_STATUS: Record<ProductionTaskStatus, StatusMeta> = {
   pending: { label: 'Chờ thực hiện', color: 'slate' },
   in_progress: { label: 'Đang thực hiện', color: 'blue' },
@@ -249,6 +264,11 @@ export interface ModuleNavItem {
 }
 
 export const MODULES: ModuleNavItem[] = [
+  {
+    title: 'Dự án',
+    href: '/du-an',
+    roles: ['admin', 'giam_doc', 'kinh_doanh', 'san_xuat'],
+  },
   {
     title: 'Kinh doanh',
     href: '/kinh-doanh',
@@ -297,6 +317,7 @@ export const MODULES: ModuleNavItem[] = [
 ];
 
 export const MODULE_COLORS: Record<string, ColorKey> = {
+  '/du-an': 'red',
   '/kinh-doanh': 'blue',
   '/vat-tu': 'amber',
   '/nhan-su': 'violet',
@@ -309,6 +330,11 @@ export const MODULE_COLORS: Record<string, ColorKey> = {
 };
 
 export type TabItem = { title: string; href: string };
+
+export const DU_AN_TABS: TabItem[] = [
+  { title: 'Dự án', href: '/du-an' },
+  { title: 'Công việc', href: '/du-an/cong-viec' },
+];
 
 export const KINH_DOANH_TABS: TabItem[] = [
   { title: 'Khách hàng', href: '/kinh-doanh' },
@@ -367,7 +393,7 @@ export const PAGE_TITLES: Record<string, string> = {
   '/phan-quyen': 'Phân quyền',
   '/nhat-ky': 'Nhật ký',
 };
-for (const tabs of [KINH_DOANH_TABS, VAT_TU_TABS, NHAN_SU_TABS, TAI_CHINH_TABS, BAO_GIA_SXKH_TABS]) {
+for (const tabs of [DU_AN_TABS, KINH_DOANH_TABS, VAT_TU_TABS, NHAN_SU_TABS, TAI_CHINH_TABS, BAO_GIA_SXKH_TABS]) {
   for (const tab of tabs) PAGE_TITLES[tab.href] = tab.title;
 }
 

@@ -19,7 +19,7 @@ import { formatVND, CONTRACT_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { ContractInput } from '@/lib/validations/kinh-doanh';
 import { createContract, updateContract, deleteContract } from '@/lib/actions/kinh-doanh';
-import type { Customer, ContractStatus } from '@/types/database';
+import type { Customer, ContractStatus, Project } from '@/types/database';
 import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 
 const defaultValues: ContractInput = {
@@ -29,13 +29,15 @@ const defaultValues: ContractInput = {
   value: 0,
   status: 'draft',
   attachment_url: '',
+  project_id: '',
 };
 
 export default async function HopDongPage() {
   const supabase = await createClient();
-  const [{ data: contracts, error }, { data: customers }] = await Promise.all([
+  const [{ data: contracts, error }, { data: customers }, { data: projects }] = await Promise.all([
     supabase.from('contracts').select('*, customers(name)').order('created_at', { ascending: false }),
     supabase.from('customers').select('*').order('name'),
+    supabase.from('projects').select('*').order('code'),
   ]);
 
   const fields: EntityField<ContractInput>[] = [
@@ -56,6 +58,13 @@ export default async function HopDongPage() {
       options: ((customers as Customer[]) ?? []).map((c) => ({ value: c.id, label: c.name })),
     },
     { name: 'value', label: 'Giá trị (VND)', type: 'number', half: true },
+    {
+      name: 'project_id',
+      label: 'Dự án (tuỳ chọn)',
+      type: 'select',
+      half: true,
+      options: ((projects as Project[]) ?? []).map((p) => ({ value: p.id, label: `${p.code} — ${p.name}` })),
+    },
     { name: 'attachment_url', label: 'File hợp đồng đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
@@ -137,6 +146,7 @@ export default async function HopDongPage() {
                         value: c.value,
                         status: c.status,
                         attachment_url: c.attachment_url ?? '',
+                        project_id: c.project_id ?? '',
                       }}
                       onUpdate={updateContract}
                       successMessage="Đã cập nhật hợp đồng"

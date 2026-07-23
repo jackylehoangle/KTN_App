@@ -128,6 +128,7 @@ export interface Contract {
   status: ContractStatus;
   file_url: string | null;
   attachment_url: string | null;
+  project_id: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -144,6 +145,7 @@ export interface SalesOrder {
   status: SalesOrderStatus;
   total_amount: number;
   attachment_url: string | null;
+  project_id: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -460,6 +462,7 @@ export interface Quotation {
   payment_terms: string | null;
   ai_generated: boolean;
   approval_request_id: string | null;
+  project_id: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -520,6 +523,7 @@ export interface ProductionPlan {
   planned_end: string | null;
   status: ProductionPlanStatus;
   attachment_url: string | null;
+  project_id: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -545,5 +549,40 @@ export interface ProductionTask {
   status: ProductionTaskStatus;
   progress_pct: number;
   attachment_url: string | null;
+}
+
+// ---------- Module: Du an (project spine) ----------
+export type ProjectStatus = 'planning' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface Project {
+  id: string;
+  code: string;
+  name: string;
+  customer_id: string | null;
+  opportunity_id: string | null;
+  status: ProjectStatus;
+  planned_start: string | null;
+  planned_end: string | null;
+  description: string | null;
+  attachment_url: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export type TaskStatus = 'pending' | 'in_progress' | 'done';
+
+export interface Task {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  assigned_to: string | null;
+  status: TaskStatus;
+  start_date: string | null;
+  due_date: string | null;
+  progress_pct: number;
+  attachment_url: string | null;
+  created_by: string | null;
+  created_at: string;
 }
 

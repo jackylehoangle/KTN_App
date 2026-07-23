@@ -8,7 +8,7 @@ import { SalesOrderTable } from '@/components/features/kinh-doanh/sales-order-ta
 import { KINH_DOANH_TABS as TABS } from '@/lib/constants';
 import type { SalesOrderInput } from '@/lib/validations/kinh-doanh';
 import { createSalesOrder } from '@/lib/actions/kinh-doanh';
-import type { Customer, Contract, SalesOrderStatus } from '@/types/database';
+import type { Customer, Contract, Project, SalesOrderStatus } from '@/types/database';
 
 const STATUS_LABEL: Record<SalesOrderStatus, string> = {
   pending: 'Chờ xử lý',
@@ -26,17 +26,19 @@ const defaultValues: SalesOrderInput = {
   status: 'pending',
   total_amount: 0,
   attachment_url: '',
+  project_id: '',
 };
 
 export default async function DonHangPage() {
   const supabase = await createClient();
-  const [{ data: orders, error }, { data: customers }, { data: contracts }] = await Promise.all([
+  const [{ data: orders, error }, { data: customers }, { data: contracts }, { data: projects }] = await Promise.all([
     supabase
       .from('sales_orders')
       .select('*, customers(name)')
       .order('order_date', { ascending: false }),
     supabase.from('customers').select('*').order('name'),
     supabase.from('contracts').select('*').order('code'),
+    supabase.from('projects').select('*').order('code'),
   ]);
 
   const fields: EntityField<SalesOrderInput>[] = [
@@ -64,6 +66,13 @@ export default async function DonHangPage() {
     },
     { name: 'order_date', label: 'Ngày đặt hàng', type: 'date', half: true },
     { name: 'delivery_date', label: 'Ngày giao hàng', type: 'date', half: true },
+    {
+      name: 'project_id',
+      label: 'Dự án (tuỳ chọn)',
+      type: 'select',
+      half: true,
+      options: ((projects as Project[]) ?? []).map((p) => ({ value: p.id, label: `${p.code} — ${p.name}` })),
+    },
     { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number' },
     { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];

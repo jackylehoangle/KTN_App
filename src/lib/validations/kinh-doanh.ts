@@ -30,6 +30,7 @@ export const contractSchema = z.object({
   value: z.number().min(0),
   status: z.enum(['draft', 'active', 'completed', 'cancelled']),
   attachment_url: z.string().optional(),
+  project_id: z.string().uuid('Chọn dự án').optional().or(z.literal('')).nullable().transform((v) => v || null),
 });
 export type ContractInput = z.infer<typeof contractSchema>;
 
@@ -42,6 +43,7 @@ export const salesOrderSchema = z.object({
   status: z.enum(['pending', 'confirmed', 'delivered', 'cancelled']),
   total_amount: z.number().min(0),
   attachment_url: z.string().optional(),
+  project_id: z.string().uuid('Chọn dự án').optional().or(z.literal('')).nullable().transform((v) => v || null),
 });
 export type SalesOrderInput = z.infer<typeof salesOrderSchema>;
 

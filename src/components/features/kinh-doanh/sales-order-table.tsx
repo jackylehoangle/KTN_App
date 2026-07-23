@@ -33,6 +33,7 @@ interface SalesOrderRow {
   status: SalesOrderStatus;
   total_amount: number;
   attachment_url: string | null;
+  project_id: string | null;
 }
 
 export function SalesOrderTable({
@@ -115,6 +116,7 @@ export function SalesOrderTable({
                         status: o.status,
                         total_amount: o.total_amount,
                         attachment_url: o.attachment_url ?? '',
+                        project_id: o.project_id ?? '',
                       }}
                       onUpdate={updateSalesOrder}
                       successMessage="Đã cập nhật đơn hàng"
