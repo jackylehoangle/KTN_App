@@ -30,6 +30,7 @@ create policy "ns_read_contract" on employee_contracts for select using (
   auth_role() = 'admin' or has_module_permission('/nhan-su')
   or (auth_role() = 'nhan_su' and auth_level() = 'manager')
   or employee_id in (select id from employees where user_id = auth.uid())
+  or created_by = auth.uid()
 );
 
 drop policy if exists "ns_write_contract" on employee_contracts;
