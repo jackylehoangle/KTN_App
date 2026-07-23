@@ -297,6 +297,23 @@ export interface StockMovement {
   reference_id: string | null;
   note: string | null;
   attachment_url: string | null;
+  lot_id: string | null;
+  project_id: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface InventoryLot {
+  id: string;
+  material_id: string;
+  warehouse_id: string;
+  lot_number: string;
+  quantity_received: number;
+  quantity_remaining: number;
+  unit_cost: number;
+  received_date: string;
+  supplier_id: string | null;
+  attachment_url: string | null;
   created_by: string | null;
   created_at: string;
 }

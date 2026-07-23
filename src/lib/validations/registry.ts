@@ -12,6 +12,7 @@ import {
   materialCategorySchema,
   purchaseOrderSchema,
   purchaseOrderItemSchema,
+  inventoryLotSchema,
 } from '@/lib/validations/vat-tu';
 import {
   departmentSchema,
@@ -61,6 +62,7 @@ export const SCHEMA_REGISTRY = {
   materialCategory: materialCategorySchema,
   purchaseOrder: purchaseOrderSchema,
   purchaseOrderItem: purchaseOrderItemSchema,
+  inventoryLot: inventoryLotSchema,
   department: departmentSchema,
   employee: employeeSchema,
   employeeContract: employeeContractSchema,

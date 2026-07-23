@@ -394,6 +394,7 @@ export const VAT_TU_TABS: TabItem[] = [
   { title: 'Kho', href: '/vat-tu/kho' },
   { title: 'Nhà cung cấp', href: '/vat-tu/nha-cung-cap' },
   { title: 'Nhập / xuất kho', href: '/vat-tu/nhap-xuat' },
+  { title: 'Lô/Serial', href: '/vat-tu/lo-hang' },
   { title: 'Đơn mua hàng', href: '/vat-tu/don-mua' },
   { title: 'Dòng đơn mua', href: '/vat-tu/chi-tiet-don-mua' },
 ];

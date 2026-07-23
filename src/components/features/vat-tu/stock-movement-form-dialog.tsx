@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 import { Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -34,21 +35,26 @@ import {
 import { stockMovementSchema, type StockMovementInput } from '@/lib/validations/vat-tu';
 import { createStockMovement, updateStockMovement } from '@/lib/actions/vat-tu';
 import { ImageUploadField } from '@/components/shared/image-upload-field';
-import type { Material, Warehouse, StockMovement } from '@/types/database';
+import { formatDate } from '@/lib/constants';
+import type { Material, Warehouse, StockMovement, InventoryLot, Project } from '@/types/database';
 
 export function StockMovementFormDialog({
   materials,
   warehouses,
+  lots,
+  projects,
   movement,
 }: {
   materials: Material[];
   warehouses: Warehouse[];
+  lots: InventoryLot[];
+  projects: Project[];
   movement?: StockMovement;
 }) {
   const [open, setOpen] = useState(false);
   const isEdit = Boolean(movement);
 
-  const form = useForm<StockMovementInput>({
+  const form = useForm<z.input<typeof stockMovementSchema>, unknown, StockMovementInput>({
     resolver: zodResolver(stockMovementSchema),
     defaultValues: {
       code: movement?.code ?? '',
@@ -59,6 +65,8 @@ export function StockMovementFormDialog({
       unit_cost: movement?.unit_cost ?? 0,
       note: movement?.note ?? '',
       attachment_url: movement?.attachment_url ?? '',
+      lot_id: movement?.lot_id ?? '',
+      project_id: movement?.project_id ?? '',
     },
   });
 
@@ -184,6 +192,56 @@ export function StockMovementFormDialog({
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="lot_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lô/Serial (tuỳ chọn)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Không gắn lô" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {lots.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>
+                            Lô {l.lot_number} (còn {l.quantity_remaining}, nhận {formatDate(l.received_date)})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="project_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dự án (tuỳ chọn)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Không gắn dự án" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {projects.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.code} — {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

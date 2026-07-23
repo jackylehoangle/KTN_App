@@ -40,8 +40,23 @@ export const stockMovementSchema = z.object({
   unit_cost: z.number().min(0),
   note: z.string().optional(),
   attachment_url: z.string().optional(),
+  lot_id: z.string().uuid('Chọn lô hàng').optional().or(z.literal('')).nullable().transform((v) => v || null),
+  project_id: z.string().uuid('Chọn dự án').optional().or(z.literal('')).nullable().transform((v) => v || null),
 });
 export type StockMovementInput = z.infer<typeof stockMovementSchema>;
+
+export const inventoryLotSchema = z.object({
+  material_id: z.string().uuid('Chọn vật tư'),
+  warehouse_id: z.string().uuid('Chọn kho'),
+  lot_number: z.string().min(1, 'Bắt buộc'),
+  quantity_received: z.number().positive('Số lượng phải > 0'),
+  quantity_remaining: z.number().min(0),
+  unit_cost: z.number().min(0),
+  received_date: z.string().min(1, 'Bắt buộc'),
+  supplier_id: z.string().uuid('Chọn nhà cung cấp').optional().or(z.literal('')).nullable().transform((v) => v || null),
+  attachment_url: z.string().optional(),
+});
+export type InventoryLotInput = z.infer<typeof inventoryLotSchema>;
 
 export const materialCategorySchema = z.object({
   name: z.string().min(2, 'Tối thiểu 2 ký tự'),

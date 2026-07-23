@@ -16,20 +16,23 @@ import {
 } from '@/components/ui/table';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
-import type { Material, StockMovementType, Warehouse } from '@/types/database';
+import type { Material, StockMovementType, Warehouse, InventoryLot, Project } from '@/types/database';
 import { VAT_TU_TABS as TABS, STOCK_MOVEMENT_TYPE_STATUS } from '@/lib/constants';
 
 export default async function NhapXuatPage() {
   const supabase = await createClient();
-  const [{ data: movements, error }, { data: materials }, { data: warehouses }] = await Promise.all([
-    supabase
-      .from('stock_movements')
-      .select('*, materials(code,name), warehouses(name)')
-      .order('created_at', { ascending: false })
-      .limit(100),
-    supabase.from('materials').select('*').order('code'),
-    supabase.from('warehouses').select('*').order('code'),
-  ]);
+  const [{ data: movements, error }, { data: materials }, { data: warehouses }, { data: lots }, { data: projects }] =
+    await Promise.all([
+      supabase
+        .from('stock_movements')
+        .select('*, materials(code,name), warehouses(name)')
+        .order('created_at', { ascending: false })
+        .limit(100),
+      supabase.from('materials').select('*').order('code'),
+      supabase.from('warehouses').select('*').order('code'),
+      supabase.from('inventory_lots').select('*').order('received_date', { ascending: true }),
+      supabase.from('projects').select('*').order('code'),
+    ]);
 
   const excelColumns: ExcelColumn<{
     code: string;
@@ -61,6 +64,8 @@ export default async function NhapXuatPage() {
         <StockMovementFormDialog
           materials={(materials as Material[]) ?? []}
           warehouses={(warehouses as Warehouse[]) ?? []}
+          lots={(lots as InventoryLot[]) ?? []}
+          projects={(projects as Project[]) ?? []}
         />
       </div>
       <div className="rounded-lg border">
@@ -95,6 +100,8 @@ export default async function NhapXuatPage() {
                     <StockMovementFormDialog
                       materials={(materials as Material[]) ?? []}
                       warehouses={(warehouses as Warehouse[]) ?? []}
+                      lots={(lots as InventoryLot[]) ?? []}
+                      projects={(projects as Project[]) ?? []}
                       movement={m}
                     />
                     <ConfirmDeleteButton onConfirm={deleteStockMovement.bind(null, m.id)} />
