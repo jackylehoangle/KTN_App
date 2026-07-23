@@ -50,12 +50,12 @@ export function ApprovalRequestTable({
   requests,
   currentUserRole,
   currentUserLevel,
-  isAdmin,
+  isDirector,
 }: {
   requests: ApprovalRequestRow[];
   currentUserRole: UserRole;
   currentUserLevel: StaffLevel;
-  isAdmin: boolean;
+  isDirector: boolean;
 }) {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
@@ -72,9 +72,9 @@ export function ApprovalRequestTable({
 
   function canAct(r: ApprovalRequestRow) {
     if (r.status === 'pending_manager') {
-      return isAdmin || (currentUserLevel === 'manager' && currentUserRole === r.department);
+      return currentUserLevel === 'manager' && currentUserRole === r.department;
     }
-    return r.status === 'pending_director' && isAdmin;
+    return r.status === 'pending_director' && isDirector;
   }
 
   const excelColumns: ExcelColumn<ApprovalRequestRow>[] = [

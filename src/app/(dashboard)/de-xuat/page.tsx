@@ -88,7 +88,7 @@ export default async function DeXuatPage() {
         requests={requestRows}
         currentUserRole={profile?.role ?? 'kinh_doanh'}
         currentUserLevel={profile?.level ?? 'staff'}
-        isAdmin={profile?.role === 'admin'}
+        isDirector={profile?.role === 'giam_doc'}
       />
     </div>
   );

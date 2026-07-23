@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const userRoleLevelSchema = z.object({
-  role: z.enum(['admin', 'kinh_doanh', 'vat_tu', 'nhan_su', 'tai_chinh', 'san_xuat']),
+  role: z.enum(['admin', 'giam_doc', 'kinh_doanh', 'vat_tu', 'nhan_su', 'tai_chinh', 'san_xuat']),
   level: z.enum(['staff', 'manager']),
 });
 export type UserRoleLevelInput = z.infer<typeof userRoleLevelSchema>;

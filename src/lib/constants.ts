@@ -66,6 +66,7 @@ export interface StatusMeta {
 
 export const ROLE_STATUS: Record<UserRole, StatusMeta> = {
   admin: { label: 'Quản trị viên', color: 'slate' },
+  giam_doc: { label: 'Giám đốc', color: 'rose' },
   kinh_doanh: { label: 'Kinh doanh', color: 'blue' },
   vat_tu: { label: 'Vật tư', color: 'amber' },
   nhan_su: { label: 'Nhân sự', color: 'violet' },
@@ -77,7 +78,7 @@ export const ROLE_LABELS: Record<UserRole, string> = Object.fromEntries(
   Object.entries(ROLE_STATUS).map(([k, v]) => [k, v.label])
 ) as Record<UserRole, string>;
 
-export const ALL_ROLES: UserRole[] = ['admin', 'kinh_doanh', 'vat_tu', 'nhan_su', 'tai_chinh', 'san_xuat'];
+export const ALL_ROLES: UserRole[] = ['admin', 'giam_doc', 'kinh_doanh', 'vat_tu', 'nhan_su', 'tai_chinh', 'san_xuat'];
 
 export const LEVEL_LABELS: Record<StaffLevel, string> = {
   staff: 'Nhân viên',
@@ -244,32 +245,32 @@ export const MODULES: ModuleNavItem[] = [
   {
     title: 'Kinh doanh',
     href: '/kinh-doanh',
-    roles: ['admin', 'kinh_doanh'],
+    roles: ['admin', 'giam_doc', 'kinh_doanh'],
   },
   {
     title: 'Vật tư',
     href: '/vat-tu',
-    roles: ['admin', 'vat_tu'],
+    roles: ['admin', 'giam_doc', 'vat_tu'],
   },
   {
     title: 'Nhân sự',
     href: '/nhan-su',
-    roles: ['admin', 'nhan_su'],
+    roles: ['admin', 'giam_doc', 'nhan_su'],
   },
   {
     title: 'Tài chính',
     href: '/tai-chinh',
-    roles: ['admin', 'tai_chinh'],
+    roles: ['admin', 'giam_doc', 'tai_chinh'],
   },
   {
     title: 'Báo giá & SXKH',
     href: '/bao-gia-sxkh',
-    roles: ['admin', 'kinh_doanh', 'san_xuat'],
+    roles: ['admin', 'giam_doc', 'kinh_doanh', 'san_xuat'],
   },
   {
     title: 'Báo cáo',
     href: '/bao-cao',
-    roles: ['admin'],
+    roles: ['admin', 'giam_doc'],
   },
   {
     title: 'Đề xuất & Phê duyệt',
@@ -284,7 +285,7 @@ export const MODULES: ModuleNavItem[] = [
   {
     title: 'Nhật ký',
     href: '/nhat-ky',
-    roles: ['admin'],
+    roles: ['admin', 'giam_doc'],
   },
 ];
 

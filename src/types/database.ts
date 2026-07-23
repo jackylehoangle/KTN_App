@@ -1,7 +1,7 @@
 // Hand-written types mirroring supabase/schema.sql.
 // Regenerate/adjust if the schema changes.
 
-export type UserRole = 'admin' | 'kinh_doanh' | 'vat_tu' | 'nhan_su' | 'tai_chinh' | 'san_xuat';
+export type UserRole = 'admin' | 'giam_doc' | 'kinh_doanh' | 'vat_tu' | 'nhan_su' | 'tai_chinh' | 'san_xuat';
 export type StaffLevel = 'staff' | 'manager';
 
 export interface Profile {

@@ -42,7 +42,7 @@ export async function notifyDepartmentManagers(
   await notifyUsers(ids, title, message, link, supabase);
 }
 
-// Báo cho toàn bộ admin/BGD.
+// Báo cho toàn bộ admin (Quản trị viên/IT).
 export async function notifyAdmins(
   supabase: SupabaseClient,
   title: string,
@@ -51,5 +51,17 @@ export async function notifyAdmins(
 ) {
   const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
   const ids = ((admins as { id: string }[]) ?? []).map((a) => a.id);
+  await notifyUsers(ids, title, message, link, supabase);
+}
+
+// Báo cho toàn bộ Giám đốc (vai trò duyệt bước 2, tách riêng khỏi admin).
+export async function notifyDirectors(
+  supabase: SupabaseClient,
+  title: string,
+  message?: string,
+  link?: string
+) {
+  const { data: directors } = await supabase.from('profiles').select('id').eq('role', 'giam_doc');
+  const ids = ((directors as { id: string }[]) ?? []).map((d) => d.id);
   await notifyUsers(ids, title, message, link, supabase);
 }

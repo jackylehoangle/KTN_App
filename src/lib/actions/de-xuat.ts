@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { generateNextCode } from '@/lib/generate-code';
 import { approvalRequestSchema, type ApprovalRequestInput } from '@/lib/validations/de-xuat';
 import { logAudit } from '@/lib/audit-log';
-import { notifyDepartmentManagers, notifyUsers, notifyAdmins } from '@/lib/notifications';
+import { notifyDepartmentManagers, notifyUsers, notifyDirectors } from '@/lib/notifications';
 import { APPROVAL_TYPE_LABELS } from '@/lib/constants';
 
 export async function createApprovalRequest(input: ApprovalRequestInput) {
@@ -97,9 +97,9 @@ async function actOnRequest(id: string, action: 'approve' | 'reject', note?: str
     revalidatePath('/nhan-su/hop-dong-lao-dong');
   }
 
-  // Chuyển từ Trưởng phòng lên Giám đốc: báo cho admin/BGD biết có việc mới cần duyệt.
+  // Chuyển từ Trưởng phòng lên Giám đốc: báo cho vai trò Giám đốc biết có việc mới cần duyệt.
   if (nextStatus === 'pending_director') {
-    await notifyAdmins(
+    await notifyDirectors(
       supabase,
       `Đề xuất ${request.code} cần Giám đốc duyệt`,
       `"${request.title}" đã được Trưởng phòng duyệt, đang chờ Giám đốc.`,
