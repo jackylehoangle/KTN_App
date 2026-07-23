@@ -50,24 +50,36 @@ alter table leads enable row level security;
 alter table contacts enable row level security;
 alter table interactions enable row level security;
 
+drop policy if exists "crm_read_leads" on leads;
 create policy "crm_read_leads" on leads for select using (
   auth_role() = 'admin' or auth_role() = 'giam_doc' or has_module_permission('/kinh-doanh')
   or (auth_role() = 'kinh_doanh' and (auth_level() = 'manager' or created_by = auth.uid()))
 );
+drop policy if exists "crm_write_leads" on leads;
 create policy "crm_write_leads" on leads for insert with check (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/kinh-doanh'));
+drop policy if exists "crm_update_leads" on leads;
 create policy "crm_update_leads" on leads for update using (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/kinh-doanh'));
+drop policy if exists "crm_delete_leads" on leads;
 create policy "crm_delete_leads" on leads for delete using (auth_role() = 'admin');
 
+drop policy if exists "crm_read_contacts" on contacts;
 create policy "crm_read_contacts" on contacts for select using (
   auth_role() = 'admin' or auth_role() = 'giam_doc' or has_module_permission('/kinh-doanh') or auth_role() = 'kinh_doanh'
 );
+drop policy if exists "crm_write_contacts" on contacts;
 create policy "crm_write_contacts" on contacts for insert with check (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/kinh-doanh'));
+drop policy if exists "crm_update_contacts" on contacts;
 create policy "crm_update_contacts" on contacts for update using (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/kinh-doanh'));
+drop policy if exists "crm_delete_contacts" on contacts;
 create policy "crm_delete_contacts" on contacts for delete using (auth_role() = 'admin');
 
+drop policy if exists "crm_read_interactions" on interactions;
 create policy "crm_read_interactions" on interactions for select using (
   auth_role() = 'admin' or auth_role() = 'giam_doc' or has_module_permission('/kinh-doanh') or auth_role() = 'kinh_doanh'
 );
+drop policy if exists "crm_write_interactions" on interactions;
 create policy "crm_write_interactions" on interactions for insert with check (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/kinh-doanh'));
+drop policy if exists "crm_update_interactions" on interactions;
 create policy "crm_update_interactions" on interactions for update using (auth_role() in ('admin','kinh_doanh') or has_edit_permission('/kinh-doanh'));
+drop policy if exists "crm_delete_interactions" on interactions;
 create policy "crm_delete_interactions" on interactions for delete using (auth_role() = 'admin');

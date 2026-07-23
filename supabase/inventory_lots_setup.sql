@@ -33,9 +33,13 @@ $$ language sql volatile security definer;
 
 alter table inventory_lots enable row level security;
 
+drop policy if exists "vt_read_lots" on inventory_lots;
 create policy "vt_read_lots" on inventory_lots for select using (
   auth_role() = 'admin' or auth_role() = 'giam_doc' or has_module_permission('/vat-tu') or auth_role() = 'vat_tu'
 );
+drop policy if exists "vt_write_lots" on inventory_lots;
 create policy "vt_write_lots" on inventory_lots for insert with check (auth_role() in ('admin','vat_tu') or has_edit_permission('/vat-tu'));
+drop policy if exists "vt_update_lots" on inventory_lots;
 create policy "vt_update_lots" on inventory_lots for update using (auth_role() in ('admin','vat_tu') or has_edit_permission('/vat-tu'));
+drop policy if exists "vt_delete_lots" on inventory_lots;
 create policy "vt_delete_lots" on inventory_lots for delete using (auth_role() = 'admin');
