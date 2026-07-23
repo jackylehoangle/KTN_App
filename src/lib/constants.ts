@@ -1,4 +1,5 @@
 import type {
+  AccountStatus,
   ApprovalStatus,
   ApprovalType,
   AttendanceStatus,
@@ -233,6 +234,12 @@ export const GENDER_LABELS: Record<'male' | 'female' | 'other', string> = {
   male: 'Nam',
   female: 'Nữ',
   other: 'Khác',
+};
+
+export const ACCOUNT_STATUS: Record<AccountStatus, StatusMeta> = {
+  chua_yeu_cau: { label: 'Chưa yêu cầu', color: 'slate' },
+  da_yeu_cau: { label: 'Đang chờ cấp', color: 'amber' },
+  da_cap: { label: 'Đã cấp tài khoản', color: 'emerald' },
 };
 
 export interface ModuleNavItem {

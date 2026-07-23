@@ -41,6 +41,10 @@ export async function createQuotation(input: QuotationInput) {
 export async function updateQuotation(id: string, input: QuotationInput) {
   const data = quotationSchema.parse(input);
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('quotations').select('status').eq('id', id).single();
+  if (existing?.status === 'pending_approval') {
+    throw new Error('Báo giá đang chờ duyệt — không thể sửa. Vui lòng chờ kết quả duyệt.');
+  }
   const { error } = await supabase.from('quotations').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/bao-gia-sxkh');
@@ -49,6 +53,9 @@ export async function updateQuotation(id: string, input: QuotationInput) {
 export async function deleteQuotation(id: string) {
   const supabase = await createClient();
   const { data: existing } = await supabase.from('quotations').select('*').eq('id', id).single();
+  if (existing?.status === 'pending_approval') {
+    throw new Error('Báo giá đang chờ duyệt — không thể xoá. Vui lòng chờ kết quả duyệt.');
+  }
   const { error } = await supabase.from('quotations').delete().eq('id', id);
   if (error) throw new Error(error.message);
   await logAudit({

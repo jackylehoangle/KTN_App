@@ -274,6 +274,8 @@ export interface Position {
 
 export type EmployeeStatus = 'active' | 'probation' | 'inactive' | 'terminated';
 
+export type AccountStatus = 'chua_yeu_cau' | 'da_yeu_cau' | 'da_cap';
+
 export interface Employee {
   id: string;
   code: string;
@@ -294,6 +296,7 @@ export interface Employee {
   avatar_url: string | null;
   user_id: string | null;
   created_by: string | null;
+  account_status: AccountStatus;
   created_at: string;
 }
 

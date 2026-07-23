@@ -132,6 +132,10 @@ export async function createEmployeeContract(input: EmployeeContractInput) {
 export async function updateEmployeeContract(id: string, input: EmployeeContractInput) {
   const data = employeeContractSchema.parse(input);
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('employee_contracts').select('status').eq('id', id).single();
+  if (existing?.status === 'pending_approval') {
+    throw new Error('Hợp đồng đang chờ duyệt — không thể sửa. Vui lòng chờ kết quả duyệt.');
+  }
   const { error } = await supabase.from('employee_contracts').update(data).eq('id', id);
   if (error) throw new Error(error.message);
   revalidatePath('/nhan-su/hop-dong-lao-dong');
@@ -140,6 +144,9 @@ export async function updateEmployeeContract(id: string, input: EmployeeContract
 export async function deleteEmployeeContract(id: string) {
   const supabase = await createClient();
   const { data: existing } = await supabase.from('employee_contracts').select('*').eq('id', id).single();
+  if (existing?.status === 'pending_approval') {
+    throw new Error('Hợp đồng đang chờ duyệt — không thể xoá. Vui lòng chờ kết quả duyệt.');
+  }
   const { error } = await supabase.from('employee_contracts').delete().eq('id', id);
   if (error) throw new Error(error.message);
   await logAudit({
@@ -213,6 +220,8 @@ export async function submitEmployeeContractForApproval(contractId: string) {
 
 // Sau khi hợp đồng đã ký, HR bấm nút này để báo cho toàn bộ admin cấp email/quyền
 // truy cập ứng dụng — chỉ tạo thông báo, không tự tạo tài khoản đăng nhập thật.
+// Đánh dấu account_status = 'da_yeu_cau' để có điểm chốt theo dõi trên UI thay vì
+// yêu cầu trôi mất sau khi thông báo được đọc.
 export async function requestAccountProvisioning(employeeId: string) {
   const supabase = await createClient();
   const { data: employee } = await supabase
@@ -227,6 +236,20 @@ export async function requestAccountProvisioning(employeeId: string) {
     `Nhân viên đã ký hợp đồng lao động, cần cấp email và quyền truy cập ứng dụng.`,
     '/nhan-su'
   );
+  await supabase.from('employees').update({ account_status: 'da_yeu_cau' }).eq('id', employeeId);
+  revalidatePath('/nhan-su/hop-dong-lao-dong');
+}
+
+// Admin bấm sau khi đã cấp email/quyền thật cho nhân viên, đóng vòng lặp của yêu cầu trên.
+export async function markAccountProvisioned(employeeId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('employees')
+    .update({ account_status: 'da_cap' })
+    .eq('id', employeeId);
+  if (error) throw new Error(error.message);
+  revalidatePath('/nhan-su/hop-dong-lao-dong');
+  revalidatePath('/nhan-su');
 }
 
 export async function createLeaveRequest(input: LeaveRequestInput) {
@@ -365,9 +388,16 @@ export async function createPayroll(input: PayrollInput) {
   revalidatePath('/nhan-su/luong');
 }
 
+// Bảng lương "Đã trả" coi như đã chốt sổ — không cho sửa nữa trừ khi chủ động đổi trạng thái
+// về "Nháp" trước (đó chính là hành động mở khoá), tránh work_days/số tiền âm thầm đổi khác
+// với phiếu lương đã phát cho nhân viên.
 export async function updatePayroll(id: string, input: PayrollInput) {
   const data = payrollSchema.parse(input);
   const supabase = await createClient();
+  const { data: existing } = await supabase.from('payroll').select('status').eq('id', id).single();
+  if (existing?.status === 'paid' && data.status === 'paid') {
+    throw new Error('Bảng lương đã chốt (Đã trả) — đổi trạng thái về Nháp trước khi sửa.');
+  }
   const work_days = await computeWorkDays(supabase, data.employee_id, data.period);
   const { error } = await supabase.from('payroll').update({ ...data, work_days }).eq('id', id);
   if (error) throw new Error(error.message);
@@ -377,6 +407,9 @@ export async function updatePayroll(id: string, input: PayrollInput) {
 export async function deletePayroll(id: string) {
   const supabase = await createClient();
   const { data: existing } = await supabase.from('payroll').select('*').eq('id', id).single();
+  if (existing?.status === 'paid') {
+    throw new Error('Bảng lương đã chốt (Đã trả) — đổi trạng thái về Nháp trước khi xoá.');
+  }
   const { error } = await supabase.from('payroll').delete().eq('id', id);
   if (error) throw new Error(error.message);
   await logAudit({

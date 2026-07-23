@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { Plus, Pencil, Printer, UserCog } from 'lucide-react';
+import { Plus, Pencil, Printer, UserCog, CheckCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { getCurrentProfile } from '@/lib/supabase/queries';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
 import { ConfirmDeleteButton } from '@/components/shared/confirm-delete-button';
@@ -17,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatVND, formatDate, EMPLOYEE_CONTRACT_STATUS, EMPLOYEE_CONTRACT_TYPE_LABELS, APPROVAL_STATUS } from '@/lib/constants';
+import { formatVND, formatDate, EMPLOYEE_CONTRACT_STATUS, EMPLOYEE_CONTRACT_TYPE_LABELS, APPROVAL_STATUS, ACCOUNT_STATUS } from '@/lib/constants';
 import { buildExcelRows, type ExcelColumn } from '@/lib/export-excel';
 import type { EmployeeContractInput } from '@/lib/validations/nhan-su';
 import {
@@ -26,8 +27,9 @@ import {
   deleteEmployeeContract,
   submitEmployeeContractForApproval,
   requestAccountProvisioning,
+  markAccountProvisioned,
 } from '@/lib/actions/nhan-su';
-import type { ApprovalStatus, Employee, EmployeeContractStatus, EmployeeContractType } from '@/types/database';
+import type { AccountStatus, ApprovalStatus, Employee, EmployeeContractStatus, EmployeeContractType } from '@/types/database';
 import { NHAN_SU_TABS as TABS } from '@/lib/constants';
 
 const defaultValues: EmployeeContractInput = {
@@ -42,10 +44,11 @@ const defaultValues: EmployeeContractInput = {
 
 export default async function HopDongLaoDongPage() {
   const supabase = await createClient();
-  const [{ data: contracts, error }, { data: employees }] = await Promise.all([
+  const [profile, { data: contracts, error }, { data: employees }] = await Promise.all([
+    getCurrentProfile(),
     supabase
       .from('employee_contracts')
-      .select('*, employees(full_name), approval_requests(status)')
+      .select('*, employees(full_name, account_status), approval_requests(status)')
       .order('created_at', { ascending: false }),
     supabase.from('employees').select('*').order('full_name'),
   ]);
@@ -161,12 +164,28 @@ export default async function HopDongLaoDongPage() {
                         </Link>
                       </Button>
                     )}
-                    {c.status === 'approved' && (
-                      <form action={requestAccountProvisioning.bind(null, c.employee_id)}>
-                        <Button variant="ghost" size="icon" type="submit" title="Gửi yêu cầu cấp tài khoản">
-                          <UserCog className="size-4" />
-                        </Button>
-                      </form>
+                    {c.status === 'approved' &&
+                      (c.employees?.account_status ?? 'chua_yeu_cau') === 'chua_yeu_cau' && (
+                        <form action={requestAccountProvisioning.bind(null, c.employee_id)}>
+                          <Button variant="ghost" size="icon" type="submit" title="Gửi yêu cầu cấp tài khoản">
+                            <UserCog className="size-4" />
+                          </Button>
+                        </form>
+                      )}
+                    {c.status === 'approved' && c.employees?.account_status === 'da_yeu_cau' && (
+                      <>
+                        <StatusBadge value={'da_yeu_cau' as AccountStatus} map={ACCOUNT_STATUS} />
+                        {profile?.role === 'admin' && (
+                          <form action={markAccountProvisioned.bind(null, c.employee_id)}>
+                            <Button variant="ghost" size="icon" type="submit" title="Đánh dấu đã cấp tài khoản">
+                              <CheckCircle className="size-4" />
+                            </Button>
+                          </form>
+                        )}
+                      </>
+                    )}
+                    {c.status === 'approved' && c.employees?.account_status === 'da_cap' && (
+                      <StatusBadge value={'da_cap' as AccountStatus} map={ACCOUNT_STATUS} />
                     )}
                     {c.status === 'draft' && (
                       <SubmitApprovalButton
