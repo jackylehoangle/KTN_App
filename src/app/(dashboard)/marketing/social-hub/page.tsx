@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle2, Facebook, FileText, TriangleAlert } from 'lucide-react';
+import { CalendarDays, CheckCircle2, FileText, TriangleAlert, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { StatCard } from '@/components/shared/stat-card';
@@ -29,7 +29,7 @@ export default async function SocialHubDashboardPage() {
       <ModuleTabs items={SOCIAL_HUB_TABS} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <StatCard icon={Facebook} label="Fanpage đang quản lý" value={pages.length} color="blue" />
+        <StatCard icon={Users} label="Fanpage đang quản lý" value={pages.length} color="blue" />
         <StatCard icon={CalendarDays} label="Kế hoạch chờ duyệt" value={pendingRes.count ?? 0} color="amber" />
         <StatCard icon={FileText} label="Bài đang chờ đăng" value={queuedRes.count ?? 0} color="violet" />
         <StatCard icon={CheckCircle2} label="Bài đã đăng" value={publishedRes.count ?? 0} color="emerald" />
