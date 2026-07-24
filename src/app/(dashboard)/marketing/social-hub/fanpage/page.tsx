@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createSocialHubClient } from '@/lib/supabase/social-hub';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,7 +7,7 @@ import { togglePageAutomation } from '@/lib/actions/social-hub';
 import { SOCIAL_HUB_TABS, socialStatusClass } from '@/lib/social-hub';
 
 export default async function SocialHubPagesPage() {
-  const supabase = await createClient();
+  const supabase = createSocialHubClient();
   const { data, error } = await supabase
     .from('facebook_pages')
     .select('id,page_key,page_name,facebook_page_id,posts_per_week,planning_enabled,generation_enabled,publish_enabled,active,brand_profiles(brand_name,target_audience),organizations(organization_name)')
