@@ -25,6 +25,9 @@ export default async function SocialHubContentPage() {
         <p className="text-sm text-muted-foreground">Theo dõi toàn bộ vòng đời nội dung từ ý tưởng tới khi đăng Facebook.</p>
       </div>
       <ModuleTabs items={SOCIAL_HUB_TABS} />
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+        Bản kiểm thử Social Hub v1.2 · Đã bật hiển thị lỗi, số lần tạo và nút Chạy lại.
+      </div>
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error.message}</div>}
       <div className="overflow-x-auto rounded-lg border">
         <Table>
@@ -35,7 +38,7 @@ export default async function SocialHubContentPage() {
               <TableHead>Lịch đăng</TableHead>
               <TableHead>Sản xuất</TableHead>
               <TableHead>Đăng bài</TableHead>
-              <TableHead className="text-right">Thao tác</TableHead>
+              <TableHead className="min-w-[190px] text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -71,7 +74,7 @@ export default async function SocialHubContentPage() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="min-w-[190px]">
                   <div className="flex flex-wrap justify-end gap-2">
                     {item.publish_status !== 'published' && RETRYABLE_STATUSES.has(item.content_status) && (
                       <SocialActionButton
