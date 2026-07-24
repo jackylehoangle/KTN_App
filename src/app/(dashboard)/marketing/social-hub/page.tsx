@@ -1,5 +1,5 @@
 import { CalendarDays, CheckCircle2, FileText, TriangleAlert, Users } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import { createSocialHubClient } from '@/lib/supabase/social-hub';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { StatCard } from '@/components/shared/stat-card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SOCIAL_HUB_TABS, formatDateTime, socialStatusClass } from '@/lib/social-hub';
 
 export default async function SocialHubDashboardPage() {
-  const supabase = await createClient();
+  const supabase = createSocialHubClient();
   const [pagesRes, pendingRes, queuedRes, publishedRes, failedRes, recentRes] = await Promise.all([
     supabase.from('facebook_pages').select('id,page_name,page_key,posts_per_week,planning_enabled,generation_enabled,publish_enabled,active').order('page_name'),
     supabase.from('content_batches').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending'),
@@ -19,6 +19,7 @@ export default async function SocialHubDashboardPage() {
 
   const pages = (pagesRes.data ?? []) as any[];
   const recent = (recentRes.data ?? []) as any[];
+  const error = pagesRes.error ?? pendingRes.error ?? queuedRes.error ?? publishedRes.error ?? failedRes.error ?? recentRes.error;
 
   return (
     <div className="space-y-4">
@@ -27,6 +28,7 @@ export default async function SocialHubDashboardPage() {
         <p className="text-sm text-muted-foreground">Quản lý tập trung kế hoạch, nội dung và lịch đăng nhiều fanpage.</p>
       </div>
       <ModuleTabs items={SOCIAL_HUB_TABS} />
+      {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error.message}</div>}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard icon={Users} label="Fanpage đang quản lý" value={pages.length} color="blue" />
@@ -53,6 +55,7 @@ export default async function SocialHubDashboardPage() {
                 </div>
               </div>
             ))}
+            {pages.length === 0 && <p className="text-sm text-muted-foreground">Chưa có fanpage hoặc kết nối Social Hub chưa được cấu hình.</p>}
           </CardContent>
         </Card>
 
