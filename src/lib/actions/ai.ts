@@ -1,6 +1,6 @@
 'use server';
 
-import { generateText, generateJSON, generateVisionJSON, isGeminiConfigured } from '@/lib/gemini';
+import { generateText, generateJSON, generateVisionJSON, isAiConfigured } from '@/lib/ai-provider';
 import { getAssistantContext } from '@/lib/supabase/queries';
 import { createClient } from '@/lib/supabase/server';
 import { LEAD_SOURCE_LABELS } from '@/lib/constants';
@@ -12,8 +12,8 @@ Nếu câu hỏi cần dữ liệu không có trong phần đó, hãy nói rõ l
 
 export async function askBusinessAssistant(question: string) {
   return runAction(async () => {
-    if (!isGeminiConfigured()) {
-      throw new Error('Trợ lý AI chưa được cấu hình. Vui lòng thêm GEMINI_API_KEY.');
+    if (!isAiConfigured()) {
+      throw new Error('Trợ lý AI chưa được cấu hình. Vui lòng thêm OPENAI_API_KEY (khuyến nghị) hoặc GEMINI_API_KEY.');
     }
     const context = await getAssistantContext();
     const prompt = `Dữ liệu hiện tại:\n${context}\n\nCâu hỏi: ${question}`;
@@ -29,8 +29,8 @@ interface ReceiptExtraction {
 
 export async function extractReceiptData(imageUrl: string) {
   return runAction(async () => {
-    if (!isGeminiConfigured()) {
-      throw new Error('Chưa cấu hình GEMINI_API_KEY');
+    if (!isAiConfigured()) {
+      throw new Error('Chưa cấu hình OPENAI_API_KEY (khuyến nghị) hoặc GEMINI_API_KEY');
     }
     const res = await fetch(imageUrl);
     if (!res.ok) throw new Error('Không tải được ảnh để đọc dữ liệu');
@@ -56,8 +56,8 @@ export interface CccdExtraction {
 
 export async function extractCccdData(imageUrl: string) {
   return runAction(async () => {
-    if (!isGeminiConfigured()) {
-      throw new Error('Chưa cấu hình GEMINI_API_KEY');
+    if (!isAiConfigured()) {
+      throw new Error('Chưa cấu hình OPENAI_API_KEY (khuyến nghị) hoặc GEMINI_API_KEY');
     }
     const res = await fetch(imageUrl);
     if (!res.ok) throw new Error('Không tải được ảnh để đọc dữ liệu');
@@ -108,8 +108,8 @@ Chỉ trả về JSON đúng định dạng: {"recommendedKwp": number, "recomme
 
 export async function analyzeSolarSizing(input: SolarSizingInput) {
   return runAction(async () => {
-    if (!isGeminiConfigured()) {
-      throw new Error('Trợ lý AI chưa được cấu hình. Vui lòng thêm GEMINI_API_KEY.');
+    if (!isAiConfigured()) {
+      throw new Error('Trợ lý AI chưa được cấu hình. Vui lòng thêm OPENAI_API_KEY (khuyến nghị) hoặc GEMINI_API_KEY.');
     }
     const prompt = `Thông tin khách hàng cung cấp:
 - Tiền điện trung bình/tháng: ${input.monthlyBillVnd ? `${input.monthlyBillVnd.toLocaleString('vi-VN')} VNĐ` : 'không cung cấp'}
@@ -139,8 +139,8 @@ Chỉ trả về JSON đúng định dạng: {"priority": "high" hoặc "medium"
 // hiển thị để sales tự đọc và tự bấm Sửa nếu đồng ý, không tự ghi đè stage.
 export async function classifyLead(leadId: string) {
   return runAction(async () => {
-    if (!isGeminiConfigured()) {
-      throw new Error('Trợ lý AI chưa được cấu hình. Vui lòng thêm GEMINI_API_KEY.');
+    if (!isAiConfigured()) {
+      throw new Error('Trợ lý AI chưa được cấu hình. Vui lòng thêm OPENAI_API_KEY (khuyến nghị) hoặc GEMINI_API_KEY.');
     }
     const supabase = await createClient();
     const { data: lead, error } = await supabase.from('leads').select('*').eq('id', leadId).single();
@@ -161,8 +161,8 @@ Hãy đánh giá độ ưu tiên chăm sóc và gợi ý giai đoạn tiếp the
 
 export async function generateQuotationDescription(productName: string) {
   return runAction(async () => {
-    if (!isGeminiConfigured()) {
-      throw new Error('Chưa cấu hình GEMINI_API_KEY');
+    if (!isAiConfigured()) {
+      throw new Error('Chưa cấu hình OPENAI_API_KEY (khuyến nghị) hoặc GEMINI_API_KEY');
     }
     if (!productName.trim()) {
       throw new Error('Nhập tên sản phẩm trước khi dùng gợi ý AI');

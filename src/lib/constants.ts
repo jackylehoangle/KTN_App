@@ -29,6 +29,21 @@ import type {
   UserRole,
 } from '@/types/database';
 
+// Thông tin công ty dùng chung cho mọi biểu mẫu in (báo giá, hợp đồng...) — tập trung 1 chỗ
+// thay vì lặp lại hằng số cục bộ ở từng trang in như trước đây.
+export const COMPANY_NAME = 'CÔNG TY CỔ PHẦN CÔNG NGHỆ NĂNG LƯỢNG VÀ XÂY DỰNG KTN';
+export const COMPANY_SHORT_NAME = 'KTN Solar';
+export const COMPANY_ADDRESS = '998 Phạm Văn Đồng, Phường Hiệp Bình, TP. Hồ Chí Minh';
+export const COMPANY_WORKSHOP_ADDRESS = '55A Quốc lộ 1A, Phường Hiệp Bình, TP. Hồ Chí Minh';
+export const COMPANY_PHONE = '0877008216';
+export const COMPANY_TAX_CODE = '0319557719';
+export const COMPANY_BANK_ACCOUNT_NAME = 'LÊ HOÀNG PHONG';
+export const COMPANY_BANK_ACCOUNT_NUMBER = '6262286';
+export const COMPANY_BANK_NAME = 'Ngân hàng TMCP Á Châu (ACB)';
+export const COMPANY_REPRESENTATIVE_NAME = 'LÊ HOÀNG PHONG';
+export const COMPANY_REPRESENTATIVE_TITLE = 'Giám đốc';
+export const COMPANY_LOGO_PATH = '/logo-ktn.png';
+
 // Màu nền dùng chung cho StatusBadge (bg/text/border) — mỗi class name viết đầy đủ, không nội suy,
 // để Tailwind quét được ở build time.
 export type ColorKey =

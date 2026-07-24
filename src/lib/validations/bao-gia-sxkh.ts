@@ -13,6 +13,10 @@ export const quotationSchema = z.object({
   margin_pct: z.number().min(0).max(100).optional(),
   payment_terms: z.string().optional(),
   project_id: z.string().uuid('Chọn dự án').optional().or(z.literal('')).nullable().transform((v) => v || null),
+  project_type: z.string().optional(),
+  system_type: z.string().optional(),
+  project_address: z.string().optional(),
+  payback_years: z.number().min(0).optional(),
 });
 export type QuotationInput = z.infer<typeof quotationSchema>;
 

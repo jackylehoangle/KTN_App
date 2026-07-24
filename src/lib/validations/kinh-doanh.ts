@@ -32,6 +32,16 @@ export const contractSchema = z.object({
   status: z.enum(['draft', 'active', 'completed', 'cancelled']),
   attachment_url: z.string().optional(),
   project_id: z.string().uuid('Chọn dự án').optional().or(z.literal('')).nullable().transform((v) => v || null),
+  party_a_name: z.string().optional(),
+  party_a_id_number: z.string().optional(),
+  party_a_id_issue_place: z.string().optional(),
+  party_a_id_issue_date: z.string().optional().or(z.literal('')).nullable().transform((v) => v || null),
+  party_a_address: z.string().optional(),
+  party_a_phone: z.string().optional(),
+  capacity_kwp: z.number().min(0).optional(),
+  phase: z.preprocess((v) => (v === '' || v == null ? undefined : Number(v)), z.union([z.literal(1), z.literal(3)]).optional()),
+  project_address: z.string().optional(),
+  payment_terms: z.string().optional(),
 });
 export type ContractInput = z.infer<typeof contractSchema>;
 

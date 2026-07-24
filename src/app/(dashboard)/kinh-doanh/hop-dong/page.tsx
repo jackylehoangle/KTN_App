@@ -1,4 +1,5 @@
-import { Plus, Pencil } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Pencil, Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { EntityFormDialog, type EntityField } from '@/components/shared/entity-form-dialog';
@@ -30,6 +31,16 @@ const defaultValues: ContractInput = {
   status: 'draft',
   attachment_url: '',
   project_id: '',
+  party_a_name: '',
+  party_a_id_number: '',
+  party_a_id_issue_place: '',
+  party_a_id_issue_date: '',
+  party_a_address: '',
+  party_a_phone: '',
+  capacity_kwp: undefined,
+  phase: undefined,
+  project_address: '',
+  payment_terms: '',
 };
 
 export default async function HopDongPage() {
@@ -65,6 +76,26 @@ export default async function HopDongPage() {
       half: true,
       options: ((projects as Project[]) ?? []).map((p) => ({ value: p.id, label: `${p.code} — ${p.name}` })),
     },
+    { name: 'capacity_kwp', label: 'Công suất hệ thống (kWp, tuỳ chọn)', type: 'number', half: true },
+    {
+      name: 'phase',
+      label: 'Số pha (tuỳ chọn)',
+      type: 'select',
+      half: true,
+      placeholder: 'Chọn số pha',
+      options: [
+        { value: '1', label: '1 pha' },
+        { value: '3', label: '3 pha' },
+      ],
+    },
+    { name: 'project_address', label: 'Địa điểm thi công (tuỳ chọn, mặc định theo địa chỉ khách hàng)' },
+    { name: 'party_a_name', label: 'Tên người đại diện Bên A (tuỳ chọn, mặc định theo tên khách hàng)', half: true },
+    { name: 'party_a_phone', label: 'Điện thoại Bên A (tuỳ chọn, mặc định theo SĐT khách hàng)', half: true },
+    { name: 'party_a_address', label: 'Địa chỉ Bên A (tuỳ chọn, mặc định theo địa chỉ khách hàng)' },
+    { name: 'party_a_id_number', label: 'Số CCCD Bên A (tuỳ chọn)', half: true },
+    { name: 'party_a_id_issue_date', label: 'Ngày cấp CCCD (tuỳ chọn)', type: 'date', half: true },
+    { name: 'party_a_id_issue_place', label: 'Nơi cấp CCCD (tuỳ chọn)' },
+    { name: 'payment_terms', label: 'Điều khoản thanh toán theo đợt (tuỳ chọn, để trống dùng mẫu mặc định)', type: 'textarea' },
     { name: 'attachment_url', label: 'File hợp đồng đính kèm', type: 'image' },
   ];
   const createFields = fields.filter((f) => f.name !== 'code');
@@ -134,6 +165,11 @@ export default async function HopDongPage() {
                 <TableCell className="text-right">{formatVND(c.value)}</TableCell>
                 <TableCell className="print:hidden">
                   <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" title="In hợp đồng" asChild>
+                      <Link href={`/kinh-doanh/hop-dong/${c.id}/in`} target="_blank">
+                        <Printer className="size-4" />
+                      </Link>
+                    </Button>
                     <EntityFormDialog
                       title="Sửa hợp đồng"
                       schemaKey="contract"
@@ -147,6 +183,16 @@ export default async function HopDongPage() {
                         status: c.status,
                         attachment_url: c.attachment_url ?? '',
                         project_id: c.project_id ?? '',
+                        party_a_name: c.party_a_name ?? '',
+                        party_a_id_number: c.party_a_id_number ?? '',
+                        party_a_id_issue_place: c.party_a_id_issue_place ?? '',
+                        party_a_id_issue_date: c.party_a_id_issue_date ?? '',
+                        party_a_address: c.party_a_address ?? '',
+                        party_a_phone: c.party_a_phone ?? '',
+                        capacity_kwp: c.capacity_kwp ?? undefined,
+                        phase: (c.phase as 1 | 3 | undefined) ?? undefined,
+                        project_address: c.project_address ?? '',
+                        payment_terms: c.payment_terms ?? '',
                       }}
                       onUpdate={updateContract}
                       successMessage="Đã cập nhật hợp đồng"

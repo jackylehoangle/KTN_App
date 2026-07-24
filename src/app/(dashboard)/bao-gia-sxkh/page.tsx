@@ -39,6 +39,11 @@ const defaultValues: QuotationInput = {
   attachment_url: '',
   margin_pct: 30,
   project_id: '',
+  project_type: '',
+  system_type: 'Hòa lưới bám tải (Zero Export)',
+  project_address: '',
+  payback_years: undefined,
+  payment_terms: '',
 };
 
 export default async function BaoGiaPage() {
@@ -90,6 +95,11 @@ export default async function BaoGiaPage() {
     { name: 'valid_until', label: 'Có hiệu lực đến', type: 'date', half: true },
     { name: 'total_amount', label: 'Tổng giá trị (VND)', type: 'number', half: true },
     { name: 'margin_pct', label: 'Lợi nhuận (%, 25-40)', type: 'number', half: true },
+    { name: 'project_type', label: 'Loại công trình (tuỳ chọn)', placeholder: 'Nhà ở, xưởng sản xuất...', half: true },
+    { name: 'system_type', label: 'Loại hệ thống', half: true },
+    { name: 'project_address', label: 'Địa điểm dự án (tuỳ chọn, mặc định theo địa chỉ khách hàng)' },
+    { name: 'payback_years', label: 'Thời gian hoàn vốn ước tính (năm, tuỳ chọn)', type: 'number', half: true },
+    { name: 'payment_terms', label: 'Điều khoản thanh toán (tuỳ chọn, để trống dùng mẫu mặc định)', type: 'textarea' },
     { name: 'notes', label: 'Ghi chú', type: 'textarea' },
     { name: 'attachment_url', label: 'File đính kèm', type: 'image' },
   ];
@@ -201,6 +211,11 @@ export default async function BaoGiaPage() {
                         attachment_url: q.attachment_url ?? '',
                         margin_pct: q.margin_pct ?? 30,
                         project_id: q.project_id ?? '',
+                        project_type: q.project_type ?? '',
+                        system_type: q.system_type ?? 'Hòa lưới bám tải (Zero Export)',
+                        project_address: q.project_address ?? '',
+                        payback_years: q.payback_years ?? undefined,
+                        payment_terms: q.payment_terms ?? '',
                       }}
                       onUpdate={updateQuotation}
                       successMessage="Đã cập nhật báo giá"

@@ -181,6 +181,16 @@ export interface Contract {
   file_url: string | null;
   attachment_url: string | null;
   project_id: string | null;
+  party_a_name: string | null;
+  party_a_id_number: string | null;
+  party_a_id_issue_place: string | null;
+  party_a_id_issue_date: string | null;
+  party_a_address: string | null;
+  party_a_phone: string | null;
+  capacity_kwp: number | null;
+  phase: number | null;
+  project_address: string | null;
+  payment_terms: string | null;
   created_by: string | null;
   created_at: string;
 }
@@ -532,6 +542,10 @@ export interface Quotation {
   ai_generated: boolean;
   approval_request_id: string | null;
   project_id: string | null;
+  project_type: string | null;
+  system_type: string | null;
+  project_address: string | null;
+  payback_years: number | null;
   created_by: string | null;
   created_at: string;
 }
