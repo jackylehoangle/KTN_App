@@ -83,12 +83,38 @@ export async function cancelContent(contentId: string) {
     const { social } = await requireSocialAdmin();
     const { data: row, error } = await social
       .from('content_items')
-      .update({ content_status: 'cancelled', publish_status: 'not_scheduled' })
+      .update({ content_status: 'cancelled', publish_status: 'not_scheduled', locked_by: null, locked_until: null })
       .eq('id', contentId)
       .neq('publish_status', 'published')
       .select('id')
       .single();
     if (error || !row) throw new Error('Không thể hủy bài đã đăng hoặc bài không còn tồn tại.');
+    refreshSocialHub();
+  });
+}
+
+export async function retryContentGeneration(contentId: string) {
+  return runAction(async () => {
+    const { social } = await requireSocialAdmin();
+
+    const { data: row, error } = await social
+      .from('content_items')
+      .update({
+        content_status: 'revision_requested',
+        approval_status: 'revision_requested',
+        image_status: 'not_started',
+        generation_attempts: 0,
+        locked_by: null,
+        locked_until: null,
+        last_error: null,
+        revision_notes: 'Quản trị viên yêu cầu chạy lại nội dung từ Social Hub.',
+      })
+      .eq('id', contentId)
+      .neq('publish_status', 'published')
+      .select('id')
+      .single();
+
+    if (error || !row) throw new Error('Không thể chạy lại bài đã đăng hoặc bài không còn tồn tại.');
     refreshSocialHub();
   });
 }
