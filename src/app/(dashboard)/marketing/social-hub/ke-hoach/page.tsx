@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createSocialHubClient } from '@/lib/supabase/social-hub';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,7 +7,7 @@ import { approvePlan, rejectPlan } from '@/lib/actions/social-hub';
 import { PLAN_STATUS_LABELS, SOCIAL_HUB_TABS, socialStatusClass } from '@/lib/social-hub';
 
 export default async function SocialHubPlansPage() {
-  const supabase = await createClient();
+  const supabase = createSocialHubClient();
   const { data, error } = await supabase
     .from('content_batches')
     .select('id,batch_key,week_start,week_end,week_theme,approval_status,created_at,facebook_pages(page_name,page_key),content_items(count)')
