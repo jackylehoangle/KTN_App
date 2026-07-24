@@ -3,14 +3,16 @@ import { ModuleTabs } from '@/components/layout/module-tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SocialActionButton } from '@/components/features/social-hub/action-button';
-import { cancelContent } from '@/lib/actions/social-hub';
+import { cancelContent, retryContentGeneration } from '@/lib/actions/social-hub';
 import { CONTENT_STATUS_LABELS, PUBLISH_STATUS_LABELS, SOCIAL_HUB_TABS, formatDateTime, socialStatusClass } from '@/lib/social-hub';
+
+const RETRYABLE_STATUSES = new Set(['revision_requested', 'failed', 'generating']);
 
 export default async function SocialHubContentPage() {
   const supabase = createSocialHubClient();
   const { data, error } = await supabase
     .from('content_items')
-    .select('id,content_code,topic,pillar,publish_at,content_status,publish_status,planning_approval_status,facebook_post_id,facebook_permalink,facebook_pages(page_name,page_key)')
+    .select('id,content_code,topic,pillar,publish_at,content_status,publish_status,planning_approval_status,generation_attempts,revision_notes,last_error,facebook_post_id,facebook_permalink,facebook_pages(page_name,page_key)')
     .order('publish_at', { ascending: false })
     .limit(200);
 
@@ -46,12 +48,18 @@ export default async function SocialHubContentPage() {
                 <TableCell className="max-w-lg">
                   <div className="font-medium">{item.topic}</div>
                   <div className="font-mono text-xs text-muted-foreground">{item.content_code}</div>
+                  {(item.revision_notes || item.last_error) && (
+                    <div className="mt-1 line-clamp-2 text-xs text-red-600">{item.revision_notes || item.last_error}</div>
+                  )}
                 </TableCell>
                 <TableCell>{formatDateTime(item.publish_at)}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={socialStatusClass(item.content_status)}>
-                    {CONTENT_STATUS_LABELS[item.content_status] ?? item.content_status}
-                  </Badge>
+                  <div className="space-y-1">
+                    <Badge variant="outline" className={socialStatusClass(item.content_status)}>
+                      {CONTENT_STATUS_LABELS[item.content_status] ?? item.content_status}
+                    </Badge>
+                    <div className="text-xs text-muted-foreground">Lần tạo: {item.generation_attempts ?? 0}/3</div>
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="space-y-1">
@@ -64,7 +72,15 @@ export default async function SocialHubContentPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex justify-end">
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {item.publish_status !== 'published' && RETRYABLE_STATUSES.has(item.content_status) && (
+                      <SocialActionButton
+                        action={retryContentGeneration.bind(null, item.id)}
+                        label="Chạy lại"
+                        variant="outline"
+                        confirmMessage="Đưa bài về hàng đợi, mở khóa và đặt lại số lần tạo để WF02 xử lý lại?"
+                      />
+                    )}
                     {item.publish_status !== 'published' && item.content_status !== 'cancelled' && (
                       <SocialActionButton
                         action={cancelContent.bind(null, item.id)}
