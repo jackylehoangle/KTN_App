@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createSocialHubClient } from '@/lib/supabase/social-hub';
 import { ModuleTabs } from '@/components/layout/module-tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,7 +7,7 @@ import { cancelContent } from '@/lib/actions/social-hub';
 import { CONTENT_STATUS_LABELS, PUBLISH_STATUS_LABELS, SOCIAL_HUB_TABS, formatDateTime, socialStatusClass } from '@/lib/social-hub';
 
 export default async function SocialHubContentPage() {
-  const supabase = await createClient();
+  const supabase = createSocialHubClient();
   const { data, error } = await supabase
     .from('content_items')
     .select('id,content_code,topic,pillar,publish_at,content_status,publish_status,planning_approval_status,facebook_post_id,facebook_permalink,facebook_pages(page_name,page_key)')
