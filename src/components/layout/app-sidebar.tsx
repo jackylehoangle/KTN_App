@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   History,
   FolderKanban,
+  Megaphone,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -46,6 +47,7 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
 export function AppSidebar({ profile }: { profile: Profile }) {
   const pathname = usePathname();
   const visibleModules = MODULES.filter((m) => m.roles.includes(profile.role));
+  const canManageSocialHub = ['admin', 'giam_doc'].includes(profile.role);
 
   return (
     <Sidebar collapsible="icon" className="print:hidden">
@@ -100,6 +102,16 @@ export function AppSidebar({ profile }: { profile: Profile }) {
                   </SidebarMenuItem>
                 );
               })}
+              {canManageSocialHub && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname.startsWith('/marketing/social-hub')}>
+                    <Link href="/marketing/social-hub">
+                      <Megaphone />
+                      <span>Marketing · Social Hub</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
