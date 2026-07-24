@@ -9,20 +9,22 @@ let socialHubClient: SupabaseClient | null = null;
  *
  * KTN App vẫn tiếp tục dùng NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY
  * cho đăng nhập và các module nghiệp vụ hiện có. Social Hub dùng project thứ hai
- * qua service-role key ở server để không làm ảnh hưởng hệ thống KTN App.
+ * qua secret/service-role key ở server để không làm ảnh hưởng hệ thống KTN App.
  */
 export function createSocialHubClient(): SupabaseClient {
   const url = process.env.SOCIAL_HUB_SUPABASE_URL;
-  const serviceRoleKey = process.env.SOCIAL_HUB_SUPABASE_SERVICE_ROLE_KEY;
+  const secretKey =
+    process.env.SOCIAL_HUB_SUPABASE_SECRET_KEY ??
+    process.env.SOCIAL_HUB_SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !serviceRoleKey) {
+  if (!url || !secretKey) {
     throw new Error(
-      'Social Hub chưa được cấu hình kết nối Automation_KTN. Hãy thêm SOCIAL_HUB_SUPABASE_URL và SOCIAL_HUB_SUPABASE_SERVICE_ROLE_KEY trong Vercel.'
+      'Social Hub chưa được cấu hình kết nối Automation_KTN. Hãy thêm SOCIAL_HUB_SUPABASE_URL và SOCIAL_HUB_SUPABASE_SECRET_KEY trong Vercel.'
     );
   }
 
   if (!socialHubClient) {
-    socialHubClient = createClient(url, serviceRoleKey, {
+    socialHubClient = createClient(url, secretKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
